@@ -1,24 +1,3 @@
-Here is a complete overhaul of the **House Plan Generator & CAD Studio** designed to look and feel like a modern, professional architectural web application.
-
-### Key Look & Usability Upgrades:
-1. **Split-Screen Studio Layout**:
-   - Replaced the long vertical scroll with a **two-column CAD workspace** (Control Sidebar on the left, Interactive Blueprint & 3D Canvas on the right).
-   - Sidebar and Canvas scroll and scale independently, keeping your plan and tools visible at all times.
-2. **Tabbed Option Switcher & Compare Mode**:
-   - Easily toggle between **Option A, B, C, D, and E** with a single click, or switch to **"Compare All"** grid view.
-3. **Drafting Table Visual Styling**:
-   - High-contrast architectural drafting aesthetic with subtle CAD grid paper canvas, double-line exterior wall poché, glass mullion windows, and hinge-anchored door swings.
-   - Modern architectural badges displaying room names, exact dimensions, and square footage.
-4. **Layer Visibility Toggles**:
-   - Toggle **Dimensions**, **Room Badges**, **Sun Vectors**, and **Material Hatching** on and off in real-time.
-5. **Integrated Editor (No New Tab Required)**:
-   - Switch seamlessly between **2D Floor Plan**, **3D Massing**, and **Interactive Layout Editor** right in the main canvas.
-6. **Quick Design Presets**:
-   - Added instant one-click architectural presets (*Modern Courtyard Villa*, *Compact Urban*, *Sprawling Ranch*, *Farmhouse Estate*).
-7. **Action Hub**:
-   - Prominent header actions for **Export DXF (AutoCAD)**, **Print / PDF Sheet**, **Download SVG**, and **Save / Load JSON**.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,21 +33,18 @@ Here is a complete overhaul of the **House Plan Generator & CAD Studio** designe
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text-main);font-size:14px;line-height:1.5;overflow:hidden;height:100vh}
 input,select,button{font-family:inherit;font-size:inherit;color:inherit}
-
 /* Layout Frame */
 #app{display:grid;grid-template-rows:56px 1fr;height:100vh}
 header{background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;z-index:20}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-0.02em}
 .logo svg{color:var(--primary)}
 .main-layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 56px);overflow:hidden}
-
 /* Sidebar Styles */
 sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border);overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:18px}
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .preset-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
 .preset-chip{background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 9px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}
 .preset-chip:hover{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
-
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:12px;font-weight:600;color:var(--text-sub);display:flex;justify-content:space-between}
@@ -76,49 +52,39 @@ select,input[type=number],input[type=text]{background:var(--bg-app);border:1px s
 select:focus,input:focus{border-color:var(--border-focus);box-shadow:0 0 0 2px var(--primary-light)}
 input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%}
 .val-badge{font-family:var(--font-mono);font-size:11px;background:var(--bg-app);padding:2px 6px;border-radius:4px;color:var(--primary);font-weight:600}
-
 .chk-group{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-sub);cursor:pointer;user-select:none}
 .chk input{accent-color:var(--primary);width:15px;height:15px}
-
 .btn-create{background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);padding:12px;font-weight:600;font-size:14px;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-md)}
 .btn-create:hover{background:var(--primary-hover)}
-
 /* Canvas & Stage */
 .stage{background:var(--bg-canvas);overflow-y:auto;display:flex;flex-direction:column;position:relative}
 .stage-toolbar{position:sticky;top:0;background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;justify-content:space-between;align-items:center;z-index:10;gap:12px;flex-wrap:wrap}
 .nav-tabs{display:inline-flex;background:var(--bg-app);padding:3px;border-radius:var(--radius-md);border:1px solid var(--border)}
 .nav-tab{border:none;background:transparent;padding:6px 14px;font-size:12.5px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-sub);transition:all .15s}
 .nav-tab.active{background:var(--bg-sidebar);color:var(--primary);box-shadow:var(--shadow-sm)}
-
 .view-modes{display:inline-flex;gap:4px}
 .view-btn{background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-sub)}
 .view-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-
 .canvas-area{padding:24px;display:flex;flex-direction:column;align-items:center;gap:20px;max-width:1100px;margin:0 auto;width:100%}
 .plan-sheet{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);width:100%;padding:24px;position:relative}
-
 /* Metrics Dashboard Strip */
 .metrics-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;width:100%;margin-bottom:16px}
 .metric-box{background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 14px}
 .metric-box .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700}
 .metric-box .value{font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--text-main);margin-top:2px}
 .metric-box .subtext{font-size:11px;color:var(--text-sub)}
-
 /* Layer Filter Pills */
 .layer-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .layer-pill{background:transparent;border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11.5px;cursor:pointer;color:var(--text-sub);display:flex;align-items:center;gap:5px}
 .layer-pill.on{background:var(--primary-light);border-color:var(--primary);color:var(--primary);font-weight:600}
-
 /* Notes Cards */
 .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
 .note-card{background:var(--bg-app);border-left:3px solid var(--primary);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12.5px;color:var(--text-sub)}
-
 /* Editor Toolbar */
 .editor-tools{display:flex;gap:8px;margin-bottom:14px;background:var(--bg-app);padding:8px;border-radius:var(--radius-md);border:1px solid var(--border);flex-wrap:wrap}
 .editor-tools button{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
 .editor-tools button:hover{background:var(--primary-light);border-color:var(--primary)}
-
 /* Print Sheet Format */
 @media print{
   body{overflow:visible;height:auto;background:#fff;color:#000}
@@ -139,7 +105,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
       <span>ArchPlan Studio</span>
       <span style="font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:12px;font-weight:600">CAD v2.5</span>
     </div>
-
     <!-- Quick Actions -->
     <div style="display:flex;gap:10px;align-items:center">
       <div class="nav-tabs" style="padding:2px">
@@ -152,7 +117,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
       <input type="file" id="fileIn" accept=".json" style="display:none">
     </div>
   </header>
-
   <!-- Split Screen Workspace -->
   <div class="main-layout">
     <!-- Left Configuration Sidebar -->
@@ -167,7 +131,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <div class="preset-chip" data-pre="compact">Compact Urban</div>
         </div>
       </div>
-
       <!-- Geometry & Footprint -->
       <div class="field">
         <div class="section-title">Footprint Architecture</div>
@@ -194,7 +157,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           </div>
         </div>
       </div>
-
       <!-- Dimensions -->
       <div class="field">
         <label>Envelope Width <span class="val-badge" id="wo">42 ft</span></label>
@@ -204,7 +166,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
         <label>Target Area <span class="val-badge" id="ao">2,100 sq ft</span></label>
         <input type="range" id="ar" min="500" max="5600" value="2100" step="25">
       </div>
-
       <!-- Architectural Style & Roof -->
       <div class="field">
         <div class="section-title">Style &amp; Massing</div>
@@ -231,7 +192,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           </div>
         </div>
       </div>
-
       <!-- Rooms & Program -->
       <div class="field">
         <div class="section-title">Program &amp; Room Specifications</div>
@@ -242,7 +202,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <div><label>Garage</label><select id="gar"><option value="0">None</option><option value="1">1-Car</option><option value="2" selected>2-Car</option></select></div>
         </div>
       </div>
-
       <div class="field">
         <label>Specialty Rooms</label>
         <div class="chk-group">
@@ -254,7 +213,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <label class="chk"><input type="checkbox" id="adp">Adaptable Living</label>
         </div>
       </div>
-
       <!-- Solar & Entrances -->
       <div class="field">
         <div class="section-title">Site &amp; Orientation</div>
@@ -277,7 +235,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           </div>
         </div>
       </div>
-
       <!-- Budget -->
       <div class="field">
         <div class="section-title">Budget Estimation</div>
@@ -286,14 +243,12 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <div><label>Finish Tier</label><select id="fin"><option value="std">Standard</option><option value="mid" selected>Mid-Range</option><option value="hi">High-End Luxury</option></select></div>
         </div>
       </div>
-
       <button id="create" class="btn-create">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
         <span>Generate Plans</span>
       </button>
       <div id="stale" style="font-size:12px"></div>
     </sidebar>
-
     <!-- Right Workspace Stage -->
     <div class="stage">
       <!-- Stage Toolbar -->
@@ -307,7 +262,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <button class="nav-tab" data-opt="4">Option E</button>
           <button class="nav-tab" data-opt="all">⊞ Compare All</button>
         </div>
-
         <!-- View Switcher -->
         <div class="view-modes">
           <button class="view-btn active" id="v2d">2D Floor Plan</button>
@@ -315,7 +269,6 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <button class="view-btn" id="vEd">Interactive Editor</button>
         </div>
       </div>
-
       <!-- Canvas Area -->
       <div class="canvas-area">
         <!-- Layer Filters -->
@@ -325,14 +278,12 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
           <button class="layer-pill on" data-layer="hatch">🧱 Textures &amp; Tiles</button>
           <button class="layer-pill on" data-layer="sun">☀️ Solar Axis</button>
         </div>
-
         <!-- Content Mount -->
         <div id="stageMount" style="width:100%"></div>
       </div>
     </div>
   </div>
 </div>
-
 <script>
 const $=id=>document.getElementById(id);
 let isMetric=false;
@@ -341,11 +292,9 @@ let activeView='2d'; // '2d', '3d', 'edit', 'all'
 const layers={dim:true,tags:true,hatch:true,sun:true};
 const state={res:null,PL:[],Q:[]};
 let seed=1;
-
 const CARD=['N','E','S','W'],NM={N:'north',E:'east',S:'south',W:'west'};
 const cl=b=>CARD[Math.round((((b%360)+360)%360)/90)%4];
 function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-
 const FT2M=0.3048,SQFT2M2=0.092903;
 function fi(ft){
   if(isMetric){return (ft*FT2M).toFixed(2)+'m'}
@@ -356,12 +305,10 @@ function fa(sqft){
   return Math.round(sqft).toLocaleString()+' sq ft'
 }
 function fm(n){return n>=1e6?'$'+(n/1e6).toFixed(2)+'M':'$'+Math.round(n/1000)+'k'}
-
 /* Program Sizes */
 const SZ={liv:[11,13],kit:[9.5,9.5],M:[11.5,10.5],MB:[8,5.5],MC:[5,7],Q:[9,9.5],D:[8.5,9],T:[11.5,9],S:[8.5,9],Ba:[8,5.2],pow:[4.8,5.2],lau:[6,8],mud:[6.5,7],pan:[5,6],gym:[10,11],gar2:[20,20],gar1:[12,20],st:[3.5,12]};
 const SZA={M:{t:[14,10],m:[12,10]},Ba:{t:[8.5,8.5],m:[7,8.5]},MB:{t:[8.5,8.5],m:[7,8.5]},kit:{t:[10,8.5],m:[10,8.5]}};
 const DINS=[[10,9],[12,9],[13.5,9]],DINA=[[11,9.8],[12.8,9.8],[14.2,9.8]];
-
 const STY={
   mod:{n:'Modern',cost:1.1,pref:['D','E','A'],asp:0,open:true},
   open:{n:'Open Concept',cost:1,pref:['A','D','C'],asp:0,open:true},
@@ -386,7 +333,6 @@ const OPT_INFO={
   E:['U-Shape Courtyard Villa','Three connected wings wrapping around an intimate central patio or terrace garden.']
 };
 const RATE={std:155,mid:215,hi:320};
-
 function mk(n,t,sz,mn,flex,nochk){
   const a=Math.min(sz[0],sz[1]),b=Math.max(sz[0],sz[1]);
   const q=mn||sz,qa=Math.min(q[0],q[1]),qb=Math.max(q[0],q[1]);
@@ -418,7 +364,6 @@ function build(p,r){
   P.stairs=p.st===2?mk('Stairs','hall',SZ.st,null,0,1):null;
   return P;
 }
-
 function scaleP(P,p,netArea){
   const fl=[P.liv,P.kit,P.din,P.off,P.gym].filter(Boolean).reduce((a,x)=>a+x.a,0);
   let fixed=0;const add=x=>{if(x&&!x.flex)fixed+=x.a};
@@ -429,12 +374,10 @@ function scaleP(P,p,netArea){
   ['liv','kit','din','off','gym'].forEach(k=>{if(P[k])S[k]=Object.assign({},P[k],{a:P[k].a*fo})});
   return S;
 }
-
 const wsum=i=>i.sub?i.sub.reduce((s,x)=>s+wsum(x),0):(i.a||0);
 const G=(dir,...it)=>{it=it.flat().filter(Boolean);return it.length?{sub:it,dir:dir}:null};
 const H=(f,n)=>({n:n||'Hall',t:'hall',fixed:f});
 const pack=(it,dir,thr,hall)=>{it=it.filter(Boolean);if(it.length<=thr)return G(dir,it);const m=Math.ceil(it.length/2),od=dir==='h'?'v':'h';return G(od,G(dir,it.slice(0,m)),hall?H(3.5):null,G(dir,it.slice(m)))};
-
 function split(items,x,y,w,h,dir,out){
   items=items.filter(Boolean);if(!items.length)return;
   let fx=0,tot=0;
@@ -449,7 +392,6 @@ function split(items,x,y,w,h,dir,out){
   });
 }
 function inter(lead,bd,ba){const o=lead.slice(),b=ba.slice();bd.forEach(x=>{o.push(x);if(b.length)o.push(b.shift())});return o.concat(b)}
-
 function layoutMulti(s,F,W,D,shapeMode,popD){
   const pub=!!F.liv,hp=!!F.M,thr=pub?4:3;
   const PS=hp?G('h',F.M,G('v',F.MC,F.MB)):null;
@@ -458,7 +400,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
   const mode=shapeMode==='multi'?({A:'stagger',B:'L',C:'T',D:'bump',E:'U'}[s]):shapeMode;
   const p=Math.min(popD,Math.min(W,D)*0.25);
   const out=[],footRects=[];
-
   if(mode==='rect'){
     footRects.push({id:'main',name:'Main Body',x:0,y:0,w:W,d:D,g:0});
     let root;
@@ -468,7 +409,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     split([root],0,0,W,D,'h',out);
     return{rooms:out,footRects:footRects,shapeName:'Single Rectangle'};
   }
-
   if(mode==='L'){
     const w1=Math.round(W*0.58),w2=W-w1,d1=Math.round(D*0.62),d2=D-d1;
     footRects.push({id:'main',name:'Living Wing',x:0,y:0,w:W,d:d1,g:0});
@@ -479,7 +419,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     out.push({n:'Garden Terrace',t:'patio',x:w1,y:d1,w:w2,h:d2,a:w2*d2});
     return{rooms:out,footRects:footRects,shapeName:'L-Shape (2 Rectangles)'};
   }
-
   if(mode==='T'){
     const wc=Math.round(W*0.48),wl=Math.round((W-wc)/2),wr=W-wc-wl;
     const dMid=D,dSide=Math.max(16,D-p*1.6);
@@ -494,7 +433,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     out.push({n:'Terrace',t:'patio',x:wl+wc,y:p+dSide,w:wr,h:p*0.6,a:wr*p*0.6});
     return{rooms:out,footRects:footRects,shapeName:'T-Shape Pavilion (3 Rectangles)'};
   }
-
   if(mode==='stagger'){
     const w1=Math.round(W*0.54),w2=W-w1,d1=D-p,d2=D-p;
     footRects.push({id:'wing1',name:'Front Living Block',x:0,y:0,w:w1,d:d1,g:0});
@@ -505,7 +443,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     out.push({n:'Rear Deck',t:'patio',x:0,y:d1,w:w1,h:p,a:w1*p});
     return{rooms:out,footRects:footRects,shapeName:'Staggered Wings (2 Rectangles)'};
   }
-
   if(mode==='U'){
     const wl=Math.round(W*0.32),wr=Math.round(W*0.32),wm=W-wl-wr;
     const dTop=Math.round(D*0.48),dCourt=D-dTop;
@@ -518,7 +455,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     out.push({n:'Central Courtyard',t:'patio',x:wl,y:dTop,w:wm,h:dCourt,a:wm*dCourt});
     return{rooms:out,footRects:footRects,shapeName:'U-Shape Courtyard (3 Rectangles)'};
   }
-
   /* Default / Bump */
   const gw=F.gar?(F.gar.a>300?20:14):14,gh=p;
   const rw=Math.round(W*0.55),rh=p,dMid=D-p*1.5;
@@ -533,7 +469,6 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
   out.push({n:'Rear Patio',t:'patio',x:gw+rw,y:gh+dMid,w:W-gw-rw,h:rh,a:(W-gw-rw)*rh});
   return{rooms:out,footRects:footRects,shapeName:'Articulated Bays (3 Rectangles)'};
 }
-
 function getExtWalls(rooms){
   const eps=0.08,walls=[];
   const active=rooms.filter(r=>r.t!=='patio'&&r.t!=='void');
@@ -576,7 +511,6 @@ function getExtWalls(rooms){
   }
   return walls;
 }
-
 function expoMulti(r,extWalls,F){
   const e=[],SB={t:0,r:90,b:180,l:270};
   const rw=extWalls.filter(w=>w.r===r);
@@ -607,7 +541,6 @@ function checkRects(all,adp){
   });
   return all.filter(x=>x.m);
 }
-
 function shared(a,b){
   const E=0.08,ov=(a0,a1,b0,b1)=>[Math.max(a0,b0),Math.min(a1,b1)];
   let o;
@@ -660,7 +593,6 @@ function computeDoors(rc,adp){
   });
   return{list:list,miss:miss};
 }
-
 function entDoorMulti(extWalls,code,main,adp,W,D){
   if(!code||code==='none'||!extWalls.length)return null;
   const sd=code[0],pos=code[1],dw=main?3:(adp?3:2.67),horiz=sd==='t'||sd==='b';
@@ -679,7 +611,6 @@ function entDoorMulti(extWalls,code,main,adp,W,D){
   const w=best.w;
   return{ax:horiz?'h':'v',L:horiz?w.y1:w.x1,a0:best.c-dw/2,dw:dw,hinge:0,dir:(sd==='t'||sd==='l')?1:-1,kind:'ext',main:main,room:best.room,tier:best.t,side:sd,c:best.c};
 }
-
 function garDoorMulti(extWalls){
   const gw=extWalls.filter(w=>w.r.t==='gar'&&w.len>=8);
   if(!gw.length)return null;
@@ -693,9 +624,7 @@ function garDoorMulti(extWalls){
   }
   return null;
 }
-
 const fills={liv:'var(--bg-accent)',slp:'var(--bg-pro)',svc:'var(--bg-app)',wrk:'var(--bg-warning)',gar:'url(#dots-garage)',hall:'var(--bg-canvas)',patio:'url(#hatch-patio)',clo:'var(--bg-app)'};
-
 function doorSVG(d,X,Y,s){
   const ax=d.ax;
   const A=ax==='h'?[d.a0,d.L]:[d.L,d.a0],B=ax==='h'?[d.a0+d.dw,d.L]:[d.L,d.a0+d.dw];
@@ -721,7 +650,6 @@ function doorSVG(d,X,Y,s){
   h+='<path d="M'+c[0].toFixed(1)+','+c[1].toFixed(1)+' A'+r.toFixed(1)+','+r.toFixed(1)+' 0 0 '+sweep+' '+t[0].toFixed(1)+','+t[1].toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="1" stroke-dasharray="3 2"/>';
   return h;
 }
-
 function planSVG(rects,W,D,o){
   const s=Math.min(380/W,420/D),pw=W*s,ox=(450-pw)/2,oy=24;
   const X=x=>ox+x*s,Y=y=>oy+y*s;
@@ -733,17 +661,14 @@ function planSVG(rects,W,D,o){
     +'<pattern id="tile-bath" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="var(--bg-app)"/><path d="M 8 0 L 0 0 0 8" fill="none" stroke="var(--border)" stroke-width="0.6" opacity="0.7"/></pattern>'
     +'<pattern id="dots-garage" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.75" fill="var(--text-muted)" opacity="0.4"/><circle cx="5" cy="5" r="0.75" fill="var(--text-muted)" opacity="0.4"/></pattern>'
     +'</defs>';
-
   /* Blueprint Grid Sheet Background */
   h+='<rect width="100%" height="100%" fill="url(#grid)" opacity="0.8"/>';
-
   /* 1. Exterior patios/courtyards */
   rects.filter(r=>r.t==='patio').forEach(r=>{
     const fillStyle=layers.hatch?'url(#hatch-patio)':'none';
     h+='<rect x="'+X(r.x).toFixed(1)+'" y="'+Y(r.y).toFixed(1)+'" width="'+(r.w*s).toFixed(1)+'" height="'+(r.h*s).toFixed(1)+'" fill="'+fillStyle+'" stroke="var(--text-sub)" stroke-width="1" stroke-dasharray="3 3"/>';
     if(layers.tags)h+='<text x="'+X(r.x+r.w/2).toFixed(1)+'" y="'+Y(r.y+r.h/2).toFixed(1)+'" font-size="11" text-anchor="middle" dominant-baseline="central" font-family="var(--font-sans)" font-weight="600" fill="var(--text-sub)">'+r.n+'</text>';
   });
-
   /* 2. Conditioned Rooms */
   rects.filter(r=>r.t!=='patio').forEach((r,i)=>{
     const x=X(r.x),y=Y(r.y),w=r.w*s,hh=r.h*s;
@@ -766,13 +691,11 @@ function planSVG(rects,W,D,o){
     }
     if(o.ed)h+='</g>';
   });
-
   /* 3. True exterior walls with CAD Poché */
   const ew=o.extWalls||getExtWalls(rects);
   ew.forEach(w=>{
     h+='<line x1="'+X(w.x1).toFixed(1)+'" y1="'+Y(w.y1).toFixed(1)+'" x2="'+X(w.x2).toFixed(1)+'" y2="'+Y(w.y2).toFixed(1)+'" stroke="var(--text-main)" stroke-width="3" stroke-linecap="square"/>';
   });
-
   /* 4. Windows */
   const dl=o.doors||[];
   const blk=dl.filter(d=>d.kind==='ext'||d.kind==='slide'||d.kind==='garage').map(d=>({ax:d.ax,L:d.L,a0:d.a0,a1:d.a0+d.dw}));
@@ -790,10 +713,8 @@ function planSVG(rects,W,D,o){
       else h+='<rect x="'+(X(line)-t/2).toFixed(1)+'" y="'+Y(a0).toFixed(1)+'" width="'+t+'" height="'+(L*s).toFixed(1)+'" fill="#e0f2fe" stroke="var(--text-main)" stroke-width="1.2"/>';
     });
   });
-
   /* 5. Doors */
   dl.forEach(d=>{h+=doorSVG(d,X,Y,s)});
-
   /* 6. Dimensions Callouts */
   if(layers.dim){
     const DT='font-size="9" font-family="var(--font-mono)" font-weight="600" text-anchor="middle" fill="var(--primary)"';
@@ -802,7 +723,6 @@ function planSVG(rects,W,D,o){
     h+='<line x1="'+(ox-14)+'" y1="'+oy+'" x2="'+(ox-14)+'" y2="'+(oy+D*s).toFixed(1)+'" stroke="var(--primary)" stroke-width="1" stroke-dasharray="2 2"/>';
     h+='<text x="'+(ox-18)+'" y="'+(oy+D*s/2).toFixed(1)+'" '+DT+' transform="rotate(-90 '+(ox-18)+' '+(oy+D*s/2).toFixed(1)+')">DEPTH '+fi(D)+'</text>';
   }
-
   /* 7. Sun Orientation */
   if(layers.sun){
     const LT='font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="var(--font-sans)" fill="var(--text-muted)"';
@@ -812,7 +732,6 @@ function planSVG(rects,W,D,o){
   h+='</svg>';
   return{html:h,s:s,ox:ox,oy:oy};
 }
-
 function massMulti(footRects,W,D,p,pe,se){
   const S=SM[p.sty],fh=p.sty==='ranch'?9:9.5,hz=fh*p.st,rf=p.roof,sl=S.sl||0.33;
   const B=footRects.filter(b=>b.w>=3&&b.d>=3);
@@ -829,7 +748,6 @@ function massMulti(footRects,W,D,p,pe,se){
   const WALL='var(--bg-card)',SIDE='var(--bg-app)',ROOF='#fcd34d';
   let h='<svg width="100%" viewBox="0 0 450 '+Math.round(Hs)+'" role="img"><title>3D Axonometric Massing</title>';
   h+=pl([[-4,-6,0],[W+4,-6,0],[W+4,D+4,0],[-4,D+4,0]],'#dcfce7',0.4,0);
-
   const sorted=B.slice().sort((a,b)=>(b.y+b.d)-(a.y+a.d)||(a.x-b.x));
   const [ww,wh,sill]=S.win;
   sorted.forEach(b=>{
@@ -838,7 +756,6 @@ function massMulti(footRects,W,D,p,pe,se){
     h+=pl([[x,y,0],[x1,y,0],[x1,y,hz],[x,y,hz]],WALL);
     if(rf==='shed')h+=pl([[x1,y,0],[x1,y1,0],[x1,y1,hz+r],[x1,y,hz]],SIDE);
     else h+=pl([[x1,y,0],[x1,y1,0],[x1,y1,hz],[x1,y,hz]],SIDE);
-
     if(!b.g){
       const n=Math.floor((w-2)/(ww+3.5));
       if(n>=1){
@@ -875,7 +792,6 @@ function massMulti(footRects,W,D,p,pe,se){
   h+='</svg>';
   return h;
 }
-
 function exportDXF(plan){
   const rooms=plan.fl[0],extWalls=getExtWalls(rooms);
   let d='0\nSECTION\n2\nENTITIES\n';
@@ -901,7 +817,6 @@ function exportDXF(plan){
   a.download='cad_plan_'+plan.title.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'.dxf';
   document.body.appendChild(a);a.click();a.remove();
 }
-
 function notes(k,fl,p,m,shapeName){
   const all=fl.reduce((a,f)=>a.concat(f),[]),L=[];
   const rm=n=>all.find(x=>x.n===n);
@@ -916,7 +831,6 @@ function notes(k,fl,p,m,shapeName){
   if(pm&&pm.bb!=null)L.push('Primary suite wing faces '+dn(pm.bb)+' for peaceful daylighting.');
   return L.slice(0,6);
 }
-
 function readP(){
   return{
     w:+$('w').value,d:+$('d').value,bd:+$('bd').value,ba:+$('ba').value,
@@ -928,24 +842,20 @@ function readP(){
     sh:$('sh').value,popd:+$('popd').value
   };
 }
-
 function run(){
   const p=readP();
   const sty=STY[p.sty];
   const rate=RATE[p.fin],stf=p.st===2?0.95:1,mult=sty.cost;
   const r=rng(seed*97+5),P=build(p,r);
-
   state.PL=[];
   state.res=['A','B','C','D','E'].map((s,i)=>{
     const W=p.w,D=p.d;
     const S=scaleP(P,p,W*D);
     const g=Object.assign({},S);let u=null;
     if(p.st===2){g.M=null;g.MC=null;g.MB=null;g.Bd=[];g.BC=[];g.Ba=[];u={M:S.M,MC:S.MC,MB:S.MB,Bd:S.Bd,BC:S.BC,Ba:S.Ba,stairs:S.stairs,gym:S.gym}}
-
     const lay1=layoutMulti(s,g,W,D,p.sh,p.popd);
     const fl=[lay1.rooms];
     if(u)fl.push(layoutMulti(s,u,W,D,p.sh,p.popd).rooms);
-
     const extWalls=getExtWalls(fl[0]);
     fl.forEach(rc=>annMulti(rc,extWalls,p));
     const all=fl.reduce((a,rc)=>a.concat(rc),[]);
@@ -955,7 +865,6 @@ function run(){
     const miss=doors.reduce((a,d)=>a.concat(d.miss),[]);
     const pe=entDoorMulti(extWalls,p.entP,true,p.adp,W,D);
     const se=entDoorMulti(extWalls,p.entS,false,p.adp,W,D);
-
     const sum=f=>all.filter(f).reduce((a,x)=>a+x.w*x.h,0);
     const area=Math.round(sum(x=>x.t!=='patio')),garA=sum(x=>x.t==='gar'),hallA=sum(x=>x.t==='hall');
     const circ=Math.round(hallA/Math.max(area,1)*100);
@@ -963,50 +872,40 @@ function run(){
     let sw=0,sn=0;
     all.forEach(x=>{if(x.sc!=null&&WT[x.t]){const w=x.w*x.h*WT[x.t];sw+=w;sn+=w*x.sc}});
     const sun=Math.round(sn/Math.max(sw,1)*100);
-
     const cond=area-garA;
     const hard=Math.round(((cond*rate*stf+garA*rate*0.4)+Math.max(0,p.ba-2)*10000)*mult/1000)*1000;
     const tb=+$('tb').value||450000;
     const diff=hard-tb;
     const sc=sun*0.4+(100-Math.min(100,circ*4))*0.15+25*(passN/Math.max(M,1));
-
     const m={circ:circ,hallA:hallA,hasT:true,diff:diff,cut:Math.round(Math.max(0,diff)/(rate*stf*mult)),pe:pe,se:se,miss:miss};
     const nts=notes(s,fl,p,m,lay1.shapeName);
-
     const plan={title:'Option '+s+': '+OPT_INFO[s][0],W:W,D:D,p:{f:p.f,hs:p.hs,adp:p.adp,sty:p.sty,entP:p.entP,entS:p.entS,st:p.st,open:sty.open,sh:p.sh},fl:fl.map(rc=>rc.map(x=>({n:x.n,t:x.t,x:x.x,y:x.y,w:x.w,h:x.h,m:x.m,s:x.s,a:x.a,ad:x.ad}))),footRects:lay1.footRects};
     state.PL.push(plan);
-
     return{
       k:s,title:'Option '+s+': '+OPT_INFO[s][0],sub:OPT_INFO[s][1],shapeName:lay1.shapeName,
       hard:hard,diff:diff,sun:sun,area:area,circ:circ,passN:passN,M:M,fl:fl,
       extWalls:extWalls,doors:doors,pe:pe,se:se,footRects:lay1.footRects,nts:nts,score:sc,W:W,D:D,p:p
     };
   });
-
   renderActiveStage();
 }
-
 /* Stage Renderer */
 function renderActiveStage(){
   if(!state.res)return;
   const mount=$('stageMount');
-
   if(activeOptIdx==='all'){
     mount.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:20px;width:100%">'
       +state.res.map((r,i)=>renderSheetHTML(r,i,false)).join('')+'</div>';
     return;
   }
-
   const cur=state.res[activeOptIdx];
   mount.innerHTML=renderSheetHTML(cur,activeOptIdx,true);
 }
-
 function renderSheetHTML(cur,idx,isSingle){
   let h='<div class="plan-sheet">';
   h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">';
   h+='<div><h2 style="font-size:18px;font-weight:700">'+cur.title+'</h2><div style="font-size:12.5px;color:var(--text-sub)">'+cur.sub+' · <strong>'+cur.shapeName+'</strong></div></div>';
   h+='<div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--primary)">'+cur.W+'×'+cur.D+' ft Envelope</div></div>';
-
   /* Metric Dashboard */
   h+='<div class="metrics-strip">'
     +'<div class="metric-box"><div class="label">Net Area</div><div class="value">'+fa(cur.area)+'</div><div class="subtext">'+cur.fl.length+' Level'+(cur.fl.length>1?'s':'')+'</div></div>'
@@ -1014,7 +913,6 @@ function renderSheetHTML(cur,idx,isSingle){
     +'<div class="metric-box"><div class="label">Solar Alignment</div><div class="value">'+cur.sun+'<span style="font-size:12px;font-weight:400">/100</span></div><div class="subtext">Front faces '+NM[cl(cur.p.f)]+'</div></div>'
     +'<div class="metric-box"><div class="label">Circulation</div><div class="value">'+cur.circ+'%</div><div class="subtext">Efficient layout</div></div>'
     +'</div>';
-
   /* Visual View */
   if(activeView==='3d'){
     h+=massMulti(cur.footRects,cur.W,cur.D,cur.p,cur.pe,cur.se);
@@ -1032,7 +930,6 @@ function renderSheetHTML(cur,idx,isSingle){
       h+=planSVG(rc,cur.W,cur.D,{F:cur.p.f,open:STY[cur.p.sty].open,doors:dl,extWalls:i===0?cur.extWalls:getExtWalls(rc)}).html;
     });
   }
-
   /* Architectural Notes */
   if(isSingle){
     h+='<div class="notes-grid">'+cur.nts.map(x=>'<div class="note-card">'+x+'</div>').join('')+'</div>';
@@ -1040,7 +937,6 @@ function renderSheetHTML(cur,idx,isSingle){
   h+='</div>';
   return h;
 }
-
 /* Event Wiring */
 function initApp(){
   const syncWD=()=>{
@@ -1055,7 +951,6 @@ function initApp(){
     W=Math.min(75,Math.max(20,Math.round(W)));D=Math.min(85,Math.max(25,Math.round(D)));
     $('w').value=W;$('d').value=D;syncWD();
   });
-
   $('uImp').addEventListener('click',()=>{
     isMetric=false;$('uImp').classList.add('active');$('uMet').classList.remove('active');
     syncWD();if(state.res)run();
@@ -1064,7 +959,6 @@ function initApp(){
     isMetric=true;$('uMet').classList.add('active');$('uImp').classList.remove('active');
     syncWD();if(state.res)run();
   });
-
   /* Option Switcher */
   $('optionTabs').addEventListener('click',e=>{
     const b=e.target.closest('.nav-tab');if(!b)return;
@@ -1074,7 +968,6 @@ function initApp(){
     activeOptIdx=(opt==='all')?'all':+opt;
     renderActiveStage();
   });
-
   /* View Switcher */
   $('v2d').addEventListener('click',()=>{activeView='2d';updateViewBtns();renderActiveStage()});
   $('v3d').addEventListener('click',()=>{activeView='3d';updateViewBtns();renderActiveStage()});
@@ -1085,7 +978,6 @@ function initApp(){
     if(activeView==='3d')$('v3d').classList.add('active');
     if(activeView==='edit')$('vEd').classList.add('active');
   }
-
   /* Layer Filters */
   $('layerBar').addEventListener('click',e=>{
     const p=e.target.closest('.layer-pill');if(!p)return;
@@ -1094,7 +986,6 @@ function initApp(){
     p.classList.toggle('on',layers[lay]);
     renderActiveStage();
   });
-
   /* Presets */
   document.querySelectorAll('.preset-chip').forEach(chip=>{
     chip.addEventListener('click',()=>{
@@ -1106,7 +997,6 @@ function initApp(){
       syncWD();run();
     });
   });
-
   $('create').addEventListener('click',()=>run());
   $('btnExportDxf').addEventListener('click',()=>{
     const plan=state.PL[typeof activeOptIdx==='number'?activeOptIdx:0];
@@ -1119,13 +1009,10 @@ function initApp(){
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='floorplan.json';a.click();a.remove();
   });
   $('btnPrint').addEventListener('click',()=>window.print());
-
   syncWD();
   run();
 }
-
 window.addEventListener('DOMContentLoaded',initApp);
 </script>
 </body>
 </html>
-```
