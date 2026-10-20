@@ -88,14 +88,10 @@ input[type=range]{accent-color:var(--primary);height:6px;margin:6px 0;width:100%
 .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
 .note-card{background:var(--bg-app);border-left:3px solid var(--primary);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12.5px;color:var(--text-sub)}
 
-.editor-tools{display:flex;gap:8px;margin-bottom:14px;background:var(--bg-app);padding:8px;border-radius:var(--radius-md);border:1px solid var(--border);flex-wrap:wrap}
-.editor-tools button{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
-.editor-tools button:hover{background:var(--primary-light);border-color:var(--primary)}
-
 @media print{
   body{overflow:visible;height:auto;background:#fff;color:#000}
   #app{display:block}
-  header, .sidebar, .stage-toolbar, .layer-bar, .editor-tools, button{display:none !important}
+  header, .sidebar, .stage-toolbar, .layer-bar, button{display:none !important}
   .stage{background:#fff;overflow:visible}
   .canvas-area{padding:0;max-width:100%}
   .plan-sheet{border:2px solid #000;box-shadow:none;page-break-after:always;padding:20px}
@@ -296,6 +292,7 @@ const state={res:null,PL:[],Q:[]};
 let seed=1;
 
 const CARD=['N','E','S','W'],NM={N:'north',E:'east',S:'south',W:'west'};
+const ENTL={tl:'top left',tm:'top middle',tr:'top right',lm:'left middle',rm:'right middle',bl:'bottom left',bm:'bottom middle',br:'bottom right'};
 const cl=b=>CARD[Math.round((((b%360)+360)%360)/90)%4];
 function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
@@ -415,7 +412,7 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
   const p=Math.min(popD,Math.min(W,D)*0.25);
   const out=[],footRects=[];
 
-  /* Upper floor with sleeping rooms */
+  /* Upper floor safety handling */
   if(!pub && hp){
     footRects.push({id:'upper',name:'Upper Level',x:0,y:0,w:W,d:D,g:0});
     const bedRoot=pack(pl,'h',3,true);
@@ -483,7 +480,7 @@ function layoutMulti(s,F,W,D,shapeMode,popD){
     return{rooms:out,footRects:footRects,shapeName:'U-Shape Courtyard (3 Rectangles)'};
   }
 
-  /* Default: Bump */
+  /* Default / Bump */
   const hasGar=!!F.gar;
   const gw=hasGar?(F.gar.a>300?20:14):0;
   const gh=hasGar?p:0;
@@ -778,7 +775,7 @@ function planSVG(rects,W,D,o){
 }
 
 function massMulti(footRects,W,D,p,pe,se){
-  const S=SM[p.sty],fh=p.sty==='ranch'?9:9.5,hz=fh*p.st,rf=p.roof,sl=S.sl||0.33;
+  const S=SM[p.sty]||SM.mod,fh=p.sty==='ranch'?9:9.5,hz=fh*p.st,rf=p.roof,sl=S.sl||0.33;
   const B=footRects.filter(b=>b.w>=3&&b.d>=3);
   B.forEach(b=>{
     b.ax=b.w>=b.d?'x':'y';const span=Math.min(b.w,b.d);
@@ -873,7 +870,10 @@ function notes(k,fl,p,m,shapeName){
   const dn=b=>NM[cl(b)];
   L.push('Footprint: '+shapeName+' with corner notches providing sheltered outdoor transitions.');
   if(m.miss.length)L.push('Notice: Adjust doorway alignment in Editor for '+m.miss.slice(0,3).join(', ')+'.');
-  if(m.pe)L.push('Main entrance ('+ENTL[p.entP]+') opens into '+m.pe.room+(m.pe.tier>=3?'. Consider shifting entry position to the living zone.':'.'));
+  if(m.pe){
+    const entLabel=ENTL[p.entP]||p.entP||'front';
+    L.push('Main entrance ('+entLabel+') opens into '+m.pe.room+(m.pe.tier>=3?'. Consider shifting entry position to the living zone.':'.'));
+  }
   const lv=rm('Living');
   if(lv&&lv.bb!=null&&lv.sc>=0.6)L.push('Living pavilion faces '+dn(lv.bb)+', capturing optimal winter sun exposure with summer shade potential.');
   const pm=rm('Primary');
@@ -1088,7 +1088,6 @@ function initApp(){
   run();
 }
 
-/* Run reliably in any browser / webview state */
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',initApp);
 } else {
@@ -1096,4 +1095,5 @@ if(document.readyState==='loading'){
 }
 </script>
 </body>
-</html>  
+</html>
+
