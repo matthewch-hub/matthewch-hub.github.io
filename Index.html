@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>House Plan Generator</title>
+<style>
+:root{
+  --surface-0:#ffffff;--surface-1:#f3f2ee;--surface-2:#faf9f6;
+  --text-primary:#1f1e1b;--text-secondary:#5c5a54;--text-muted:#8a877f;
+  --text-accent:#1d5fa8;--text-warning:#8a5a00;--text-success:#2f6b2f;--text-danger:#b3261e;
+  --bg-accent:#dbe8f7;--bg-warning:#f6e3bd;--bg-success:#dcefd8;--bg-pro:#e7dff5;
+  --border:#dcd9d1;--border-strong:#c4c0b5;--border-stronger:#9d998d;
+  --fill-accent:#4a8fd8;--fill-success:#5fa65a;--fill-warning:#e0a63a;--fill-pro:#9a7bd1;
+  --radius:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --surface-0:#1b1a18;--surface-1:#262522;--surface-2:#2d2c28;
+    --text-primary:#f1efe9;--text-secondary:#bdbab0;--text-muted:#8f8c83;
+    --text-accent:#8fbcf0;--text-warning:#f0c978;--text-success:#9fd39a;--text-danger:#f19a93;
+    --bg-accent:#22364d;--bg-warning:#4a3a1a;--bg-success:#26402a;--bg-pro:#3a3050;
+    --border:#3a3935;--border-strong:#55534c;--border-stronger:#77746a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.4}
+#app{max-width:720px;margin:0 auto}
+h1{font-size:22px;font-weight:600;margin:0 0 4px}
+.sub{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+select,input[type=number],button{font:inherit;color:var(--text-primary);background:var(--surface-1);border:1px solid var(--border-strong);border-radius:var(--radius);padding:8px 10px;width:100%}
+button{cursor:pointer}
+button:hover{background:var(--surface-2)}
+input[type=range]{width:100%}
+svg{display:block;max-width:100%}
+.sec{font-size:14px;font-weight:600;margin:16px 0 8px}
+.f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:8px}
+.f label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:4px}
+.full{grid-column:1/-1}
+.v{font-weight:600;color:var(--text-primary)}
+.chip{font-size:12px;background:var(--surface-1);border-radius:var(--radius);padding:4px 8px;color:var(--text-secondary);display:inline-block;margin:0 6px 6px 0}
+.chip.w{background:var(--bg-warning);color:var(--text-warning)}
+.chip.g{background:var(--bg-success);color:var(--text-success)}
+.chip.a{background:var(--bg-accent);color:var(--text-accent)}
+.card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-primary)}
+.f label.chk{color:var(--text-primary);margin-bottom:0}
+.chk input{margin:0}
+.m{background:var(--surface-1);border-radius:var(--radius);padding:12px}
+.ml{font-size:13px;color:var(--text-secondary)}
+.mv{font-size:20px;font-weight:600}
+.lg{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);margin:6px 10px 0 0}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:2px}
+ul.n{margin:0;padding-left:18px;font-size:13px;line-height:1.55;color:var(--text-secondary)}
+ul.n li{margin-bottom:4px}
+.h3{font-weight:600;font-size:14px;margin:12px 0 4px}
+.cap{font-size:12px;color:var(--text-muted);margin-top:4px}
+</style>
+</head>
+<body>
+<div id="app">
+<h1>House Plan Generator</h1>
+<div class="sub">Set your footprint and program. Five layout options appear with sun scoring, cost estimates, exterior massing, clearance checks, and design notes. The top of every plan is the front of the house.</div>
+
+<div class="sec">Style and size</div>
+<div class="f">
+  <div class="full"><label for="sty">Design style</label><select id="sty"><option value="mod" selected>Modern</option><option value="open">Open floor plan</option><option value="craft">Craftsman</option><option value="ranch">Ranch</option><option value="farm">Modern farmhouse</option></select></div>
+  <div class="full"><label for="fx">Allow size variation</label><select id="fx"><option value="0">None, use my exact size</option><option value="0.1">Up to 10% in area</option><option value="0.25" selected>Up to 25% in area</option></select></div>
+  <div class="full"><label>Footprint width <span class="v" id="wo">40</span> ft</label><input type="range" id="w" min="20" max="70" value="40" step="1"></div>
+  <div class="full"><label>Footprint depth <span class="v" id="do">50</span> ft</label><input type="range" id="d" min="25" max="80" value="50" step="1"></div>
+</div>
+
+<div class="sec">Rooms</div>
+<div class="f">
+  <div><label for="bd">Bedrooms</label><select id="bd"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+  <div><label for="ba">Bathrooms</label><select id="ba"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+  <div><label for="st">Stories</label><select id="st"><option value="1" selected>1</option><option value="2">2</option></select></div>
+  <div><label for="pri">Priority</label><select id="pri"><option value="bal">Balanced</option><option value="ent">Entertaining</option><option value="pri">Quiet bedrooms</option></select></div>
+  <label class="chk"><input type="checkbox" id="off" checked>Home office</label>
+  <label class="chk"><input type="checkbox" id="gar" checked>2-car garage</label>
+  <label class="chk full"><input type="checkbox" id="adp">Adaptable dwelling requirements</label>
+  <div class="full cap" style="margin-top:-6px">Applies the adaptable-unit sizes and clearances from the reference PDF (BCBC 2024 as cited there): a larger primary bedroom, an accessible bath, a wider kitchen, and 1000 mm halls. Off uses the PDF's standard room clearances only.</div>
+</div>
+
+<div class="sec">Sun</div>
+<div class="f">
+  <div><label for="fr">Front (top of plan) faces</label><select id="fr"><option value="0" selected>North</option><option value="90">East</option><option value="180">South</option><option value="270">West</option></select></div>
+  <div><label for="hs">Hemisphere</label><select id="hs"><option value="N" selected>Northern</option><option value="S">Southern</option></select></div>
+</div>
+
+<div class="sec">Budget</div>
+<div class="f">
+  <div><label for="fin">Finish level</label><select id="fin"><option value="std">Standard</option><option value="mid" selected>Mid-range</option><option value="hi">High-end</option></select></div>
+  <div><label for="rg">Local costs</label><select id="rg"><option value="lo">Below average</option><option value="avg" selected>Average</option><option value="hi">Above average</option></select></div>
+  <div><label for="tb">Target budget ($)</label><input type="number" id="tb" min="0" step="10000" value="450000"></div>
+  <div><label for="ov">Your $/sq ft (optional)</label><input type="number" id="ov" min="0" step="5" placeholder="200"></div>
+  <div class="full" id="err" style="font-size:13px;color:var(--text-danger)"></div>
+</div>
+
+<div class="f">
+  <div><label for="so">Sort options by</label><select id="so"><option value="best">Best overall</option><option value="ord">Layout order</option><option value="sun">Best sun fit</option><option value="cost">Lowest cost</option><option value="circ">Least hallway</option></select></div>
+  <div style="align-self:end"><button id="vary">Vary layouts</button></div>
+</div>
+
+<div id="note"></div>
+<div id="bud"></div>
+<div id="out"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let seed=1;const Q=[];
+const CARD=['N','E','S','W'],NM={N:'north',E:'east',S:'south',W:'west'};
+const cl=b=>CARD[Math.round((((b%360)+360)%360)/90)%4];
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function fi(x){let f=Math.floor(x),i=Math.round((x-f)*12);if(i===12){f++;i=0}return f+"'"+i+'"'}
+const STD={liv:[14,18],kit:[12,14],din:[11,12],lau:[6,8],gar:[20,20],off:[10,11],M:[14,16],MB:[8,10],Bd:[11,12],Ba:[5,8],pow:[5,5],st:[3.5,12]};
+const MIN={
+  std:{M:[9.17,10.33],Q:[9,9.17],D:[8.5,8.75],Ba:[5.08,8],MB:[5.08,8],pow:[4.5,5],kit:[6.7,8.2],din:[9,10],liv:[8.67,10],off:[5,5.5]},
+  adp:{M:[9.96,11.83],Ba:[6.9,8.5],MB:[6.9,8.5],kit:[6.7,9.8],din:[9.67,10.67],off:[5,6]}
+};
+const STY={
+  mod:{n:'Modern',liv:1.1,kit:1.1,din:0.85,lau:1,off:1,cost:1.1,pref:['D','E'],asp:0,open:true},
+  open:{n:'Open floor plan',liv:1.15,kit:1.1,din:1,lau:1,off:1,cost:1,pref:['A','D'],asp:0,open:true},
+  craft:{n:'Craftsman',liv:1,kit:1,din:1.1,lau:1,off:1.1,cost:1.08,pref:['B','C'],asp:0,open:false},
+  ranch:{n:'Ranch',liv:1,kit:1,din:1,lau:1,off:1,cost:0.97,pref:['A','B'],asp:1,open:false},
+  farm:{n:'Modern farmhouse',liv:1,kit:1.15,din:1.1,lau:1.25,off:1,cost:1.07,pref:['C','E'],asp:0,open:false}
+};
+const SM={
+  mod:{roof:'flat',sl:0,ov:1.5,win:[7,6,1.5],porch:0,txt:'flat roof with a slim overhang and large glazing'},
+  open:{roof:'gable',sl:0.33,ov:1.5,win:[4.5,4.5,2.5],porch:0,txt:'medium gable (about 4:12) with mid-size windows'},
+  craft:{roof:'gable',sl:0.42,ov:2.5,win:[5.5,4.5,2.5],porch:1,txt:'low gable (about 5:12) with wide eaves, paired windows, and a front porch'},
+  ranch:{roof:'gable',sl:0.25,ov:2,win:[5,3.5,3.5],porch:0,txt:'low gable (about 3:12) with long, low windows'},
+  farm:{roof:'gable',sl:0.83,ov:1,win:[3,5.5,2],porch:1,txt:'steep gable (about 10:12) with tall windows and a front porch'}
+};
+const STN={
+  mod:['Modern: put large glazing on the sun-facing wall under a flat or low-slope roof, with a 2 to 3 ft overhang for summer shade.','Keep the material palette simple and spend on the biggest views. Slim metal window frames and long spans raise cost quickly.'],
+  open:['Open floor plan: living, kitchen, and dining read as one room (dashed lines mark the open edges). Define zones with lighting, a rug, or a ceiling change instead of walls.','Open plans carry noise and cooking smells. Vent the range hood outside and add a door or short hall before the bedrooms.'],
+  craft:['Craftsman: add a deep front porch (6 to 8 ft) with tapered columns and a low-pitched gable roof with wide eaves.','Keep the dining room defined and add built-ins beside the fireplace or window seat. Smaller, grouped windows suit the style.'],
+  ranch:['Ranch: one level, low and wide, usually with the garage at one end. Wide footprints (width at least 1.4 times depth) suit it best.','A low gable or hip roof with a covered entry keeps the look. Vaulted ceilings in the living area add height without a second story.'],
+  farm:['Modern farmhouse: gable roof, front porch, and a large kitchen with an island and walk-in pantry. Black window frames and board-and-batten siding are the signature look.','Put a mudroom with hooks and a bench between the garage and kitchen. The extra laundry and mudroom space here is sized for that.']
+};
+const R=(n,t,k,m)=>{const d=STD[k];return{n:n,t:t,a:d[0]*d[1]*(m||1),s:d[0]+'×'+d[1]}};
+const wsum=i=>i.sub?i.sub.reduce((s,x)=>s+wsum(x),0):(i.a||0);
+const G=(dir,...it)=>{it=it.flat().filter(Boolean);return it.length?{sub:it,dir:dir}:null};
+const H=(f,n)=>({n:n||'Hall',t:'hall',fixed:f});
+const pack=(it,dir,thr)=>{it=it.filter(Boolean);if(it.length<=thr)return G(dir,it);const m=Math.ceil(it.length/2),od=dir==='h'?'v':'h';return G(od,G(dir,it.slice(0,m)),G(dir,it.slice(m)))};
+function split(items,x,y,w,h,dir,out){
+  items=items.filter(Boolean);if(!items.length)return;
+  let fx=0,tot=0;
+  items.forEach(i=>{if(i.fixed)fx+=i.fixed;else tot+=wsum(i)});
+  const len=dir==='h'?w:h,rem=Math.max(len-fx,len*0.2);let pos=0;
+  items.forEach(i=>{
+    const l=i.fixed?i.fixed:rem*wsum(i)/tot;
+    const rx=dir==='h'?x+pos:x,ry=dir==='h'?y:y+pos,rw=dir==='h'?l:w,rh=dir==='h'?h:l;
+    if(i.sub)split(i.sub,rx,ry,rw,rh,i.dir,out);else out.push({n:i.n,t:i.t,a:i.a,s:i.s,m:i.m,ad:i.ad,x:rx,y:ry,w:rw,h:rh});
+    pos+=l;
+  });
+}
+function build(p,r){
+  const S=STY[p.sty],j=()=>0.97+r()*0.06,e=p.pri==='ent',q=p.pri==='pri',ad=p.adp;
+  const MS=MIN.std,MA=MIN.adp;
+  const P={};
+  P.liv=R('Living','liv','liv',S.liv*(e?1.15:1)*j());
+  P.kit=R('Kitchen','liv','kit',S.kit*(e?1.1:1)*j());
+  P.din=R('Dining','liv','din',S.din*(e?1.1:1)*j());
+  P.lau=R('Laundry','svc','lau',S.lau);
+  P.gar=p.gar?R('Garage','gar','gar',1):null;
+  P.off=p.off?R('Office','wrk','off',S.off*j()):null;
+  P.M=R('Primary','slp','M',(q?1.06:1)*j());
+  P.MB=p.ba>=2?R('Ensuite','svc','MB',1):null;
+  P.Bd=[];for(let i=2;i<=p.bd;i++)P.Bd.push(R('Bed '+i,'slp','Bd',(q?1.06:1)*j()));
+  P.Ba=[];const nb=p.ba>=2?p.ba-1:1;for(let i=0;i<nb;i++)P.Ba.push(R('Bath','svc','Ba',1));
+  P.pow=p.st===2?R('Powder','svc','pow',1):null;
+  P.stairs=p.st===2?R('Stairs','hall','st',1):null;
+  P.liv.m=MS.liv;
+  P.kit.m=ad?MA.kit:MS.kit;P.kit.ad=ad;
+  P.din.m=ad?MA.din:MS.din;P.din.ad=ad;
+  if(P.off){P.off.m=ad?MA.off:MS.off;P.off.ad=ad}
+  P.M.m=ad?MA.M:MS.M;P.M.ad=ad;
+  if(P.MB){P.MB.m=ad?MA.MB:MS.MB;P.MB.ad=ad}
+  P.Bd.forEach((b,i)=>{b.m=i===0?MS.Q:MS.D});
+  P.Ba.forEach((b,i)=>{const a=ad&&!P.MB&&i===0;b.m=a?MA.Ba:MS.Ba;b.ad=a;if(a&&b.a<72){b.a=72;b.s='8.5×8.5'}});
+  if(P.pow)P.pow.m=MS.pow;
+  return P;
+}
+function inter(lead,bd,ba){const o=lead.slice(),b=ba.slice();bd.forEach(x=>{o.push(x);if(b.length)o.push(b.shift())});return o.concat(b)}
+function pubBlock(s,F){
+  if(s==='A')return G('h',F.gar,F.liv,G('v',F.kit,F.din),G('v',F.off,F.lau,F.pow,F.stairs));
+  if(s==='B')return G('v',G('h',F.liv,F.din),G('h',F.kit,F.off,F.lau,F.pow,F.stairs,F.gar));
+  return G('v',F.liv,G('h',F.kit,F.din,F.off),G('h',F.gar,F.lau,F.pow,F.stairs));
+}
+function layout(s,F,W,D){
+  const pub=!!F.liv,hp=!!F.M,thr=pub?4:3;
+  const pl=hp?inter([F.M,F.MB],F.Bd,F.Ba).concat([pub?null:F.stairs]):[];
+  let root;
+  if(s==='A'){
+    root=G('v',pub?pubBlock('A',F):null,(pub&&hp)?H(3.5):null,hp?pack(pl,'h',thr):null);
+  }else if(s==='B'){
+    root=G('h',pub?pubBlock('B',F):null,(pub&&hp)?H(3.5):null,hp?pack(pl,'v',thr):null);
+  }else if(s==='C'){
+    const noBd=!F.Bd.length;
+    const sec=hp&&!noBd?pack(inter([],F.Bd,F.Ba),'v',3):null;
+    const mc=hp?G('v',F.M,F.MB,noBd?F.Ba:null):null;
+    const mid=pub?pubBlock('C',F):(hp?{n:'Stairs',t:'hall',fixed:8}:null);
+    root=G('h',sec,(sec&&pub)?H(3.5):null,mid,(mc&&pub)?H(3.5):null,mc);
+  }else if(s==='D'){
+    if(!pub)root=G('v',pack(pl,'h',3));
+    else{
+      const one=hp;
+      const fl=[F.gar].concat(one?F.Bd.concat(F.Ba):[],[F.off,F.lau,F.pow,F.stairs]).filter(Boolean);
+      const rear=G('h',one?G('v',F.M,F.MB):null,F.liv,G('v',F.kit,F.din));
+      root=G('v',pack(fl,'h',4),H(3.5),rear);
+    }
+  }else{
+    if(!pub)root=G('v',pack(pl,'h',3));
+    else if(hp){
+      const top=G('h',F.gar,F.liv,G('v',F.kit,F.din),G('v',F.off,F.lau));
+      const left=pack(pl,'h',4);
+      root=G('v',top,H(3.5),G('h',left,{n:'Patio',t:'patio',a:wsum(left)*0.4}));
+    }else{
+      const top=G('h',F.gar,F.liv,G('v',F.kit,F.din));
+      const left=G('h',F.off,F.lau,F.pow,F.stairs);
+      root=G('v',top,G('h',left,{n:'Patio',t:'patio',a:wsum(left)*0.5}));
+    }
+  }
+  const out=[];
+  split([root],0,0,W,D,'h',out);
+  return out;
+}
+function expo(r,rc,W,D,F){
+  const e=[],E=0.05,SB={t:0,r:90,b:180,l:270};
+  const add=(side,len)=>{if(len>=2.5)e.push({side:side,b:(F+SB[side])%360,len:len})};
+  const ov=(a0,a1,b0,b1)=>Math.max(0,Math.min(a1,b1)-Math.max(a0,b0));
+  if(r.y<E)add('t',r.w);
+  if(r.y+r.h>D-E)add('b',r.w);
+  if(r.x<E)add('l',r.h);
+  if(r.x+r.w>W-E)add('r',r.h);
+  rc.filter(q=>q.t==='patio').forEach(q=>{
+    if(Math.abs(r.y+r.h-q.y)<E)add('b',ov(r.x,r.x+r.w,q.x,q.x+q.w));
+    if(Math.abs(r.y-(q.y+q.h))<E)add('t',ov(r.x,r.x+r.w,q.x,q.x+q.w));
+    if(Math.abs(r.x+r.w-q.x)<E)add('r',ov(r.y,r.y+r.h,q.y,q.y+q.h));
+    if(Math.abs(r.x-(q.x+q.w))<E)add('l',ov(r.y,r.y+r.h,q.y,q.y+q.h));
+  });
+  return e;
+}
+const TGT={liv:180,slp:110,wrk:20,svc:315,gar:300};
+function score(r,ex,hs){
+  const t=r.n==='Kitchen'?135:TGT[r.t];
+  if(!ex.length)return{sc:r.t==='slp'?0:(r.t==='liv'||r.t==='wrk')?0.25:0.7,bb:null};
+  let best=-1,bb=null;
+  ex.forEach(x=>{const b=hs==='S'?(x.b+180)%360:x.b;let d=Math.abs(b-t);d=Math.min(d,360-d);const c=Math.max(0,1-d/110);if(c>best){best=c;bb=x.b}});
+  return{sc:best,bb:bb};
+}
+function ann(rc,p){
+  rc.forEach(r=>{
+    if(r.t==='hall'||r.t==='patio'){r.sc=null;r.ex=[];return}
+    r.ex=expo(r,rc,p.w,p.d,p.f);
+    const o=score(r,r.ex,p.hs);r.sc=o.sc;r.bb=o.bb;
+  });
+}
+const fills={liv:'var(--bg-accent)',slp:'var(--bg-pro)',svc:'var(--surface-1)',wrk:'var(--bg-warning)',gar:'var(--surface-1)',hall:'var(--surface-0)',patio:'none'};
+function svg(rects,W,D,F,open){
+  const s=Math.min(300/W,360/D),pw=W*s,ph=D*s,ox=(380-pw)/2,oy=18;
+  let h='<svg width="100%" viewBox="0 0 380 '+Math.round(ph+oy*2)+'" role="img"><title>Floor plan</title>';
+  const T='font-size="11" text-anchor="middle" dominant-baseline="central" font-family="inherit"';
+  rects.forEach(r=>{
+    const x=ox+r.x*s,y=oy+r.y*s,w=r.w*s,hh=r.h*s;
+    const dash=r.t==='patio'?' stroke-dasharray="4 3"':(open&&(r.n==='Living'||r.n==='Kitchen'||r.n==='Dining')?' stroke-dasharray="2 3"':'');
+    const bad=r.bad?' stroke="var(--text-danger)" stroke-width="2"':' stroke="var(--border-stronger)" stroke-width="1"';
+    h+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+hh.toFixed(1)+'" fill="'+fills[r.t]+'"'+bad+dash+'/>';
+    if(r.t==='liv'||r.t==='slp'||r.t==='wrk'){
+      r.ex.forEach(e=>{
+        const hor=e.side==='t'||e.side==='b',L=Math.min(e.len,hor?r.w:r.h)*0.5*s;
+        let x1,y1,x2,y2;
+        if(hor){x1=x+w/2-L/2;x2=x1+L;y1=y2=e.side==='t'?y:y+hh}
+        else{y1=y+hh/2-L/2;y2=y1+L;x1=x2=e.side==='l'?x:x+w}
+        h+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="var(--text-accent)" stroke-width="3"/>';
+      });
+    }
+    const nm=r.n,need=nm.length*6.3,cx=x+w/2,cy=y+hh/2,dm=Math.round(r.w)+'×'+Math.round(r.h);
+    if(r.t==='hall'){
+      if(w>=need+6&&hh>=16)h+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" '+T+' fill="var(--text-secondary)">'+nm+'</text>';
+    }else if(w>=need+10&&hh>=32){
+      h+='<text x="'+cx.toFixed(1)+'" y="'+(cy-7).toFixed(1)+'" '+T+' fill="var(--text-primary)">'+nm+'</text>';
+      h+='<text x="'+cx.toFixed(1)+'" y="'+(cy+7).toFixed(1)+'" '+T+' fill="var(--text-secondary)">'+dm+'</text>';
+    }else if(w>=need+6&&hh>=16){
+      h+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" '+T+' fill="var(--text-primary)">'+nm+'</text>';
+    }else if(w>=26&&hh>=16){
+      h+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" '+T+' fill="var(--text-primary)">'+nm.slice(0,3)+'</text>';
+    }
+  });
+  h+='<rect x="'+ox.toFixed(1)+'" y="'+oy+'" width="'+pw.toFixed(1)+'" height="'+ph.toFixed(1)+'" fill="none" stroke="var(--text-primary)" stroke-width="2"/>';
+  const LT='font-size="11" text-anchor="middle" dominant-baseline="central" font-family="inherit" fill="var(--text-muted)"';
+  h+='<text x="'+(ox+pw/2).toFixed(1)+'" y="'+(oy-9)+'" '+LT+'>'+cl(F)+'</text>';
+  h+='<text x="'+(ox+pw/2).toFixed(1)+'" y="'+(oy+ph+10)+'" '+LT+'>'+cl(F+180)+'</text>';
+  h+='<text x="'+(ox-11).toFixed(1)+'" y="'+(oy+ph/2).toFixed(1)+'" '+LT+'>'+cl(F+270)+'</text>';
+  h+='<text x="'+(ox+pw+11).toFixed(1)+'" y="'+(oy+ph/2).toFixed(1)+'" '+LT+'>'+cl(F+90)+'</text></svg>';
+  return h;
+}
+function sub(r,h){
+  const x0=Math.max(r.x,h.x),x1=Math.min(r.x+r.w,h.x+h.w),y0=Math.max(r.y,h.y),y1=Math.min(r.y+r.d,h.y+h.d);
+  if(x0>=x1||y0>=y1)return[r];
+  const o=[];
+  if(y0>r.y)o.push({x:r.x,y:r.y,w:r.w,d:y0-r.y});
+  if(y1<r.y+r.d)o.push({x:r.x,y:y1,w:r.w,d:r.y+r.d-y1});
+  if(x0>r.x)o.push({x:r.x,y:y0,w:x0-r.x,d:y1-y0});
+  if(x1<r.x+r.w)o.push({x:x1,y:y0,w:r.x+r.w-x1,d:y1-y0});
+  return o;
+}
+function mass(g0,W,D,p){
+  const S=SM[p.sty],fh=p.sty==='ranch'?9:9.5,hz=fh*p.st;
+  const ga=g0.find(r=>r.t==='gar'),pa=p.st===1?g0.find(r=>r.t==='patio'):null;
+  let pcs=[{x:0,y:0,w:W,d:D}];
+  if(pa)pcs=pcs.flatMap(r=>sub(r,{x:pa.x,y:pa.y,w:pa.w,d:pa.h}));
+  if(ga)pcs=pcs.flatMap(r=>sub(r,{x:ga.x,y:ga.y,w:ga.w,d:ga.h}));
+  let B=pcs.map(r=>Object.assign({g:0},r));
+  if(ga)B.push({x:ga.x,y:ga.y,w:ga.w,d:ga.h,g:1});
+  B=B.filter(b=>b.w>=3&&b.d>=3);
+  B.forEach(b=>{
+    if(S.roof==='gable'){b.ax=b.w>=b.d?'x':'y';const sp=b.ax==='x'?b.d:b.w;b.rise=Math.min(sp/2*S.sl,14)}
+    else b.rise=0.8;
+  });
+  const mr=Math.max(...B.map(b=>b.rise));
+  const s=Math.min(9,340/(W+0.45*D+7),230/(hz+mr+0.45*D+3));
+  const Hs=(hz+mr+0.45*D+3)*s+26,base=Hs-16,ox=(380-(W+0.45*D)*s)/2;
+  const P=(x,y,z)=>(ox+(x+0.45*y)*s).toFixed(1)+','+(base-(z+0.45*y)*s).toFixed(1);
+  const pl=(a,f,o,sw)=>'<polygon points="'+a.map(q=>P(q[0],q[1],q[2])).join(' ')+'" fill="'+f+'" fill-opacity="'+(o||1)+'" stroke="var(--text-secondary)" stroke-width="'+(sw===undefined?0.8:sw)+'" stroke-linejoin="round"/>';
+  const wn=a=>'<polygon points="'+a.map(q=>P(q[0],q[1],q[2])).join(' ')+'" fill="var(--text-accent)" fill-opacity="0.35" stroke="var(--text-accent)" stroke-width="0.7"/>';
+  const WALL='var(--surface-2)',SIDE='var(--surface-1)',ROOF='var(--bg-warning)';
+  let h='<svg width="100%" viewBox="0 0 380 '+Math.round(Hs)+'" role="img"><title>Exterior massing sketch</title>';
+  h+=pl([[-4,-8,0],[W+4,-8,0],[W+4,D+3,0],[-4,D+3,0]],'var(--bg-success)',0.35,0);
+  if(pa)h+='<polygon points="'+[[pa.x,pa.y],[pa.x+pa.w,pa.y],[pa.x+pa.w,pa.y+pa.h],[pa.x,pa.y+pa.h]].map(q=>P(q[0],q[1],0)).join(' ')+'" fill="var(--surface-0)" stroke="var(--text-secondary)" stroke-width="0.8" stroke-dasharray="3 3"/>';
+  B.sort((a,b)=>(b.y-a.y)||(a.x-b.x));
+  const front=B.filter(b=>!b.g&&b.y<0.05).sort((a,b)=>b.w-a.w)[0];
+  const doorX=front?front.x+front.w*0.5:null;
+  const [ww,wh,sill]=S.win;
+  B.forEach(b=>{
+    const x=b.x,y=b.y,w=b.w,d=b.d,x1=x+w,y1=y+d;
+    h+=pl([[x,y,0],[x1,y,0],[x1,y,hz],[x,y,hz]],WALL);
+    h+=pl([[x1,y,0],[x1,y1,0],[x1,y1,hz],[x1,y,hz]],SIDE);
+    if(!b.g){
+      if(b.y<0.05){
+        const n=Math.floor((w-2)/(ww+3.5));
+        if(n>=1){
+          const sl=w/n;
+          for(let f=0;f<p.st;f++)for(let i=0;i<n;i++){
+            const cx=x+sl*(i+0.5);
+            if(f===0&&doorX!==null&&b===front&&Math.abs(cx-doorX)<ww/2+2.5)continue;
+            const z0=f*fh+sill;
+            h+=wn([[cx-ww/2,y,z0],[cx+ww/2,y,z0],[cx+ww/2,y,z0+wh],[cx-ww/2,y,z0+wh]]);
+          }
+        }
+      }
+      const exR=x1>=W-0.05||(pa&&Math.abs(x1-pa.x)<0.1&&y<pa.y+pa.h&&y1>pa.y);
+      if(exR){
+        const n=Math.floor((d-2)/(ww+3.5));
+        if(n>=1){
+          const sl=d/n;
+          for(let f=0;f<p.st;f++)for(let i=0;i<n;i++){
+            const cy=y+sl*(i+0.5),z0=f*fh+sill;
+            h+=wn([[x1,cy-ww/2,z0],[x1,cy+ww/2,z0],[x1,cy+ww/2,z0+wh],[x1,cy-ww/2,z0+wh]]);
+          }
+        }
+      }
+    }else if(b.y<0.05){
+      const gw=Math.min(b.w-2,16),gx=x+(w-gw)/2;
+      h+=pl([[gx,y,0],[gx+gw,y,0],[gx+gw,y,7],[gx,y,7]],'var(--surface-0)');
+      [1.75,3.5,5.25].forEach(z=>{h+=pl([[gx,y,z],[gx+gw,y,z],[gx,y,z],[gx+gw,y,z]],'none',1,0.6)});
+    }
+    const ov=S.ov;
+    if(S.roof==='flat'){
+      h+=pl([[x-ov,y-ov,hz],[x1+ov,y-ov,hz],[x1+ov,y-ov,hz+0.8],[x-ov,y-ov,hz+0.8]],SIDE);
+      h+=pl([[x1+ov,y-ov,hz],[x1+ov,y1+ov,hz],[x1+ov,y1+ov,hz+0.8],[x1+ov,y-ov,hz+0.8]],SIDE);
+      h+=pl([[x-ov,y-ov,hz+0.8],[x1+ov,y-ov,hz+0.8],[x1+ov,y1+ov,hz+0.8],[x-ov,y1+ov,hz+0.8]],'var(--surface-0)');
+    }else if(b.ax==='x'){
+      const r=b.rise;
+      h+=pl([[x-ov,y-ov,hz-ov*S.sl],[x1+ov,y-ov,hz-ov*S.sl],[x1+ov,y+d/2,hz+r],[x-ov,y+d/2,hz+r]],ROOF);
+      h+=pl([[x1,y,hz],[x1,y1,hz],[x1,y+d/2,hz+r]],SIDE);
+    }else{
+      const r=b.rise;
+      h+=pl([[x,y,hz],[x1,y,hz],[x+w/2,y,hz+r]],WALL);
+      h+=pl([[x1+ov,y-ov,hz-ov*S.sl],[x1+ov,y1+ov,hz-ov*S.sl],[x+w/2,y1+ov,hz+r],[x+w/2,y-ov,hz+r]],ROOF,0.75);
+    }
+  });
+  if(front){
+    const cx=doorX;
+    h+=pl([[cx-1.75,0,0],[cx+1.75,0,0],[cx+1.75,0,7],[cx-1.75,0,7]],'var(--text-secondary)',0.8);
+    if(S.porch&&front.w>=12){
+      const pw=Math.min(12,front.w-2),px=cx-pw/2,hp=9;
+      h+=pl([[px,-6,0],[px+pw,-6,0],[px+pw,0,0],[px,0,0]],'var(--surface-0)');
+      h+=pl([[px-1,-6.5,hp],[px+pw+1,-6.5,hp],[px+pw+1,0,hp+2],[px-1,0,hp+2]],ROOF);
+      h+=pl([[px+0.4,-6,0],[px+0.4,-6,hp],[px+0.4,-6,hp],[px+0.4,-6,0]],'none',1,1.6);
+      h+=pl([[px+pw-0.4,-6,0],[px+pw-0.4,-6,hp],[px+pw-0.4,-6,hp],[px+pw-0.4,-6,0]],'none',1,1.6);
+    }
+  }
+  h+='</svg>';
+  return h;
+}
+const OPT={
+  A:['Two bands','Public rooms in front, bedrooms behind a short hall. Compact and easy to extend.'],
+  B:['Side wings','Living wing and sleeping wing split by a hall, so bedrooms stay quiet.'],
+  C:['Zoned suites','Secondary bedrooms on one side, primary suite on the other, living in the middle.'],
+  D:['Rear living','Garage and bedrooms at the front, one open great room across the back.'],
+  E:['L-shape with patio','Living and garage in front, bedrooms behind, with a notched-out patio.']
+};
+const RATE={std:155,mid:215,hi:320},REG={lo:0.85,avg:1,hi:1.3};
+const fm=n=>n>=1e6?'$'+(n/1e6).toFixed(2)+'M':'$'+Math.round(n/1000)+'k';
+function notes(k,fl,p,m){
+  const all=fl.reduce((a,f)=>a.concat(f),[]),L=[];
+  const rm=n=>all.find(x=>x.n===n);
+  const hs=p.hs,sun=hs==='S'?'north':'south';
+  const dn=b=>NM[cl(b)],nc=b=>cl(hs==='S'?(b+180)%360:b);
+  const eff={E:'morning light, a pleasant way to wake up',S:'sun most of the day, so add shading for summer',N:'soft, even light and cooler temperatures',W:'strong afternoon sun, so plan for heat gain'};
+  all.filter(x=>x.bad&&x.n!=='Hall').slice(0,3).forEach(x=>{
+    const s=Math.min(x.w,x.h),l=Math.max(x.w,x.h);
+    L.push(x.n+' is about '+fi(l)+'×'+fi(s)+', under the PDF '+(x.ad?'adaptable ':'')+'minimum of '+fi(x.m[1])+'×'+fi(x.m[0])+'. Grow it or borrow space from a neighbor.');
+  });
+  if(all.some(x=>x.bad&&x.n==='Hall'))L.push('A hall comes out under 3\'3" (1000 mm) wide, the adaptable minimum. Widen it.');
+  if(p.adp){
+    L.push('Adaptable mode: plan doors with 850 mm (2\'9") clear width, halls at least 1000 mm (3\'3") clear, and a 1700 mm (5\'7") turning circle in the primary bedroom, one bathroom, and the kitchen.');
+    L.push('Reinforce bathroom walls for future grab bars, leave 800×1350 mm clear for a future sink, and give one bedroom closet a 900 mm (2\'11") clear opening.');
+    L.push('Keep the cooktop and sink adjacent or on one continuous counter, and give kitchen island aisles 40" for wheelchair access.');
+    if(p.st===2)L.push('Two stories: the bedrooms and baths are upstairs in this model, so reaching the adaptable rooms would need a lift. A one-story plan or a ground-floor primary suite avoids that.');
+  }
+  STN[p.sty].forEach(x=>L.push(x));
+  if(p.sty==='ranch'&&p.st===2)L.push('Ranch homes are normally one story. Two stories makes this a hybrid, so consider the single-story setting for a truer look.');
+  const ga=fl[0].find(r=>r.t==='gar');
+  if(ga&&ga.y>=0.05)L.push('The garage is not on the street side of this plan, so the sketch shows no garage door. Plan a side or rear driveway, or use a flipped layout.');
+  const lv=rm('Living');
+  if(lv){
+    if(lv.bb==null)L.push('Living has no exterior wall. Move it to an outside wall or add a skylight.');
+    else if(lv.sc>=0.7)L.push('Living faces '+dn(lv.bb)+', which gets good winter sun. A 2 to 3 ft roof overhang keeps summer sun out (exact depth depends on your latitude).');
+    else L.push('Living faces '+dn(lv.bb)+' and misses the '+sun+' sun. Add a '+sun+'-facing window wall or a clerestory, or swap it with a less sun-hungry room.');
+  }
+  const pm=rm('Primary');
+  if(pm){
+    if(pm.bb==null)L.push('Primary bedroom has no exterior wall. Move it outside for daylight and an egress window.');
+    else L.push('Primary bedroom faces '+dn(pm.bb)+': '+eff[nc(pm.bb)]+'.');
+  }
+  const ob=all.filter(x=>x.t==='slp'&&x.n!=='Primary').sort((a,b)=>a.sc-b.sc)[0];
+  if(ob){
+    if(ob.bb==null)L.push(ob.n+' has no exterior wall, so it cannot have a code-compliant window. Shift it to an outside wall.');
+    else if(nc(ob.bb)==='W')L.push(ob.n+' faces '+dn(ob.bb)+' and will run warm in the afternoon. Deep eaves, low-e glass, or a shade tree help.');
+  }
+  const gr=rm('Garage');
+  if(gr&&gr.bb!=null){
+    const c=nc(gr.bb);
+    if(c==='N'||c==='W')L.push('Garage sits on the '+dn(gr.bb)+' wall, which buffers heat and noise for the rooms behind it.');
+    else if(c==='S')L.push('Garage takes a '+dn(gr.bb)+' wall, your best sun exposure. Swapping it with a living space or bedroom would use that wall better.');
+  }
+  const kt=rm('Kitchen');
+  if(kt){
+    if(kt.bb!=null&&kt.sc>=0.5)L.push('Kitchen faces '+dn(kt.bb)+', so it gets good daylight.');
+    else L.push('Kitchen only gets '+(kt.bb==null?'borrowed':dn(kt.bb))+' light. A window over the sink or a skylight would brighten it.');
+  }
+  all.filter(x=>x.s&&x.t!=='hall'&&x.t!=='patio'&&!x.bad&&(x.w*x.h<0.8*x.a)).slice(0,2).forEach(x=>{
+    L.push(x.n+' comes out near '+Math.round(x.w)+'×'+Math.round(x.h)+' ft against a '+x.s+' target. Borrow width from a neighbor or the hall to restore it.');
+  });
+  if(k==='A')L.push('Add a covered entry at the front door and a drop zone between the garage and kitchen.');
+  if(k==='B')L.push('Hang a solid or pocket door at the hall between wings so the bedroom side can be closed off at night.');
+  if(k==='C')L.push('Put closets and the ensuite along the wall shared with the living area to damp noise around the primary suite.');
+  if(k==='D')L.push('Use an 8 ft or wider slider from the great room to the yard. Front bedrooms face the street, so use high or frosted windows.');
+  if(k==='E'){
+    const pb=(p.f+180)%360,nb=hs==='S'?(pb+180)%360:pb;
+    const d=Math.min(Math.abs(nb-180),360-Math.abs(nb-180));
+    L.push('Patio opens '+dn(pb)+(d<=60?', so it is sunny. Add a pergola for summer shade.':', so it stays shaded most of the day. Good for hot climates; add a windbreak and a fire feature for cool ones.')+(p.st===2?' The upper floor roofs it over.':''));
+  }
+  if(m.hasT){
+    if(m.diff>0)L.push('You are about '+fm(m.diff)+' over target. Trimming roughly '+m.cut+' sq ft (a smaller dining room or no office) or stepping down one finish level would close the gap.');
+    else L.push('You are about '+fm(-m.diff)+' under target. Upgraded windows or a covered patio are common places to spend it.');
+  }else L.push('Enter a target budget to see how close this plan is.');
+  if(m.circ>=12)L.push('Hallways take '+m.circ+'% of the floor area. Trimming halls to 3 ft or opening the entry into the living room could free about '+Math.round(m.hallA*0.2)+' sq ft.');
+  const wet=all.filter(x=>['Kitchen','Laundry','Bath','Ensuite','Powder'].indexOf(x.n)>-1);
+  if(wet.length>=3){
+    const cx=wet.reduce((a,x)=>a+x.x+x.w/2,0)/wet.length,cy=wet.reduce((a,x)=>a+x.y+x.h/2,0)/wet.length;
+    const md=wet.reduce((a,x)=>a+Math.hypot(x.x+x.w/2-cx,x.y+x.h/2-cy),0)/wet.length;
+    if(md/Math.max(p.w,p.d)<0.22)L.push('Wet rooms cluster together, which keeps plumbing runs short and cheap.');
+    else L.push('Wet rooms sit about '+Math.round(md)+' ft from their center on average. Backing the kitchen, laundry, and baths onto shared walls would trim plumbing cost.');
+  }
+  if(p.pri==='ent')L.push('Add a 5 to 6 ft island with seating and a wide opening between kitchen and dining for hosting.');
+  else if(p.pri==='pri')L.push('Stagger bedroom doors and put closets or baths on shared bedroom walls to cut noise.');
+  else L.push(p.gar?'Add a pantry or drop zone at the garage entry. It is small and always gets used.':'Add a drop zone by the entry for coats, bags, and shoes.');
+  return L.slice(0,11);
+}
+function run(){
+  const p={w:+$('w').value,d:+$('d').value,bd:+$('bd').value,ba:+$('ba').value,st:+$('st').value,pri:$('pri').value,off:$('off').checked,gar:$('gar').checked,adp:$('adp').checked,f:+$('fr').value,hs:$('hs').value,fin:$('fin').value,rg:$('rg').value,sty:$('sty').value};
+  $('wo').textContent=p.w;$('do').textContent=p.d;
+  const err=[];let tb=null,ov=null;
+  if($('tb').value!==''){const v=+$('tb').value;if(!(v>0))err.push('Enter a target budget above zero.');else tb=v}
+  if($('ov').value!==''){const v=+$('ov').value;if(!(v>0))err.push('Enter a cost per sq ft above zero.');else ov=v}
+  $('err').textContent=err.join(' ');
+  const sty=STY[p.sty],flex=+$('fx').value;
+  const rate=ov||RATE[p.fin],reg=REG[p.rg],stf=p.st===2?0.95:1,mult=sty.cost;
+  const r=rng(seed*97+5),P=build(p,r);
+  let prog=P.liv.a+P.kit.a+P.din.a+P.lau.a+P.M.a;
+  [P.gar,P.off,P.MB,P.pow,P.stairs].forEach(x=>{if(x)prog+=x.a});
+  P.Bd.concat(P.Ba).forEach(x=>prog+=x.a);
+  prog*=1.12;
+  const avail=p.w*p.d*p.st*(1+flex);
+  let nt='';
+  if(avail<prog*0.92)nt+='<div class="chip w" style="display:block;margin-top:8px">Standard room sizes need about '+Math.round(prog).toLocaleString()+' sq ft but even the largest allowed footprint gives about '+Math.round(avail).toLocaleString()+'. Expect undersized rooms. Try a bigger footprint, a second story, or fewer rooms.</div>';
+  if(p.sty==='ranch'&&p.st===2)nt+='<div class="chip w" style="display:block;margin-top:8px">Ranch homes are normally one story. Switch Stories to 1 for a truer Ranch plan.</div>';
+  if(p.adp&&p.st===2)nt+='<div class="chip w" style="display:block;margin-top:8px">Adaptable layouts work best on one level. With two stories the bedrooms are upstairs, so the adaptable rooms would need a lift.</div>';
+  $('note').innerHTML=nt;
+  const seg=[['Framing and shell',28,'var(--fill-accent)'],['Systems',22,'var(--fill-success)'],['Interiors',25,'var(--fill-warning)'],['Exterior and roof',15,'var(--fill-pro)'],['Site and other',10,'var(--text-muted)']];
+  $('bud').innerHTML='<div class="sec">Cost basis</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div class="m"><div class="ml">Base rate</div><div class="mv">$'+Math.round(rate*reg)+'/sq ft</div></div><div class="m"><div class="ml">Style factor</div><div class="mv">'+mult.toFixed(2)+'×</div></div><div class="m"><div class="ml">Range shown</div><div class="mv">±15%</div></div><div class="m"><div class="ml">Size variation</div><div class="mv">'+(flex?'±'+Math.round(flex*100)+'%':'None')+'</div></div></div>'
+    +'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:12px;gap:2px">'+seg.map(s=>'<div style="width:'+s[1]+'%;background:'+s[2]+'"></div>').join('')+'</div>'
+    +'<div>'+seg.map(s=>'<span class="lg"><i style="background:'+s[2]+'"></i>'+s[0]+' '+s[1]+'%</span>').join('')+'</div>'
+    +'<div class="cap" style="margin-top:8px">Rough planning numbers for hard construction cost. They exclude land, design and permit fees, and unusual site work. Garages are priced at 40% of the house rate. Use your own $/sq ft from local quotes for better accuracy.</div>';
+  const g=Object.assign({},P);let u=null;
+  if(p.st===2){g.M=null;g.MB=null;g.Bd=[];g.Ba=[];u={M:P.M,MB:P.MB,Bd:P.Bd,Ba:P.Ba,stairs:P.stairs}}
+  const ks=flex?[1-flex,1-flex/2,1,1+flex/2,1+flex]:[1];
+  function evalOpt(s,flip,W,D){
+    const p2=Object.assign({},p,{w:W,d:D});
+    const fl=[layout(s,g,W,D)];
+    if(u)fl.push(layout(s,u,W,D));
+    if(flip)fl.forEach(rc=>rc.forEach(x=>{x.x=W-x.x-x.w}));
+    fl.forEach(rc=>ann(rc,p2));
+    const all=fl.reduce((a,rc)=>a.concat(rc),[]);
+    if(p.adp)all.forEach(x=>{if(x.n==='Hall'){x.m=[3.28,3.28];x.ad=true}});
+    const chk=all.filter(x=>x.m);
+    chk.forEach(x=>{const s2=Math.min(x.w,x.h),l=Math.max(x.w,x.h);x.bad=(s2<x.m[0]-0.05||l<x.m[1]-0.05)});
+    const passN=chk.filter(x=>!x.bad).length,M=chk.length;
+    const under=all.filter(x=>x.s&&x.t!=='hall'&&x.t!=='patio'&&!x.bad&&x.w*x.h<0.8*x.a).length;
+    const flagged=all.filter(x=>x.bad).length+under;
+    const sum=f=>all.filter(f).reduce((a,x)=>a+x.w*x.h,0);
+    const area=Math.round(sum(x=>x.t!=='patio')),garA=sum(x=>x.t==='gar'),patA=p.st===1?sum(x=>x.t==='patio'):0,hallA=sum(x=>x.t==='hall');
+    const circ=Math.round(hallA/area*100);
+    const sl=all.filter(x=>x.t==='slp'),avgB=sl.length?Math.round(sl.reduce((a,x)=>a+x.w*x.h,0)/sl.length):0;
+    const WT={liv:1.5,slp:1.2,wrk:0.8,svc:0.4,gar:0.6};
+    let sw=0,sn=0;
+    all.forEach(x=>{if(x.sc!=null&&WT[x.t]){const w=x.w*x.h*WT[x.t];sw+=w;sn+=w*x.sc}});
+    const sun=Math.round(sn/sw*100);
+    const cond=area-garA;
+    const hard=Math.round(((cond*rate*stf+garA*rate*0.4+patA*30)*reg+Math.max(0,p.ba-2)*10000*reg)*mult/1000)*1000;
+    const diff=tb?hard-tb:0,cut=Math.round(Math.max(0,diff)/(rate*reg*stf*mult));
+    const budS=tb?(diff<=0?100:Math.max(0,100-diff/tb*400)):70;
+    const dev=Math.abs(W*D/(p.w*p.d)-1),asp=W/D;
+    let bonus=sty.pref.indexOf(s)>-1?6:0;
+    if(sty.asp)bonus+=asp>=1.4?6:asp>=1.2?3:0;
+    const sc=sun*0.4+(100-Math.min(100,flagged*25))*0.25+(100-Math.min(100,circ*4))*0.1+budS*0.15-dev*40+bonus;
+    return{fl:fl,p2:p2,W:W,D:D,area:area,hallA:hallA,circ:circ,avgB:avgB,sun:sun,flagged:flagged,passN:passN,M:M,under:under,hard:hard,diff:diff,cut:cut,score:sc};
+  }
+  const res=['A','B','C','D','E'].map(s=>{
+    const flip=r()>0.5;
+    let e=null;
+    ks.forEach(kw=>ks.forEach(kd=>{
+      const ar=kw*kd;
+      if(ar<1-flex-0.001||ar>1+flex+0.001)return;
+      const W=Math.max(18,Math.round(p.w*kw)),D=Math.max(22,Math.round(p.d*kd));
+      if(W/D>2.4||D/W>2.4)return;
+      const c=evalOpt(s,flip,W,D);
+      if(!e||c.score>e.score)e=c;
+    }));
+    const m={circ:e.circ,hallA:e.hallA,hasT:!!tb,diff:e.diff,cut:e.cut};
+    const nts=notes(s,e.fl,e.p2,m);
+    const ch=Math.round((e.W*e.D/(p.w*p.d)-1)*100);
+    const comp='<svg width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="Compass" style="flex:none"><title>North arrow</title><circle cx="15" cy="15" r="13" fill="none" stroke="var(--border-strong)"/><g transform="rotate('+(-p.f)+' 15 15)"><path d="M15 4L19 18L15 15L11 18Z" fill="var(--text-accent)"/></g></svg>';
+    let c='<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-weight:600;font-size:16px">Option '+s+': '+OPT[s][0]+'</div><div style="font-size:13px;color:var(--text-secondary);margin:4px 0 8px">'+OPT[s][1]+'</div></div>'+comp+'</div>';
+    c+='@@TOP@@<span class="chip a">Est. '+fm(e.hard)+' ('+fm(e.hard*0.85)+' to '+fm(e.hard*1.15)+')</span>';
+    if(tb)c+=e.diff<=0?'<span class="chip g">Within budget</span>':'<span class="chip w">Over by '+fm(e.diff)+'</span>';
+    c+='<span class="chip '+(e.passN===e.M?'g':'w')+'">'+(p.adp?'Adaptable':'Standard')+' check: '+e.passN+' of '+e.M+' pass</span>';
+    if(e.under)c+='<span class="chip w">'+e.under+' below target size</span>';
+    c+=ch!==0?'<span class="chip a">Footprint '+e.W+'×'+e.D+' ft ('+(ch>0?'+':'')+ch+'% area)</span>':'<span class="chip">Footprint '+e.W+'×'+e.D+' ft (your size)</span>';
+    c+='<span class="chip">Sun fit '+e.sun+'/100</span><span class="chip">'+e.area.toLocaleString()+' sq ft</span><span class="chip">'+e.avgB+' sq ft avg bedroom</span><span class="chip">'+e.circ+'% hallway</span>';
+    e.fl.forEach((rc,i)=>{
+      if(u)c+='<div class="cap" style="margin:8px 0 2px">'+(i?'Upper floor':'Ground floor')+'</div>';
+      c+=svg(rc,e.W,e.D,p.f,sty.open);
+    });
+    c+='<div class="cap">Blue bars mark windows. Letters show which way each wall faces. A red outline means the room is under its minimum from the PDF.'+(sty.open?' Dashed edges are open to each other.':'')+'</div>';
+    c+='<div class="h3">Exterior massing</div>'+mass(e.fl[0],e.W,e.D,e.p2);
+    c+='<div class="cap">Seen from the front-right, built from this plan. '+sty.n+': '+SM[p.sty].txt+'. Story height '+(p.sty==='ranch'?9:9.5)+' ft. Simple volumes, not a finished elevation.</div>';
+    c+='<div class="h3">Design notes</div><ul class="n">'+nts.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+    const q='Give me more specific design ideas for Option '+s+' ('+OPT[s][0]+') in the '+sty.n+' style: '+e.W+'x'+e.D+' ft footprint, '+p.st+' storey, '+p.bd+' bed, '+p.ba+' bath, '+(p.adp?'adaptable dwelling requirements on':'standard clearances')+', front facing '+NM[cl(p.f)]+' in the '+(p.hs==='S'?'southern':'northern')+' hemisphere, sun fit '+e.sun+'/100, estimated cost '+fm(e.hard)+(tb?' against a '+fm(tb)+' target':'')+'. Focus on exterior look, daylighting, room adjacencies, accessibility, and cost savings.';
+    const qi=Q.push(q)-1;
+    c+='<button data-q="'+qi+'" style="margin-top:8px">Copy ideas prompt for Claude</button></div>';
+    return{k:s,html:c,sun:e.sun,cost:e.hard,circ:e.circ,score:e.score};
+  });
+  const top=res.reduce((a,b)=>b.score>a.score?b:a);
+  res.forEach(x=>{x.html=x.html.replace('@@TOP@@',x===top?'<span class="chip g">Top pick for '+sty.n+'</span>':'')});
+  const so=$('so').value;
+  if(so==='best')res.sort((a,b)=>b.score-a.score);
+  else if(so==='sun')res.sort((a,b)=>b.sun-a.sun);
+  else if(so==='cost')res.sort((a,b)=>a.cost-b.cost);
+  else if(so==='circ')res.sort((a,b)=>a.circ-b.circ);
+  $('out').innerHTML=res.map(x=>x.html).join('');
+}
+function go(){Q.length=0;run()}
+function copyQ(i,btn){
+  const t=Q[i],label='Copy ideas prompt for Claude';
+  const done=()=>{btn.textContent='Copied. Paste it into Claude.';setTimeout(()=>{btn.textContent=label},2500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,()=>window.prompt('Copy this prompt:',t));
+  else window.prompt('Copy this prompt:',t);
+}
+document.querySelectorAll('input,select').forEach(el=>{el.addEventListener('input',go);el.addEventListener('change',go)});
+$('vary').addEventListener('click',()=>{seed++;go()});
+$('out').addEventListener('click',e=>{const b=e.target.closest('button[data-q]');if(b)copyQ(+b.dataset.q,b)});
+go();
+</script>
+</body>
+</html>
