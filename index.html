@@ -3,1551 +3,592 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ArchPlan Studio · House Plan Generator &amp; CAD</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>ArchPlan Studio</title>
 <style>
-:root{
-  --font-sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
-  --font-mono:'JetBrains Mono',ui-monospace,monospace;
-  --bg-app:#f8fafc;--bg-sidebar:#ffffff;--bg-card:#ffffff;--bg-canvas:#f1f5f9;
-  --text-main:#0f172a;--text-sub:#475569;--text-muted:#94a3b8;
-  --border:#cbd5e1;--border-focus:#2563eb;
-  --accent:#2563eb;--accent-light:#eff6ff;
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
-  --radius-sm:6px;--radius-md:10px;--radius-lg:14px;
-  --shadow-sm:0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg-app:#0b0f19;--bg-sidebar:#111827;--bg-card:#1e293b;--bg-canvas:#090d16;
-    --text-main:#f8fafc;--text-sub:#cbd5e1;--text-muted:#64748b;
-    --border:#334155;--border-focus:#60a5fa;
-    --accent:#3b82f6;--accent-light:#1e3a8a33;
-    --danger:#f87171;
-  }
-}
+:root{--bg:#f8fafc;--panel:#ffffff;--text:#0f172a;--sub:#475569;--line:#cbd5e1;--accent:#2563eb;--accent-soft:#eff6ff;--bad:#dc2626;--ok:#16a34a}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0f19;--panel:#111827;--text:#f8fafc;--sub:#cbd5e1;--line:#334155;--accent:#60a5fa;--accent-soft:#1e3a8a44;--bad:#f87171;--ok:#4ade80}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text-main);font-size:13.5px;line-height:1.5}
-input,select,button{font-family:inherit;font-size:inherit;color:inherit}
-button{cursor:pointer}
-
-.err-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:100;background:#7f1d1d;color:#fff;padding:8px 14px;font-size:12px;font-family:var(--font-mono)}
-
-header{background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:30}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-0.02em}
-.logo svg{color:var(--accent)}
-.head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-
-.main-layout{display:block}
-.sidebar{background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:16px}
-.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px}
-.preset-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
-.preset-chip{background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 9px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
-.preset-chip:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
-
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:12px;font-weight:600;color:var(--text-sub);display:flex;justify-content:space-between;align-items:center}
-select,input[type=number],input[type=text]{width:100%;background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 9px;outline:none;transition:border-color .15s}
-select:focus,input:focus{border-color:var(--border-focus);box-shadow:0 0 0 2px var(--accent-light)}
-input[type=range]{accent-color:var(--accent);height:5px;margin:5px 0;width:100%}
-.val-badge{font-family:var(--font-mono);font-size:11px;background:var(--bg-app);padding:2px 6px;border-radius:4px;color:var(--accent);font-weight:700;border:1px solid var(--border)}
-
-.chk-group{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-sub);cursor:pointer;user-select:none}
-.chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
-
-.btn-create{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-md);padding:12px;font-weight:700;font-size:13.5px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-md)}
-.btn-create:hover{background:#1d4ed8;box-shadow:var(--shadow-lg)}
-.btn-create:active{transform:scale(0.98)}
-.stale-note{background:var(--accent-light);color:var(--accent);padding:8px 10px;border-radius:var(--radius-sm);font-weight:600;font-size:12px}
-
-.stage{background:var(--bg-canvas);display:flex;flex-direction:column;position:relative;min-height:60vh}
-.stage-toolbar{background:var(--bg-sidebar);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;z-index:10;gap:10px;flex-wrap:wrap}
-.nav-tabs{display:inline-flex;flex-wrap:wrap;background:var(--bg-app);padding:3px;border-radius:var(--radius-md);border:1px solid var(--border);gap:2px}
-.nav-tab{border:none;background:transparent;padding:6px 11px;font-size:12px;font-weight:600;border-radius:var(--radius-sm);color:var(--text-sub);transition:all .15s}
-.nav-tab.active{background:var(--bg-sidebar);color:var(--accent);box-shadow:var(--shadow-sm)}
-.view-modes{display:inline-flex;flex-wrap:wrap;background:var(--bg-app);padding:3px;border-radius:var(--radius-md);border:1px solid var(--border);gap:2px}
-.view-btn{background:transparent;border:none;border-radius:var(--radius-sm);padding:6px 11px;font-size:12px;font-weight:600;color:var(--text-sub);transition:all .15s}
-.view-btn.active{background:var(--accent);color:#fff}
-
-.canvas-area{padding:14px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:1150px;margin:0 auto;width:100%}
-.plan-sheet{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);width:100%;padding:16px;position:relative}
-.cmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:16px;width:100%}
-
-.metrics-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:100%;margin-bottom:14px}
-.metric-box{background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px}
-.metric-box .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700}
-.metric-box .value{font-size:17px;font-weight:700;font-family:var(--font-mono);color:var(--text-main);margin-top:2px}
-.metric-box .subtext{font-size:11px;color:var(--text-sub)}
-
-.layer-bar{display:flex;gap:8px;flex-wrap:wrap;width:100%}
-.layer-pill{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11.5px;color:var(--text-sub);display:flex;align-items:center;gap:5px;transition:all .15s}
-.layer-pill.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:600}
-
-.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.note-card{background:var(--bg-app);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12.5px;color:var(--text-sub)}
-
-.ed-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px 10px;background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-md);flex-wrap:wrap}
-.ed-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 11px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
-.ed-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
-.ed-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--bg-card);color:inherit;border-color:var(--border)}
-.ed-hint{font-size:11.5px;color:var(--text-muted);margin:0 0 8px}
-.ed-chip{display:inline-block;font-size:11.5px;padding:3px 8px;border-radius:var(--radius-sm);margin:0 6px 6px 0;background:var(--bg-app);border:1px solid var(--border);color:var(--text-sub)}
-.ed-chip.bad{background:#fef3c7;border-color:#f59e0b;color:#92400e}
-.ed-chip.ok{background:#dcfce7;border-color:#22c55e;color:#166534}
-.insp{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
-
-@media (min-width:901px){
-  body{overflow:hidden;height:100vh}
-  #app{display:grid;grid-template-rows:56px 1fr;height:100vh}
-  header{height:56px;padding:0 20px;position:relative;flex-wrap:nowrap}
-  .main-layout{display:grid;grid-template-columns:390px 1fr;height:calc(100vh - 56px);overflow:hidden}
-  .sidebar{border-right:1px solid var(--border);border-bottom:none;overflow-y:auto}
-  .stage{overflow-y:auto;min-height:0}
-  .stage-toolbar{position:sticky;top:0}
-  .canvas-area{padding:20px;gap:18px}
-  .plan-sheet{padding:24px}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:16px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:12.5px}
+.btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.layout{display:block}
+.sidebar{background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--line)}
+.stage{padding:14px}
+@media (min-width:900px){
+  .layout{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 51px)}
+  .sidebar{overflow-y:auto;border-right:1px solid var(--line);border-bottom:none}
+  .stage{overflow-y:auto}
 }
-@media (max-width:600px){
-  .notes-grid{grid-template-columns:1fr}
-  .logo span:nth-child(3){display:none}
-}
-@media print{
-  body{overflow:visible;height:auto;background:#fff;color:#000}
-  header,.sidebar,.stage-toolbar,.layer-bar,.ed-toolbar,.err-bar,button{display:none !important}
-  .stage{background:#fff;overflow:visible}
-  .canvas-area{padding:0;max-width:100%}
-  .plan-sheet{border:2px solid #000;box-shadow:none;page-break-after:always;padding:20px}
-}
+h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub)}
+.field{display:flex;flex-direction:column;gap:4px;transition:opacity .15s}
+.field.off{opacity:.4}
+.field label{display:flex;justify-content:space-between;font-weight:600;font-size:12.5px;color:var(--sub)}
+.field output{font-family:ui-monospace,monospace;color:var(--accent)}
+select,input[type=range]{width:100%}
+select{padding:6px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.checks label,.modes label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.modes{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--accent-soft);border-radius:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.sheet h2{font-size:17px}
+.sheet .sub{color:var(--sub);font-size:12.5px;margin-bottom:10px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.metric{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.metric b{display:block;font-family:ui-monospace,monospace;font-size:16px}
+.metric span{font-size:11px;color:var(--sub);text-transform:uppercase}
+.floor-label{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--sub);margin:10px 0 4px}
+.notes{display:grid;gap:8px;margin-top:12px}
+.note{border-left:3px solid var(--accent);background:var(--bg);padding:8px 12px;border-radius:0 6px 6px 0;color:var(--sub);font-size:12.5px}
+.error{color:var(--bad);padding:16px}
+@media print{header,.sidebar,.tabs{display:none!important}.layout{display:block;height:auto}.stage{overflow:visible}.sheet{break-inside:avoid}}
 </style>
 </head>
 <body>
-<div id="errBar" class="err-bar"></div>
-<div id="app">
-  <header>
-    <div class="logo">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-      <span>ArchPlan Studio</span>
-      <span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:12px;font-weight:700">ARCH CAD v2.9</span>
-    </div>
-    <div class="head-actions">
-      <div class="nav-tabs" style="padding:2px">
-        <button class="nav-tab active" id="uImp" type="button">Imperial (ft)</button>
-        <button class="nav-tab" id="uMet" type="button">Metric (m)</button>
-      </div>
-      <button class="ed-btn" id="btnExportDxf" type="button" title="Export AutoCAD DXF">CAD DXF</button>
-      <button class="ed-btn" id="btnExportJson" type="button">Save JSON</button>
-      <button class="ed-btn" id="btnPrint" type="button">Print / PDF</button>
-    </div>
-  </header>
-
-  <div class="main-layout">
-    <aside class="sidebar">
-      <div>
-        <div class="section-title">Design Presets</div>
-        <div class="preset-row">
-          <div class="preset-chip" data-pre="courtyard">Courtyard Villa</div>
-          <div class="preset-chip" data-pre="farm">Modern Farmhouse</div>
-          <div class="preset-chip" data-pre="ranch">Sprawling Ranch</div>
-          <div class="preset-chip" data-pre="compact">Compact Urban</div>
-          <div class="preset-chip" data-pre="mcm">Mid-Century Modern</div>
-          <div class="preset-chip" data-pre="colonial">Colonial</div>
-          <div class="preset-chip" data-pre="medv">Mediterranean Villa</div>
-          <div class="preset-chip" data-pre="beach">Beach House</div>
-          <div class="preset-chip" data-pre="cabin">Mountain Cabin</div>
-          <div class="preset-chip" data-pre="tudor">Tudor Estate</div>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="section-title">Footprint Architecture</div>
-        <div style="margin-bottom:6px">
-          <label class="chk" style="font-weight:600;color:var(--text-main)"><input type="checkbox" id="popToggle" checked>Enable Building Pop-outs &amp; Articulated Wings</label>
-        </div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Footprint Shape</label>
-            <select id="sh">
-              <option value="multi" selected>Articulated (Auto Wings)</option>
-              <option value="L">L-Shape (Courtyard)</option>
-              <option value="T">T-Shape (Pavilion)</option>
-              <option value="stagger">Staggered Wings</option>
-              <option value="bump">Garage &amp; Great Room Bay</option>
-              <option value="U">U-Shape Villa</option>
-              <option value="rect">Single Rectangle</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Pop-out Depth</label>
-            <select id="popd">
-              <option value="4">Subtle (4 ft)</option>
-              <option value="6" selected>Standard (6 ft)</option>
-              <option value="10">Deep (10 ft)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Envelope Width <span class="val-badge" id="wo">42 ft</span></label>
-        <input type="range" id="w" min="20" max="75" value="42" step="1">
-        <label>Envelope Depth <span class="val-badge" id="do">50 ft</span></label>
-        <input type="range" id="d" min="25" max="85" value="50" step="1">
-        <label>Target Area <span class="val-badge" id="ao">2,100 sq ft</span></label>
-        <input type="range" id="ar" min="500" max="5600" value="2100" step="25">
-      </div>
-
-      <div class="field">
-        <div class="section-title">Style &amp; Massing</div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Design Style</label>
-            <select id="sty">
-              <option value="mod" selected>Modern</option>
-              <option value="open">Open Concept</option>
-              <option value="craft">Craftsman</option>
-              <option value="ranch">Ranch</option>
-              <option value="farm">Modern Farmhouse</option>
-              <option value="mid">Mid-Century</option>
-              <option value="col">Colonial</option>
-              <option value="med">Mediterranean</option>
-              <option value="coast">Coastal</option>
-              <option value="tudor">Tudor</option>
-              <option value="contemp">Contemporary</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Roof Geometry</label>
-            <select id="rf">
-              <option value="gable">Gable</option>
-              <option value="hip">Hip</option>
-              <option value="flat" selected>Flat Parapet</option>
-              <option value="shed">Shed Pitch</option>
-              <option value="gambrel">Gambrel</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="section-title">Program &amp; Room Specifications</div>
-        <div class="grid-2">
-          <div class="field"><label>Bedrooms</label><select id="bd"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
-          <div class="field"><label>Bathrooms</label><select id="ba"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
-          <div class="field"><label>Levels</label><select id="st"><option value="1" selected>1 Story</option><option value="2">2 Stories</option></select></div>
-          <div class="field"><label>Garage</label><select id="gar"><option value="0">None</option><option value="1">1-Car</option><option value="2" selected>2-Car</option></select></div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Specialty Rooms</label>
-        <div class="chk-group">
-          <label class="chk"><input type="checkbox" id="off" checked>Home Office</label>
-          <label class="chk"><input type="checkbox" id="mud" checked>Mudroom Entry</label>
-          <label class="chk"><input type="checkbox" id="pan" checked>Walk-in Pantry</label>
-          <label class="chk"><input type="checkbox" id="gym">Fitness / Flex</label>
-          <label class="chk"><input type="checkbox" id="pat" checked>Outdoor Patio</label>
-          <label class="chk"><input type="checkbox" id="adp">Adaptable Living</label>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="section-title">Site &amp; Orientation</div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Front Faces</label>
-            <select id="fr"><option value="0" selected>North (0°)</option><option value="90">East (90°)</option><option value="180">South (180°)</option><option value="270">West (270°)</option></select>
-          </div>
-          <div class="field">
-            <label>Hemisphere</label>
-            <select id="hs"><option value="N" selected>Northern</option><option value="S">Southern</option></select>
-          </div>
-          <div class="field">
-            <label>Main Door</label>
-            <select id="entP"><option value="tl">Top Left</option><option value="tm" selected>Top Middle</option><option value="tr">Top Right</option><option value="lm">Left Middle</option><option value="rm">Right Middle</option></select>
-          </div>
-          <div class="field">
-            <label>Secondary Door</label>
-            <select id="entS"><option value="none">None</option><option value="bl">Back Left</option><option value="bm" selected>Back Middle</option><option value="br">Back Right</option></select>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="section-title">Budget Estimation</div>
-        <label>Target Budget <span class="val-badge" id="tbo">$475k</span></label>
-        <input type="range" id="tb" min="100000" max="2000000" step="25000" value="475000">
-        <div class="field" style="margin-top:6px">
-          <label>Finish Tier</label>
-          <select id="fin"><option value="std">Standard</option><option value="mid" selected>Mid-Range</option><option value="hi">High-End Luxury</option></select>
-        </div>
-      </div>
-
-      <button id="create" class="btn-create" type="button">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-        <span id="btnCreateText">Generate Plans</span>
-      </button>
-      <div id="stale"></div>
-    </aside>
-
-    <div class="stage" id="stage">
-      <div class="stage-toolbar">
-        <div class="nav-tabs" id="optionTabs">
-          <button class="nav-tab active" data-opt="0" type="button">Option A</button>
-          <button class="nav-tab" data-opt="1" type="button">Option B</button>
-          <button class="nav-tab" data-opt="2" type="button">Option C</button>
-          <button class="nav-tab" data-opt="3" type="button">Option D</button>
-          <button class="nav-tab" data-opt="4" type="button">Option E</button>
-          <button class="nav-tab" data-opt="all" type="button">Compare All</button>
-        </div>
-        <div class="view-modes">
-          <button class="view-btn active" id="v2d" type="button">2D Floor Plan</button>
-          <button class="view-btn" id="v3d" type="button">3D Massing</button>
-          <button class="view-btn" id="vEd" type="button">Layout Editor</button>
-        </div>
-      </div>
-
-      <div class="canvas-area">
-        <div class="layer-bar" id="layerBar">
-          <button class="layer-pill on" data-layer="dim" type="button">Dimensions</button>
-          <button class="layer-pill on" data-layer="tags" type="button">Room Badges</button>
-          <button class="layer-pill on" data-layer="hatch" type="button">Textures &amp; Tiles</button>
-          <button class="layer-pill on" data-layer="sun" type="button">Solar Axis</button>
-        </div>
-        <div id="stageMount" style="width:100%"></div>
-      </div>
-    </div>
+<header>
+  <h1>ArchPlan Studio</h1>
+  <div class="row">
+    <button class="btn active" id="unitImperial" type="button">Feet</button>
+    <button class="btn" id="unitMetric" type="button">Metres</button>
+    <button class="btn" id="saveJson" type="button">Save JSON</button>
+    <button class="btn" id="printPage" type="button">Print / PDF</button>
   </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="modes">
+    <h3>Step 1 · Size the house by</h3>
+    <label><input type="radio" name="sizeMode" value="area" checked> Total living area</label>
+    <label><input type="radio" name="sizeMode" value="dims"> Width and depth</label>
+  </div>
+
+  <div class="field" id="areaField">
+    <label>Living area (garage not counted) <output id="areaOut"></output></label>
+    <input type="range" id="area" min="500" max="5600" step="25" value="2100">
+  </div>
+  <div class="field" id="widthField">
+    <label>Overall width (includes garage) <output id="widthOut"></output></label>
+    <input type="range" id="width" min="24" max="100" step="1" value="70">
+  </div>
+  <div class="field" id="depthField">
+    <label>Overall depth <output id="depthOut"></output></label>
+    <input type="range" id="depth" min="26" max="90" step="1" value="40">
+  </div>
+
+  <h3>Rooms needed</h3>
+  <div class="two">
+    <div class="field"><label>Bedrooms</label><select id="bedrooms"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+    <div class="field"><label>Bathrooms</label><select id="bathrooms"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+    <div class="field"><label>Levels</label><select id="levels"><option value="1" selected>1 story</option><option value="2">2 stories</option></select></div>
+    <div class="field"><label>Garage</label><select id="garage"><option value="0">None</option><option value="1">1-car</option><option value="2" selected>2-car</option></select></div>
+  </div>
+  <div class="checks">
+    <label><input type="checkbox" id="office" checked> Home office</label>
+    <label><input type="checkbox" id="mudroom" checked> Mudroom</label>
+    <label><input type="checkbox" id="pantry" checked> Pantry</label>
+    <label><input type="checkbox" id="gym"> Gym / flex</label>
+    <label><input type="checkbox" id="adaptable"> Adaptable living</label>
+  </div>
+
+  <h3>Budget</h3>
+  <div class="field"><label>Target budget <output id="budgetOut"></output></label><input type="range" id="budget" min="100000" max="2000000" step="25000" value="475000"></div>
+  <div class="field"><label>Finish level</label><select id="finish"><option value="standard">Standard</option><option value="mid" selected>Mid-range</option><option value="high">High-end</option></select></div>
+</aside>
+
+<main class="stage">
+  <div class="tabs" id="tabs"></div>
+  <div id="mount"></div>
+</main>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-window.addEventListener('error',function(e){
-  const b=$('errBar');
-  if(b){b.style.display='block';b.textContent='Script error: '+e.message+(e.lineno?' (line '+e.lineno+')':'')}
-});
+/* =====================================================================
+   ArchPlan Studio
+   How a plan is made:
+     1. Read the settings the user chose.
+     2. Build the ROOM PROGRAM: which rooms exist and how big each should be.
+     3. Work out the ENVELOPE (overall width and depth) from the program.
+     4. Pack the rooms into two rows on either side of a central hallway.
+        Every room touches the hall, so the path of travel is short and clear.
+     5. Place doors, then mirror the plan to produce the other options.
+   ===================================================================== */
 
-/* ---------- state ---------- */
-let isMetric=false,activeOptIdx=0,activeView='2d';
-const layers={dim:true,tags:true,hatch:true,sun:true};
-const state={res:null};
-let seed=1;
-let edFloor=0,edSel=null,drag=null,edView=null,edWalls=[],edBounds={W:0,D:0};
+const FEET_TO_METERS = 0.3048;
+const SQFT_TO_SQM = 0.092903;
+const GARAGE_DEPTH = 20;
+const MIN_ROW_DEPTH = 8;
+const HALL_STANDARD = 3.5;
+const HALL_ADAPTABLE = 4.5;
+const COST_PER_SQFT = { standard: 155, mid: 215, high: 320 };
 
-const CARD=['N','E','S','W'],NM={N:'north',E:'east',S:'south',W:'west'};
-const ENTL={tl:'top left',tm:'top middle',tr:'top right',lm:'left middle',rm:'right middle',bl:'bottom left',bm:'bottom middle',br:'bottom right'};
-const cl=b=>CARD[Math.round((((b%360)+360)%360)/90)%4];
-function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+/* The four options are the same room arrangement, flipped in different directions. */
+const VARIANTS = [
+  { name: 'Option A', flipX: false, flipY: false },
+  { name: 'Option B', flipX: true,  flipY: false },
+  { name: 'Option C', flipX: false, flipY: true  },
+  { name: 'Option D', flipX: true,  flipY: true  }
+];
 
-const FT2M=0.3048,SQFT2M2=0.092903;
-function fi(ft){
-  if(isMetric)return (ft*FT2M).toFixed(2)+'m';
-  let f=Math.floor(ft),i=Math.round((ft-f)*12);
-  if(i===12){f++;i=0}
-  return f+"'"+i+'"';
-}
-function fa(sqft){
-  if(isMetric)return Math.round(sqft*SQFT2M2).toLocaleString()+' m²';
-  return Math.round(sqft).toLocaleString()+' sq ft';
-}
-function fm(n){return n>=1e6?'$'+(n/1e6).toFixed(2)+'M':'$'+Math.round(n/1000)+'k'}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
-
-/* ---------- room data (sizes read from the reference PDF) ---------- */
-const SZ={liv:[11,13],kit:[9.5,9.5],M:[11.5,10.5],MB:[8,5.5],MC:[5,7],Q:[9,9.5],D:[8.5,9],T:[11.5,9],S:[8.5,9],Ba:[8,5.2],pow:[4.8,5.2],lau:[6,8],mud:[6.5,7],pan:[5,6],gym:[10,11],gar2:[20,20],gar1:[12,20],st:[3.5,12]};
-const SZA={M:{t:[14,10],m:[12,10]},Ba:{t:[8.5,8.5],m:[7,8.5]},MB:{t:[8.5,8.5],m:[7,8.5]},kit:{t:[10,8.5],m:[10,8.5]}};
-const DINS=[[10,9],[12,9],[13.5,9]],DINA=[[11,9.8],[12.8,9.8],[14.2,9.8]];
-
-const STY={
-  mod:{n:'Modern',cost:1.1,open:true},
-  open:{n:'Open Concept',cost:1,open:true},
-  craft:{n:'Craftsman',cost:1.08,open:false},
-  ranch:{n:'Ranch',cost:0.97,open:false},
-  farm:{n:'Modern Farmhouse',cost:1.07,open:false},
-  mid:{n:'Mid-Century',cost:1.05,open:true},
-  col:{n:'Colonial',cost:1.1,open:false},
-  med:{n:'Mediterranean',cost:1.15,open:false},
-  coast:{n:'Coastal',cost:1.02,open:true},
-  tudor:{n:'Tudor',cost:1.12,open:false},
-  contemp:{n:'Contemporary',cost:1.08,open:true}
+const ROOM_COLORS = {
+  entry: '#fdf6e3', public: '#fdf6e3', sleep: '#e8f1fb', wet: '#e3f6f5',
+  storage: '#f1f1f1', service: '#f1efe7', garage: '#e5e7eb', flex: '#f3ecfb', hall: '#ffffff'
 };
-const SM={
-  mod:{sl:0,ov:1.5,win:[7,6,1.5]},
-  open:{sl:0.33,ov:1.5,win:[4.5,4.5,2.5]},
-  craft:{sl:0.42,ov:2.5,win:[5.5,4.5,2.5]},
-  ranch:{sl:0.25,ov:2,win:[5,3.5,3.5]},
-  farm:{sl:0.83,ov:1,win:[3,5.5,2]},
-  mid:{sl:0.1,ov:2,win:[6,5,2]},
-  col:{sl:0.55,ov:1.2,win:[4,5,2.5]},
-  med:{sl:0.3,ov:1.8,win:[4.5,5.5,2]},
-  coast:{sl:0.35,ov:2,win:[5.5,5,1.8]},
-  tudor:{sl:0.9,ov:1.2,win:[3.5,5,2.5]},
-  contemp:{sl:0,ov:1.2,win:[7,6,1.5]}
-};
-const OPT_INFO={
-  A:['Staggered Wings & Garage Pop-out','Main living block with an offset bedroom wing and a sheltered entry.'],
-  B:['L-Shape Courtyard','Two wings at a right angle embracing a private garden terrace.'],
-  C:['T-Shape Living Pavilion','A center great room flanked by quiet wings.'],
-  D:['Rear Great Room Pop-out','Garage pops forward and the great room projects into the yard.'],
-  E:['U-Shape Courtyard Villa','Three connected wings wrapping a central courtyard.']
-};
-const RATE={std:155,mid:215,hi:320};
 
-function mk(n,t,sz,mn,flex,nochk){
-  const a=Math.min(sz[0],sz[1]),b=Math.max(sz[0],sz[1]);
-  const q=mn||sz,qa=Math.min(q[0],q[1]),qb=Math.max(q[0],q[1]);
-  return{n:n,t:t,a:sz[0]*sz[1],s:fi(b)+'×'+fi(a),m:nochk?null:[qa,qb],flex:!!flex};
-}
-function build(p,r){
-  const ad=p.adp,P={},di=p.bd<=2?0:p.bd===3?1:2,j=()=>0.96+r()*0.08;
-  P.liv=mk('Living','liv',SZ.liv,null,1);
-  P.kit=ad?mk('Kitchen','liv',SZA.kit.t,SZA.kit.m,1):mk('Kitchen','liv',SZ.kit,null,1);
-  P.din=mk('Dining','liv',(ad?DINA:DINS)[di],null,1);
-  P.lau=mk('Laundry','svc',SZ.lau,null,0,1);
-  P.mud=p.mud?mk('Mudroom','svc',SZ.mud,null,0,1):null;
-  P.pan=p.pan?mk('Pantry','svc',SZ.pan,null,0,1):null;
-  P.gym=p.gym?mk('Gym/Flex','wrk',SZ.gym,null,1):null;
-  P.gar=p.gar===2?mk('Garage','gar',SZ.gar2,null,0,1):p.gar===1?mk('Garage','gar',SZ.gar1,null,0,1):null;
-  P.off=p.off?mk('Office','wrk',ad?[6,6]:[6,5.5],null,1):null;
-  [P.liv,P.kit,P.din,P.off,P.gym].forEach(x=>{if(x)x.a*=j()});
-  P.kit.ad=ad;P.din.ad=ad;if(P.off)P.off.ad=ad;
-  P.M=ad?mk('Primary','slp',SZA.M.t,SZA.M.m):mk('Primary','slp',SZ.M);P.M.ad=ad;
-  P.MC=mk('WIC','clo',SZ.MC,null,0,1);
-  P.MB=p.ba>=2?(ad?mk('Ensuite','svc',SZA.MB.t,SZA.MB.m):mk('Ensuite','svc',SZ.MB)):null;
-  if(P.MB)P.MB.ad=ad;
-  const bz=[SZ.Q,SZ.D,SZ.T,SZ.S,SZ.S];
-  P.Bd=[];P.BC=[];
-  for(let i=0;i<p.bd-1;i++){
-    const sz=bz[Math.min(i,bz.length-1)];
-    P.Bd.push(mk('Bed '+(i+2),'slp',sz));
-    P.BC.push({n:'Closet',t:'clo',fixed:2,a:2*sz[1]});
-  }
-  P.Ba=[];const nb=p.ba>=2?p.ba-1:1;
-  for(let i=0;i<nb;i++){
-    const a=ad&&!P.MB&&i===0;
-    const b=a?mk('Bath','svc',SZA.Ba.t,SZA.Ba.m):mk('Bath','svc',SZ.Ba);
-    b.ad=a;P.Ba.push(b);
-  }
-  P.pow=p.st===2?mk('Powder','svc',SZ.pow):null;
-  P.stairs=p.st===2?mk('Stairs','hall',SZ.st,null,0,1):null;
-  return P;
-}
-/* bedrooms, baths, closets and garage keep their sizes; living, kitchen, dining, office, gym flex to fill the shape */
-function scaleP(P,p,netArea){
-  const flexList=['liv','kit','din','off','gym'];
-  const fl=flexList.reduce((a,k)=>a+(P[k]?P[k].a:0),0);
-  let fixed=0;const add=x=>{if(x)fixed+=x.a};
-  [P.lau,P.mud,P.pan,P.gar].forEach(add);
-  if(p.st===1){[P.M,P.MC,P.MB].forEach(add);P.Bd.forEach(add);P.BC.forEach(add);P.Ba.forEach(add)}
-  else{[P.pow,P.stairs].forEach(add)}
-  const fo=Math.min(4.5,Math.max(0.6,(netArea*0.9-fixed)/Math.max(1,fl)));
-  const S=Object.assign({},P);
-  flexList.forEach(k=>{if(P[k])S[k]=Object.assign({},P[k],{a:P[k].a*fo})});
-  return S;
+let useMetric = false;
+let activeTab = 0;
+let plans = [];
+
+/* ---------------- formatting helpers ---------------- */
+
+function formatLength(feet) {
+  if (useMetric) return (feet * FEET_TO_METERS).toFixed(1) + ' m';
+  let wholeFeet = Math.floor(feet);
+  let inches = Math.round((feet - wholeFeet) * 12);
+  if (inches === 12) { wholeFeet++; inches = 0; }
+  return wholeFeet + "'" + (inches ? inches + '"' : '');
 }
 
-/* ---------- layout engine ---------- */
-const wsum=i=>i.sub?i.sub.reduce((s,x)=>s+wsum(x),0):(i.a||0);
-const G=(dir,...it)=>{it=it.flat().filter(Boolean);return it.length?{sub:it,dir:dir}:null};
-const H=(f,n)=>({n:n||'Hall',t:'hall',fixed:f});
-const pack=(it,dir,thr,hall)=>{
-  it=it.filter(Boolean);
-  if(it.length<=thr)return G(dir,it);
-  const m=Math.ceil(it.length/2),od=dir==='h'?'v':'h';
-  return G(od,G(dir,it.slice(0,m)),hall?H(3.5):null,G(dir,it.slice(m)));
-};
-function split(items,x,y,w,h,dir,out){
-  items=items.filter(Boolean);if(!items.length)return;
-  let fx=0,tot=0;
-  items.forEach(i=>{if(i.fixed)fx+=i.fixed;else tot+=wsum(i)});
-  const len=dir==='h'?w:h,rem=Math.max(len-fx,len*0.15);let pos=0;
-  items.forEach(i=>{
-    const l=i.fixed?i.fixed:rem*wsum(i)/Math.max(tot,0.001);
-    const rx=dir==='h'?x+pos:x,ry=dir==='h'?y:y+pos,rw=dir==='h'?l:w,rh=dir==='h'?h:l;
-    if(i.sub)split(i.sub,rx,ry,rw,rh,i.dir,out);
-    else out.push({n:i.n,t:i.t,a:i.a,s:i.s,m:i.m,ad:i.ad,x:rx,y:ry,w:rw,h:rh});
-    pos+=l;
-  });
-}
-function inter(lead,bd,ba){const o=lead.slice(),b=ba.slice();bd.forEach(x=>{o.push(x);if(b.length)o.push(b.shift())});return o.concat(b)}
-
-function shapeGeom(s,W,D,shapeMode,popD,gw,pat){
-  const req=shapeMode==='multi'?({A:'stagger',B:'L',C:'T',D:'bump',E:'U'}[s]):shapeMode;
-  const mode=['L','T','stagger','U','bump'].indexOf(req)>-1?req:'rect';
-  const p=Math.max(3,Math.min(popD,Math.min(W,D)*0.25));
-  const foot=[],outd=[];
-  const R=(id,name,x,y,w,d,ex)=>{foot.push(Object.assign({id:id,name:name,x:x,y:y,w:w,d:d,g:0},ex||{}))};
-  const O=(n,x,y,w,h)=>{if(w>1&&h>1)outd.push({n:n,t:'patio',x:x,y:y,w:w,h:h,a:w*h})};
-  let name='Single Rectangle';
-  if(mode==='L'){
-    const w1=Math.round(W*0.58),d1=Math.round(D*0.62),d2=D-d1;
-    R('main','Living Wing',0,0,W,d1);R('wing','Bedroom Wing',0,d1,w1,d2);
-    O('Garden Terrace',w1,d1,W-w1,d2);
-    name='L-Shape (2 Rectangles)';
-  }else if(mode==='T'){
-    const wc=Math.round(W*0.48),wl=Math.round((W-wc)/2),wr=W-wc-wl;
-    const dSide=Math.min(D-p,Math.max(16,D-p*1.6));
-    R('center','Great Room Pavilion',wl,0,wc,D,{pop:1});
-    R('left','Bed Wing',0,p,wl,dSide);
-    R('right','Primary & Garage Wing',wl+wc,p,wr,dSide,{g:gw?1:0});
-    O('Entry Porch',0,0,wl,p);O('Entry Court',wl+wc,0,wr,p);
-    O('Rear Patio',0,p+dSide,wl,D-p-dSide);O('Terrace',wl+wc,p+dSide,wr,D-p-dSide);
-    name='T-Shape Pavilion (3 Rectangles)';
-  }else if(mode==='stagger'){
-    const w1=Math.round(W*0.54),w2=W-w1,dh=D-p;
-    R('wing1','Front Living Block',0,0,w1,dh);R('wing2','Offset Bedroom Wing',w1,p,w2,dh);
-    O('Covered Entry',w1,0,w2,p);O('Rear Deck',0,dh,w1,p);
-    name='Staggered Wings (2 Rectangles)';
-  }else if(mode==='U'){
-    const wl=Math.round(W*0.32),wr=Math.round(W*0.32),wm=W-wl-wr,dTop=Math.round(D*0.48),dCourt=D-dTop;
-    R('main','North Living Gallery',wl,0,wm,dTop);R('left','West Wing',0,0,wl,D);R('right','East Suite Wing',wl+wm,0,wr,D);
-    O('Central Courtyard',wl,dTop,wm,dCourt);
-    name='U-Shape Courtyard (3 Rectangles)';
-  }else if(mode==='bump'){
-    const hasG=gw>0&&W-gw>=12,g0=hasG?gw:0,gh=hasG?p:0,mw=W-g0;
-    const rh=Math.max(8,Math.min(14,D-gh-10)),dMid=D-gh-rh,rw=Math.round(mw*0.7);
-    if(hasG)R('garpop','Garage Pop-out',0,0,g0,Math.min(20,D),{g:1,pop:1});
-    R('main','Main Body',g0,gh,mw,dMid);
-    R('bay','Great Room Bay',g0,gh+dMid,rw,rh,{pop:1});
-    O('Sheltered Porch',g0,0,mw,gh);O('Rear Patio',g0+rw,gh+dMid,mw-rw,rh);
-    name='Articulated Bays (3 Rectangles)';
-  }else{
-    R('main','Main Body',0,0,W,D);
-  }
-  if(pat&&outd.length===0)O('Patio',Math.round(W*0.25),D,Math.round(W*0.5),10);
-  return{mode:mode,name:name,foot:foot,out:outd,net:foot.reduce((a,f)=>a+f.w*f.d,0)};
+function formatArea(sqft) {
+  if (useMetric) return Math.round(sqft * SQFT_TO_SQM).toLocaleString() + ' m²';
+  return Math.round(sqft).toLocaleString() + ' sq ft';
 }
 
-function layoutMulti(s,F,W,D,shapeMode,popD,gw,pat){
-  const Gm=shapeGeom(s,W,D,shapeMode,popD,gw,pat);
-  const mode=Gm.mode,out=[];
-  const pub=!!F.liv,hp=!!F.M,thr=pub?4:3;
-  const PS=hp?G('h',F.M,G('v',F.MC,F.MB)):null;
-  const SBD=hp?F.Bd.map((b,i)=>G('h',b,F.BC[i])):[];
-  const pl=hp?inter([PS],SBD,F.Ba).concat([F.gym,pub?null:F.stairs]):[];
-  const F0=id=>Gm.foot.find(f=>f.id===id);
-  const put=(tree,r)=>{if(tree&&r)split([tree],r.x,r.y,r.w,r.d,'h',out)};
-  const addOut=()=>{Gm.out.forEach(o=>out.push(Object.assign({},o)))};
-  const seq=(items,leftName,leftType)=>{
-    const regs=Gm.foot.map(r=>({r:r,cap:r.w*r.d*0.96,items:[],used:0}));
-    let ri=0;
-    items.filter(Boolean).forEach(it=>{
-      const a=(wsum(it)*1.06)||40;
-      while(ri<regs.length-1&&regs[ri].used+a*0.45>regs[ri].cap)ri++;
-      regs[ri].items.push(it);regs[ri].used+=a;
-    });
-    regs.forEach(g=>{
-      const left=g.cap-g.used;
-      if(left>45)g.items.push({n:leftName,t:leftType,a:left});
-      put(pack(g.items,'h',3,true),g.r);
-    });
-  };
+function formatMoney(amount) {
+  return amount >= 1e6 ? '$' + (amount / 1e6).toFixed(2) + 'M' : '$' + Math.round(amount / 1000) + 'k';
+}
 
-  /* upper floor of a 2-story plan */
-  if(!pub&&hp){
-    seq(inter([PS],SBD,F.Ba).concat([F.stairs]),'Loft','liv');
-    return{rooms:out,footRects:Gm.foot,shapeName:Gm.name};
-  }
-  /* ground floor of a 2-story plan in a shaped footprint */
-  if(!hp&&mode!=='rect'){
-    seq([F.gar,F.mud,F.liv,F.kit,F.pan,F.din,F.off,F.gym,F.lau,F.pow,F.stairs],'Flex Room','wrk');
-    addOut();
-    return{rooms:out,footRects:Gm.foot,shapeName:Gm.name};
-  }
+function sumArea(rooms) {
+  return rooms.reduce((total, room) => total + room.area, 0);
+}
 
-  if(mode==='rect'){
-    const r=F0('main'),gy=hp?null:F.gym;
-    let root;
-    if(s==='A')root=G('v',G('h',F.gar,F.mud,F.liv),H(3.5),G('h',F.kit,F.pan,F.din,F.off,F.lau,F.pow,F.stairs,gy),(pub&&hp)?H(3.5):null,hp?pack(pl,'h',thr,true):null);
-    else if(s==='B')root=G('h',G('v',G('h',F.liv,F.din),G('h',F.kit,F.pan,F.off,F.mud,F.lau,F.pow,F.stairs,F.gar,gy)),(pub&&hp)?H(3.5):null,hp?pack(pl,'v',thr,true):null);
-    else root=G('v',F.liv,G('h',F.kit,F.pan,F.din,F.off),G('h',F.gar,F.mud,F.lau,F.pow,F.stairs,gy),H(3.5),hp?pack(pl,'h',thr,true):null);
-    put(root,r);
-  }else if(mode==='L'){
-    put(G('h',F.gar,F.mud,F.liv,G('v',F.kit,F.pan,F.din),G('v',F.off,F.lau,F.pow,F.stairs)),F0('main'));
-    put(pack(pl,'v',3,true),F0('wing'));
-  }else if(mode==='T'){
-    put(G('v',F.liv,H(3.5),G('h',F.kit,F.pan,F.din)),F0('center'));
-    const li=inter([],SBD,F.Ba).concat([F.off,F.gym]).filter(Boolean);
-    put(li.length?pack(li,'v',2,true):H(3.5),F0('left'));
-    put(G('v',F.gar,F.mud,PS,F.lau,F.pow,F.stairs),F0('right'));
-  }else if(mode==='stagger'){
-    put(G('v',G('h',F.gar,F.mud,F.liv),G('h',F.kit,F.pan,F.din,F.off,F.lau,F.pow,F.stairs)),F0('wing1'));
-    put(pack(pl,'v',3,true),F0('wing2'));
-  }else if(mode==='U'){
-    put(G('v',F.liv,G('h',F.kit,F.pan,F.din)),F0('main'));
-    const li=inter([],SBD,F.Ba).concat([F.off,F.gym]).filter(Boolean);
-    put(li.length?pack(li,'v',3,true):H(3.5),F0('left'));
-    put(G('v',F.gar,F.mud,PS,F.lau,F.pow,F.stairs),F0('right'));
-  }else if(mode==='bump'){
-    const m=F0('main'),b=F0('bay'),gp=F0('garpop');
-    let gar=F.gar;
-    if(gp&&F.gar){
-      out.push({n:F.gar.n,t:'gar',a:F.gar.a,s:F.gar.s,m:null,x:gp.x,y:gp.y,w:gp.w,h:gp.d});
-      gar=null;
+/* ---------------- step 2: the room program ---------------- */
+
+/* Creates one room request. "area" is the target size in sq ft, "minSide" the shortest acceptable side. */
+function makeRoom(name, type, area, minSide, extra) {
+  return Object.assign({ name: name, type: type, area: area, minSide: minSide }, extra || {});
+}
+
+/* If one row of a floor is much bigger than the other, add a flex room to the smaller row to even them out. */
+function balanceRows(floor, fillerName) {
+  const northArea = sumArea(floor.north);
+  const southArea = sumArea(floor.south);
+  const difference = Math.abs(northArea - southArea);
+  if (difference > 0.15 * (northArea + southArea)) {
+    const smallerRow = northArea < southArea ? floor.north : floor.south;
+    smallerRow.push(makeRoom(fillerName, 'flex', difference * 0.7, 8));
+  }
+}
+
+/* Returns a list of floors. Each floor has a "north" row and a "south" row of rooms. */
+function buildProgram(settings, garageWidth) {
+  const grow = settings.adaptable ? 1.15 : 1;   /* adaptable rooms are 15% larger */
+  const hasGarage = garageWidth > 0;
+  const makeStairs = () => makeRoom('Stairs', 'storage', 55, 4, { fixedW: 5 });
+
+  /* Public rooms */
+  const diningArea = settings.bedrooms <= 2 ? 100 : settings.bedrooms === 3 ? 120 : 140;
+  const foyer   = makeRoom('Foyer', 'entry', 48, 5);
+  const living  = makeRoom('Living', 'public', 200 * grow, 12);
+  const dining  = makeRoom('Dining', 'public', diningArea * grow, 9);
+  const kitchen = makeRoom('Kitchen', 'public', 130 * grow, 9);
+  const pantry  = settings.pantry ? makeRoom('Pantry', 'storage', 30, 4, { joinTo: 'Kitchen' }) : null;
+  const office  = settings.office ? makeRoom('Office', 'flex', 100, 9) : null;
+  const gym     = settings.gym ? makeRoom('Gym/Flex', 'flex', 110, 9) : null;
+
+  /* Service rooms. With a garage, the garage and the mudroom/laundry share the same column width. */
+  const garage  = hasGarage ? makeRoom('Garage', 'garage', garageWidth * GARAGE_DEPTH, 10, { fixedW: garageWidth }) : null;
+  const mudroom = settings.mudroom ? makeRoom('Mudroom', 'service', 45, 5) : null;
+  const laundry = makeRoom('Laundry', 'service', 48, 5);
+  if (hasGarage) {
+    const serviceArea = (mudroom ? mudroom.area : 0) + laundry.area;
+    if (mudroom) {
+      mudroom.fixedW = garageWidth * mudroom.area / serviceArea;
+      laundry.fixedW = garageWidth - mudroom.fixedW;
+    } else {
+      laundry.fixedW = garageWidth;
     }
-    put(G('v',G('h',gar,F.mud,F.lau,F.pow,F.stairs,F.off),H(3.5),pack(pl,'h',3,true),G('h',F.kit,F.pan,F.din)),m);
-    if(F.liv&&b)out.push({n:F.liv.n,t:'liv',a:F.liv.a,s:F.liv.s,m:F.liv.m,x:b.x,y:b.y,w:b.w,h:b.d});
   }
-  addOut();
-  return{rooms:out,footRects:Gm.foot,shapeName:Gm.name};
-}
+  const serviceFront = hasGarage ? [mudroom, laundry] : [];
+  const serviceBack = hasGarage ? [] : [mudroom, laundry];
 
-/* ---------- exterior walls, sun, checks, doors ---------- */
-function getExtWalls(rooms){
-  const eps=0.08,walls=[];
-  const active=rooms.filter(r=>r.t!=='patio'&&r.t!=='void');
-  function subAndAdd(s0,s1,pos,orient,dir,side,r){
-    let segs=[[s0,s1]];
-    active.forEach(o=>{
-      if(o===r)return;
-      let hit=false,o0=0,o1=0;
-      if(orient==='h'){
-        if(dir===-1&&Math.abs(o.y+o.h-pos)<eps){hit=true;o0=o.x;o1=o.x+o.w}
-        else if(dir===1&&Math.abs(o.y-pos)<eps){hit=true;o0=o.x;o1=o.x+o.w}
-      }else{
-        if(dir===-1&&Math.abs(o.x+o.w-pos)<eps){hit=true;o0=o.y;o1=o.y+o.h}
-        else if(dir===1&&Math.abs(o.x-pos)<eps){hit=true;o0=o.y;o1=o.y+o.h}
-      }
-      if(hit){
-        const next=[];
-        segs.forEach(function(sg){
-          const a=sg[0],b=sg[1],so=Math.max(a,o0),eo=Math.min(b,o1);
-          if(so<eo){
-            if(a<so-eps)next.push([a,so]);
-            if(eo+eps<b)next.push([eo,b]);
-          }else next.push([a,b]);
-        });
-        segs=next;
-      }
+  /* Private rooms: the primary suite, then bedrooms and bathrooms alternating */
+  const primarySuite = [
+    makeRoom('Walk-in Closet', 'storage', 35, 5, { joinTo: 'Primary' }),
+    makeRoom('Primary', 'sleep', 121 * grow, 10.5),
+    settings.bathrooms >= 2 ? makeRoom('Ensuite', 'wet', 60 * grow, 6.5, { joinTo: 'Primary' }) : null
+  ];
+  const bedAreas = [110, 100, 100, 100];
+  const bedroomCount = settings.bedrooms - 1;
+  const bathCount = settings.bathrooms >= 2 ? settings.bathrooms - 1 : 1;
+  const secondary = [];
+  for (let i = 0; i < Math.max(bedroomCount, bathCount); i++) {
+    if (i < bedroomCount) secondary.push(makeRoom('Bed ' + (i + 2), 'sleep', bedAreas[i] * grow, 9));
+    if (i < bathCount) secondary.push(makeRoom('Bath', 'wet', 45 * grow, 5));
+  }
+
+  const floors = [];
+  if (settings.levels === 1) {
+    floors.push({
+      label: 'Floor plan', hasGarage: hasGarage,
+      north: [garage, foyer, living, dining, kitchen, pantry, office].filter(Boolean),
+      south: [].concat(serviceFront, primarySuite, secondary, [gym], serviceBack).filter(Boolean)
     });
-    segs.forEach(function(sg){
-      const a=sg[0],b=sg[1];
-      if(b-a>0.4){
-        if(orient==='h')walls.push({x1:a,y1:pos,x2:b,y2:pos,side:side,len:b-a,r:r});
-        else walls.push({x1:pos,y1:a,x2:pos,y2:b,side:side,len:b-a,r:r});
-      }
+    balanceRows(floors[0], 'Flex Room');
+  } else {
+    floors.push({
+      label: 'Ground level', hasGarage: hasGarage,
+      north: [garage, foyer, living, dining, kitchen, pantry].filter(Boolean),
+      south: [].concat(serviceFront, [makeStairs(), makeRoom('Powder', 'wet', 25, 4), office, gym], serviceBack).filter(Boolean)
+    });
+    floors.push({
+      label: 'Upper level', hasGarage: false,
+      north: primarySuite.filter(Boolean),
+      south: [makeStairs()].concat(secondary)
+    });
+    balanceRows(floors[0], 'Flex Room');
+    balanceRows(floors[1], 'Loft');
+  }
+  return floors;
+}
+
+/* ---------------- step 3: the envelope comes FROM the program ---------------- */
+
+function computeEnvelope(settings, garageWidth) {
+  const minDepth = garageWidth > 0 ? GARAGE_DEPTH + MIN_ROW_DEPTH + HALL_ADAPTABLE + 2 : 26;
+  const roundHalf = value => Math.round(value * 2) / 2;
+  let depth, mainWidth;
+  if (settings.sizeMode === 'area') {
+    const areaPerFloor = settings.area / settings.levels;
+    depth = Math.max(minDepth, Math.sqrt(areaPerFloor / 1.35));   /* aim for a 1.35 : 1 rectangle */
+    mainWidth = Math.max(18, areaPerFloor / depth);
+  } else {
+    depth = Math.max(minDepth, settings.depth);
+    mainWidth = Math.max(18, settings.width - garageWidth);
+  }
+  depth = roundHalf(depth);
+  mainWidth = roundHalf(mainWidth);
+  return { W: mainWidth + garageWidth, D: depth, mainWidth: mainWidth };
+}
+
+/* ---------------- step 4: pack rooms around a central hall ---------------- */
+
+function layoutFloor(floor, depth, startX, rowWidth, hallWidth) {
+  const usableDepth = depth - hallWidth;
+  const northArea = sumArea(floor.north);
+  const southArea = sumArea(floor.south);
+  let northDepth = usableDepth * northArea / (northArea + southArea);
+  if (floor.hasGarage) northDepth = Math.max(northDepth, GARAGE_DEPTH);
+  northDepth = Math.max(MIN_ROW_DEPTH, Math.min(northDepth, usableDepth - MIN_ROW_DEPTH));
+
+  const placed = [];
+  /* Rooms with a fixed width keep it; the rest share what is left in proportion to their area. */
+  function placeRow(row, y, rowDepth, rowName) {
+    const fixedTotal = row.reduce((t, r) => t + (r.fixedW || 0), 0);
+    const flexArea = row.reduce((t, r) => t + (r.fixedW ? 0 : r.area), 0);
+    let x = startX;
+    row.forEach(room => {
+      const width = room.fixedW || (rowWidth - fixedTotal) * room.area / flexArea;
+      placed.push(Object.assign({}, room, { x: x, y: y, w: width, h: rowDepth, row: rowName }));
+      x += width;
     });
   }
-  active.forEach(r=>{
-    subAndAdd(r.x,r.x+r.w,r.y,'h',-1,'t',r);
-    subAndAdd(r.x,r.x+r.w,r.y+r.h,'h',1,'b',r);
-    subAndAdd(r.y,r.y+r.h,r.x,'v',-1,'l',r);
-    subAndAdd(r.y,r.y+r.h,r.x+r.w,'v',1,'r',r);
-  });
-  return walls;
-}
-function expoMulti(r,extWalls,F){
-  const e=[],SB={t:0,r:90,b:180,l:270};
-  extWalls.filter(w=>w.r===r).forEach(w=>{
-    if(w.len>=2.5)e.push({side:w.side,b:(F+SB[w.side])%360,len:w.len,x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2});
-  });
-  return e;
-}
-const TGT={liv:180,slp:110,wrk:20,svc:315,gar:300};
-function score(r,ex,hs){
-  const t=r.n==='Kitchen'?135:(TGT[r.t]||180);
-  if(!ex.length)return{sc:r.t==='slp'?0:(r.t==='liv'||r.t==='wrk')?0.25:0.7,bb:null};
-  let best=-1,bb=null;
-  ex.forEach(x=>{
-    const b=hs==='S'?(x.b+180)%360:x.b;
-    let d=Math.abs(b-t);d=Math.min(d,360-d);
-    const c=Math.max(0,1-d/110);
-    if(c>best){best=c;bb=x.b}
-  });
-  return{sc:best,bb:bb};
-}
-function annMulti(rc,extWalls,p){
-  rc.forEach(r=>{
-    if(r.t==='hall'||r.t==='patio'||r.t==='clo'){r.sc=null;r.ex=[];return}
-    r.ex=expoMulti(r,extWalls,p.f);
-    const o=score(r,r.ex,p.hs);r.sc=o.sc;r.bb=o.bb;
-  });
-}
-function checkRects(all,adp){
-  if(adp)all.forEach(x=>{if(x.n==='Hall')x.m=[3.28,3.28]});
-  all.forEach(x=>{
-    if(!x.m){x.bad=false;return}
-    const s2=Math.min(x.w,x.h),l=Math.max(x.w,x.h);
-    x.bad=(s2<x.m[0]-0.4||l<x.m[1]-0.4);
-  });
-  return all.filter(x=>x.m);
-}
-function shared(a,b){
-  const E=0.08,ov=(a0,a1,b0,b1)=>[Math.max(a0,b0),Math.min(a1,b1)];
-  let o;
-  if(Math.abs(a.x+a.w-b.x)<E){o=ov(a.y,a.y+a.h,b.y,b.y+b.h);if(o[1]-o[0]>0.5)return{ax:'v',L:b.x,s0:o[0],s1:o[1]}}
-  if(Math.abs(b.x+b.w-a.x)<E){o=ov(a.y,a.y+a.h,b.y,b.y+b.h);if(o[1]-o[0]>0.5)return{ax:'v',L:a.x,s0:o[0],s1:o[1]}}
-  if(Math.abs(a.y+a.h-b.y)<E){o=ov(a.x,a.x+a.w,b.x,b.x+b.w);if(o[1]-o[0]>0.5)return{ax:'h',L:b.y,s0:o[0],s1:o[1]}}
-  if(Math.abs(b.y+b.h-a.y)<E){o=ov(a.x,a.x+a.w,b.x,b.x+b.w);if(o[1]-o[0]>0.5)return{ax:'h',L:a.y,s0:o[0],s1:o[1]}}
-  return null;
-}
-function prefOf(r){
-  const Hl=x=>x.n==='Hall'||x.n==='Stairs',L=x=>x.n==='Living',Dn=x=>x.n==='Dining',K=x=>x.n==='Kitchen';
-  if(r.t==='slp')return[Hl,L,Dn,K];
-  if(r.n==='Closet')return[x=>x.t==='slp'];
-  if(r.n==='WIC')return[x=>x.n==='Primary'];
-  if(r.n==='Ensuite')return[x=>x.n==='Primary',Hl];
-  if(r.n==='Bath')return[Hl,x=>x.t==='slp',L];
-  if(r.n==='Powder')return[Hl,L,K,Dn];
-  if(r.n==='Office'||r.n==='Gym/Flex')return[Hl,L,Dn,K];
-  if(r.n==='Loft'||r.n==='Flex Room')return[Hl,L,Dn];
-  if(r.n==='Pantry')return[K,Dn];
-  if(r.n==='Mudroom')return[x=>x.t==='gar',K,Hl,L];
-  if(r.n==='Laundry')return[x=>x.n==='Mudroom',K,x=>x.t==='gar',Hl];
-  if(r.t==='gar')return[x=>x.n==='Mudroom',x=>x.n==='Laundry',K,Hl];
-  return null;
-}
-function computeDoors(rc,adp){
-  const dw=adp?3:2.67,rooms=rc.filter(r=>r.t!=='patio'),list=[],miss=[],seen={};
-  rooms.forEach((r,ri)=>{
-    const prefs=prefOf(r);if(!prefs)return;
-    let done=false;
-    for(let k=0;k<prefs.length&&!done;k++){
-      let best=null;
-      rooms.forEach((x,xi)=>{
-        if(x===r||!prefs[k](x))return;
-        const sg=shared(r,x);if(!sg)return;
-        const len=sg.s1-sg.s0;if(len<dw+0.6)return;
-        if(!best||len>best.len)best={x:x,sg:sg,len:len,xi:xi};
-      });
-      if(!best)continue;
-      const key=Math.min(ri,best.xi)+'-'+Math.max(ri,best.xi);
-      if(seen[key]){done=true;break}
-      seen[key]=1;
-      const sg=best.sg,c=Math.min(Math.max((sg.s0+sg.s1)/2,sg.s0+dw/2+0.3),sg.s1-dw/2-0.3);
-      const hinge=(c-sg.s0)<(sg.s1-c)?0:1;
-      const into=r.t==='gar'?best.x:r;
-      const dir=sg.ax==='v'?(into.x>=sg.L-0.1?1:-1):(into.y>=sg.L-0.1?1:-1);
-      list.push({ax:sg.ax,L:sg.L,a0:c-dw/2,dw:dw,hinge:hinge,dir:dir,kind:r.n==='Closet'?'bifold':'swing'});
-      done=true;
-    }
-    if(!done)miss.push(r.n);
-  });
-  return{list:list,miss:miss};
-}
-function entDoorMulti(extWalls,code,main,adp,W,D){
-  if(!code||code==='none'||!extWalls.length)return null;
-  const sd=code[0],pos=code[1],dw=main?3:(adp?3:2.67),horiz=sd==='t'||sd==='b';
-  const tgt=horiz?(pos==='l'?W*0.2:pos==='r'?W*0.8:W/2):(pos==='l'?D*0.2:pos==='r'?D*0.8:D/2);
-  const tier=r=>{
-    if(main){
-      if(r.n==='Living'||r.n==='Hall')return 0;
-      if(r.n==='Kitchen'||r.n==='Dining'||r.n==='Stairs')return 1;
-      if(r.n==='Office'||r.n==='Mudroom')return 2;
-      if(r.t==='gar')return 3;
-      return 4;
-    }
-    if(r.n==='Mudroom'||r.n==='Laundry'||r.n==='Kitchen'||r.n==='Hall')return 0;
-    if(r.n==='Living'||r.n==='Dining'||r.n==='Office')return 1;
-    if(r.t==='gar')return 2;
-    return 4;
-  };
-  let best=null;
-  extWalls.filter(w=>w.side===sd&&w.len>=dw+0.6).forEach(w=>{
-    const r=w.r,t=tier(r),mid=horiz?(w.x1+w.x2)/2:(w.y1+w.y2)/2;
-    const cost=Math.abs(mid-tgt)+[0,12,28,70,90][t];
-    if(!best||cost<best.cost)best={w:w,c:mid,cost:cost,t:t,room:r.n};
-  });
-  if(!best)return null;
-  const w=best.w;
-  return{ax:horiz?'h':'v',L:horiz?w.y1:w.x1,a0:best.c-dw/2,dw:dw,hinge:0,dir:(sd==='t'||sd==='l')?1:-1,kind:'ext',main:main,room:best.room,tier:best.t,side:sd,c:best.c};
-}
-function garDoorMulti(extWalls){
-  const gw=extWalls.filter(w=>w.r.t==='gar'&&w.len>=8);
-  if(!gw.length)return null;
-  const pref=['t','r','l','b'];
-  for(let i=0;i<pref.length;i++){
-    const match=gw.find(w=>w.side===pref[i]);
-    if(!match)continue;
-    const horiz=match.side==='t'||match.side==='b',dw=Math.min(16,match.len-1.6);
-    const mid=horiz?(match.x1+match.x2)/2:(match.y1+match.y2)/2;
-    return{ax:horiz?'h':'v',L:horiz?match.y1:match.x1,a0:mid-dw/2,dw:dw,kind:'garage'};
-  }
-  return null;
+  placeRow(floor.north, 0, northDepth, 'north');
+  placeRow(floor.south, northDepth + hallWidth, depth - northDepth - hallWidth, 'south');
+  placed.push({ name: 'Hall', type: 'hall', x: startX, y: northDepth, w: rowWidth, h: hallWidth, row: null });
+  return placed;
 }
 
-/* ---------- analysis (runs after generation and after every edit) ---------- */
-function finalize(res){
-  const p=res.p,W=res.W,D=res.D,sty=STY[p.sty]||STY.mod;
-  const rate=RATE[p.fin]||215,stf=p.st===2?0.95:1,mult=sty.cost;
-  res.ew=res.fl.map(rc=>getExtWalls(rc));
-  res.fl.forEach((rc,i)=>annMulti(rc,res.ew[i],p));
-  const all=res.fl.reduce((a,rc)=>a.concat(rc),[]);
-  const chk=checkRects(all,p.adp);
-  res.passN=chk.filter(x=>!x.bad).length;res.M=chk.length;
-  res.doors=res.fl.map(rc=>computeDoors(rc,p.adp));
-  res.miss=[].concat.apply([],res.doors.map(d=>d.miss));
-  res.pe=entDoorMulti(res.ew[0],p.entP,true,p.adp,W,D);
-  res.se=entDoorMulti(res.ew[0],p.entS,false,p.adp,W,D);
-  const pd=[];
-  res.fl[0].filter(r=>r.t==='patio'&&!/Entry|Porch/.test(r.n)).forEach(pt=>{
-    let best=null;
-    res.fl[0].forEach(r=>{
-      if(!(r.n==='Living'||r.n==='Dining'||r.n==='Kitchen'))return;
-      const sg=shared(r,pt);if(!sg)return;
-      const len=sg.s1-sg.s0;if(len<5)return;
-      if(!best||len>best.len)best={sg:sg,len:len};
-    });
-    if(best){const dw=Math.min(6,best.len-1),c=(best.sg.s0+best.sg.s1)/2;pd.push({ax:best.sg.ax,L:best.sg.L,a0:c-dw/2,dw:dw,kind:'slide'})}
-  });
-  res.patioDoors=pd;
-  const sum=f=>all.filter(f).reduce((a,x)=>a+x.w*x.h,0);
-  res.area=Math.round(sum(x=>x.t!=='patio'));
-  const garA=sum(x=>x.t==='gar'),hallA=sum(x=>x.t==='hall');
-  res.circ=Math.round(hallA/Math.max(res.area,1)*100);
-  const WT={liv:1.5,slp:1.2,wrk:0.8,svc:0.4,gar:0.6};
-  let sw=0,sn=0;
-  all.forEach(x=>{if(x.sc!=null&&WT[x.t]){const w=x.w*x.h*WT[x.t];sw+=w;sn+=w*x.sc}});
-  res.sun=Math.round(sn/Math.max(sw,1)*100);
-  const cond=res.area-garA;
-  res.hard=Math.round(((cond*rate*stf+garA*rate*0.4)+Math.max(0,p.ba-2)*10000)*mult/1000)*1000;
-  res.diff=res.hard-p.tb;
-  res.nts=notes(res.k,res.fl,p,res,res.shapeName);
-}
-function notes(k,fl,p,res,shapeName){
-  const all=fl.reduce((a,f)=>a.concat(f),[]),L=[];
-  const rm=n=>all.find(x=>x.n===n);
-  const dn=b=>NM[cl(b)];
-  L.push('Footprint: '+shapeName+'. Corner notches create sheltered outdoor transitions.');
-  all.filter(x=>x.bad&&x.n!=='Hall').slice(0,2).forEach(x=>{
-    L.push(x.n+' is '+fi(Math.max(x.w,x.h))+'×'+fi(Math.min(x.w,x.h))+', under its PDF '+(x.ad?'adaptable ':'')+'size of '+fi(x.m[1])+'×'+fi(x.m[0])+'. Adjust it in the Layout Editor.');
-  });
-  if(res.miss.length)L.push('Doors: no link found for '+res.miss.slice(0,3).join(', ')+'. Move those rooms next to a hall in the editor.');
-  if(res.pe){
-    const entLabel=ENTL[p.entP]||'front';
-    L.push('Main entrance ('+entLabel+') opens into '+res.pe.room+(res.pe.tier>=3?'. Consider moving the door toward the living zone.':'.'));
-  }else L.push('No room reaches the main entrance wall at that spot. Try another door position.');
-  const lv=rm('Living');
-  if(lv&&lv.bb!=null&&lv.sc>=0.6)L.push('Living area faces '+dn(lv.bb)+', capturing good winter sun. Add roof overhangs for summer shade.');
-  const pm=rm('Primary');
-  if(pm&&pm.bb!=null)L.push('Primary suite faces '+dn(pm.bb)+' for daylighting.');
-  if(p.adp)L.push('Adaptable mode: plan doors with 850 mm clear width, halls at least 1000 mm, and a 1700 mm turning circle in the primary bedroom, one bathroom, and the kitchen.');
-  if(p.st===2)L.push('Two stories: the upper floor uses the same footprint, with a loft filling space the bedrooms do not need.');
-  return L.slice(0,7);
-}
+/* ---------------- step 5: doors ---------------- */
 
-/* ---------- drawing ---------- */
-const fills={liv:'#ffffff',slp:'#ffffff',svc:'#fafafa',wrk:'#ffffff',gar:'#ffffff',hall:'#ffffff',patio:'#ffffff',clo:'#fafafa'};
-function ln(x1,y1,x2,y2,stroke,sw,extra){
-  return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+stroke+'" stroke-width="'+sw+'"'+(extra||'')+'/>';
-}
-function boundsOf(rects,W,D){
-  let mw=W,mh=D;
-  rects.forEach(r=>{mw=Math.max(mw,r.x+r.w);mh=Math.max(mh,r.y+r.h)});
-  return{W:mw,D:mh};
-}
-function doorSVG(d,X,Y,s){
-  const ax=d.ax;
-  const A=ax==='h'?[d.a0,d.L]:[d.L,d.a0],B=ax==='h'?[d.a0+d.dw,d.L]:[d.L,d.a0+d.dw];
-  const a=[X(A[0]),Y(A[1])],b=[X(B[0]),Y(B[1])];
-  if(d.kind==='garage'){
-    const gw2=ax==='h'?b[0]-a[0]:6,gh2=ax==='h'?6:b[1]-a[1],gx=ax==='h'?a[0]:a[0]-3,gy=ax==='h'?a[1]-3:a[1];
-    return '<rect x="'+gx.toFixed(1)+'" y="'+gy.toFixed(1)+'" width="'+gw2.toFixed(1)+'" height="'+gh2.toFixed(1)+'" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.4"/>';
-  }
-  const col=d.kind==='ext'?(d.main?'#0f172a':'#334155'):'#0f172a',sw=d.kind==='ext'?2.2:1.2;
-  let h=ln(a[0],a[1],b[0],b[1],'#ffffff',6);
-  if(d.kind==='slide'){
-    const o=1.8;
-    if(ax==='h')h+=ln(a[0],a[1]-o,b[0],b[1]-o,'#0f172a',1.2)+ln(a[0],a[1]+o,b[0],b[1]+o,'#0f172a',1.2);
-    else h+=ln(a[0]-o,a[1],b[0]-o,b[1],'#0f172a',1.2)+ln(a[0]+o,a[1],b[0]+o,b[1],'#0f172a',1.2);
-    return h;
-  }
-  if(d.kind==='bifold')return h+ln(a[0],a[1],b[0],b[1],'#475569',1.4,' stroke-dasharray="3 2"');
-  const Hh=d.hinge?B:A,C=d.hinge?A:B;
-  const T=ax==='h'?[Hh[0],Hh[1]+d.dir*d.dw]:[Hh[0]+d.dir*d.dw,Hh[1]];
-  const hp=[X(Hh[0]),Y(Hh[1])],c=[X(C[0]),Y(C[1])],t=[X(T[0]),Y(T[1])];
-  const ux=c[0]-hp[0],uy=c[1]-hp[1],vx=t[0]-hp[0],vy=t[1]-hp[1],sweep=(ux*vy-uy*vx)>0?1:0,r=d.dw*s;
-  h+=ln(hp[0],hp[1],t[0],t[1],col,sw);
-  h+='<path d="M'+c[0].toFixed(1)+','+c[1].toFixed(1)+' A'+r.toFixed(1)+','+r.toFixed(1)+' 0 0 '+sweep+' '+t[0].toFixed(1)+','+t[1].toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="1" stroke-dasharray="3 2"/>';
-  return h;
-}
-function planSVG(rects,W,D,o){
-  const bd=boundsOf(rects,W,D),bw=bd.W,bh=bd.D;
-  const s=Math.min(380/bw,420/bh),pw=bw*s,ox=(450-pw)/2,oy=24;
-  const X=x=>ox+x*s,Y=y=>oy+y*s;
-  let h='<svg width="100%" viewBox="0 0 450 '+Math.round(bh*s+oy*2)+'" role="img"><title>Floor plan blueprint</title>';
-  h+='<defs>'
-    +'<pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M 15 0 L 0 0 0 15" fill="none" stroke="#cbd5e1" stroke-width="0.4" opacity="0.6"/></pattern>'
-    +'<pattern id="hatch-patio" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#475569" stroke-width="0.8" opacity="0.4"/></pattern>'
-    +'<pattern id="tile-bath" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#ffffff"/><path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.9"/></pattern>'
-    +'<pattern id="dots-garage" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.75" fill="#64748b" opacity="0.5"/><circle cx="5" cy="5" r="0.75" fill="#64748b" opacity="0.5"/></pattern>'
-    +'</defs>';
-  h+='<rect width="100%" height="100%" fill="#ffffff"/><rect width="100%" height="100%" fill="url(#grid)" opacity="0.6"/>';
+/* A door is a short segment on a wall, plus (nx, ny): the direction the door swings. */
+function placeDoors(rooms, isGround, hallWidth) {
+  const doors = [];
+  const doorWidth = hallWidth > HALL_STANDARD ? 3 : 2.67;
+  const findRoom = name => rooms.find(r => r.name === name);
 
-  rects.filter(r=>r.t==='patio').forEach(r=>{
-    const fillStyle=layers.hatch?'url(#hatch-patio)':'#fafafa';
-    h+='<rect x="'+X(r.x).toFixed(1)+'" y="'+Y(r.y).toFixed(1)+'" width="'+(r.w*s).toFixed(1)+'" height="'+(r.h*s).toFixed(1)+'" fill="'+fillStyle+'" stroke="#475569" stroke-width="1" stroke-dasharray="3 3"/>';
-    if(layers.tags&&r.w*s>40)h+='<text x="'+X(r.x+r.w/2).toFixed(1)+'" y="'+Y(r.y+r.h/2).toFixed(1)+'" font-size="10" text-anchor="middle" dominant-baseline="central" font-weight="600" fill="#475569">'+r.n+'</text>';
-  });
+  rooms.filter(r => r.row).forEach(room => {
+    const centerX = room.x + room.w / 2;
+    const centerY = room.y + room.h / 2;
+    const joined = room.joinTo ? findRoom(room.joinTo) : null;
 
-  rects.filter(r=>r.t!=='patio').forEach(r=>{
-    const x=X(r.x),y=Y(r.y),w=r.w*s,hh=r.h*s;
-    const dash=(o.open&&(r.n==='Living'||r.n==='Kitchen'||r.n==='Dining'))?' stroke-dasharray="2 3"':'';
-    const stk=r.bad?' stroke="#ef4444" stroke-width="1.8"':' stroke="#94a3b8" stroke-width="1"';
-    let fillMat=fills[r.t]||'#ffffff';
-    if(layers.hatch){
-      if(r.n==='Bath'||r.n==='Ensuite'||r.n==='Powder')fillMat='url(#tile-bath)';
-      else if(r.t==='gar')fillMat='url(#dots-garage)';
-    }
-    h+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+hh.toFixed(1)+'" fill="'+fillMat+'"'+stk+dash+'/>';
-    if(layers.tags){
-      const cx=x+w/2,cy=y+hh/2,dm=fi(r.w)+'×'+fi(r.h);
-      if(w>=50&&hh>=32){
-        h+='<rect x="'+(cx-w*0.42).toFixed(1)+'" y="'+(cy-13).toFixed(1)+'" width="'+(w*0.84).toFixed(1)+'" height="26" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.8"/>';
-        h+='<text x="'+cx.toFixed(1)+'" y="'+(cy-4).toFixed(1)+'" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#0f172a">'+r.n+'</text>';
-        h+='<text x="'+cx.toFixed(1)+'" y="'+(cy+7).toFixed(1)+'" font-size="9" font-family="monospace" text-anchor="middle" dominant-baseline="central" fill="#475569">'+dm+'</text>';
-      }else if(w>=24&&hh>=16){
-        h+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#0f172a">'+r.n.slice(0,4)+'</text>';
+    if (joined) {
+      /* Closets, ensuites and pantries open into their parent room, not the hall */
+      const roomIsRight = joined.x < room.x;
+      const wallX = roomIsRight ? room.x : room.x + room.w;
+      const width = Math.min(doorWidth, room.h - 1);
+      doors.push({ x1: wallX, y1: centerY - width / 2, x2: wallX, y2: centerY + width / 2, nx: roomIsRight ? 1 : -1, ny: 0, kind: 'inner' });
+    } else {
+      const width = Math.min(doorWidth, room.w - 1);
+      if (width >= 1.5) {
+        const wallY = room.row === 'north' ? room.y + room.h : room.y;
+        doors.push({ x1: centerX - width / 2, y1: wallY, x2: centerX + width / 2, y2: wallY, nx: 0, ny: room.row === 'north' ? -1 : 1, kind: 'inner' });
       }
     }
-  });
 
-  const ew=o.extWalls||getExtWalls(rects);
-  ew.forEach(w=>{h+=ln(X(w.x1),Y(w.y1),X(w.x2),Y(w.y2),'#0f172a',3,' stroke-linecap="square"')});
-
-  const dl=o.doors||[];
-  const blk=dl.filter(d=>d.kind==='ext'||d.kind==='slide'||d.kind==='garage').map(d=>({ax:d.ax,L:d.L,a0:d.a0,a1:d.a0+d.dw}));
-  rects.forEach(r=>{
-    if(!(r.t==='liv'||r.t==='slp'||r.t==='wrk')||!r.ex)return;
-    r.ex.forEach(e=>{
-      const hor=e.side==='t'||e.side==='b';
-      const line=hor?e.y1:e.x1;
-      const mid=hor?(e.x1+e.x2)/2:(e.y1+e.y2)/2;
-      let L=Math.min(e.len*0.6,9);L=Math.max(L,2.8);
-      const a0=mid-L/2,a1=mid+L/2;
-      if(blk.some(b=>b.ax===(hor?'h':'v')&&Math.abs(b.L-line)<0.2&&a1>b.a0-0.3&&a0<b.a1+0.3))return;
-      const t=5;
-      if(hor)h+='<rect x="'+X(a0).toFixed(1)+'" y="'+(Y(line)-t/2).toFixed(1)+'" width="'+(L*s).toFixed(1)+'" height="'+t+'" fill="#e0f2fe" stroke="#0f172a" stroke-width="1.2"/>';
-      else h+='<rect x="'+(X(line)-t/2).toFixed(1)+'" y="'+Y(a0).toFixed(1)+'" width="'+t+'" height="'+(L*s).toFixed(1)+'" fill="#e0f2fe" stroke="#0f172a" stroke-width="1.2"/>';
-    });
-  });
-  dl.forEach(d=>{h+=doorSVG(d,X,Y,s)});
-
-  if(layers.dim){
-    const DT='font-size="9" font-family="monospace" font-weight="600" text-anchor="middle" fill="#2563eb"';
-    h+=ln(ox,oy-14,ox+pw,oy-14,'#2563eb',1,' stroke-dasharray="2 2"');
-    h+='<text x="'+(ox+pw/2).toFixed(1)+'" y="'+(oy-18)+'" '+DT+'>WIDTH '+fi(W)+'</text>';
-    h+=ln(ox-14,oy,ox-14,oy+bh*s,'#2563eb',1,' stroke-dasharray="2 2"');
-    h+='<text x="'+(ox-18)+'" y="'+(oy+bh*s/2).toFixed(1)+'" '+DT+' transform="rotate(-90 '+(ox-18)+' '+(oy+bh*s/2).toFixed(1)+')">DEPTH '+fi(D)+'</text>';
-  }
-  if(layers.sun){
-    h+='<text x="'+(ox+pw/2).toFixed(1)+'" y="'+(oy-6)+'" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#64748b">▲ FRONT ('+cl(o.F)+')</text>';
-  }
-  h+='</svg>';
-  return h;
-}
-function massMulti(footRects,W,D,p,pe){
-  const S=SM[p.sty]||SM.mod,fh=p.sty==='ranch'?9:9.5,hz=fh*p.st,rf=p.roof,sl=S.sl||0.33;
-  const B=footRects.filter(b=>b.w>=3&&b.d>=3).map(b=>Object.assign({},b));
-  if(!B.length)B.push({x:0,y:0,w:W,d:D,g:0});
-  B.forEach(b=>{
-    b.ax=b.w>=b.d?'x':'y';const span=Math.min(b.w,b.d);
-    b.rise=rf==='flat'?0.8:rf==='shed'?Math.min(Math.max(b.d*sl*0.6,2),9):rf==='gambrel'?Math.min(span*0.32,13):Math.min(span/2*sl,13);
-  });
-  const mr=Math.max.apply(null,B.map(b=>b.rise).concat([3]));
-  const s=Math.min(9.5,380/(W+0.45*D+8),240/(hz+mr+0.45*D+4));
-  const Hs=(hz+mr+0.45*D+4)*s+26,base=Hs-16,ox=(450-(W+0.45*D)*s)/2;
-  const P=(x,y,z)=>(ox+(x+0.45*y)*s).toFixed(1)+','+(base-(z+0.45*y)*s).toFixed(1);
-  const pl=(a,f,o,sw)=>'<polygon points="'+a.map(q=>P(q[0],q[1],q[2])).join(' ')+'" fill="'+f+'" fill-opacity="'+(o||1)+'" stroke="#475569" stroke-width="'+(sw===undefined?0.8:sw)+'" stroke-linejoin="round"/>';
-  const wn=a=>'<polygon points="'+a.map(q=>P(q[0],q[1],q[2])).join(' ')+'" fill="#e0f2fe" stroke="#0f172a" stroke-width="1"/>';
-  const WALL='#ffffff',SIDE='#f1f5f9',ROOF='#f8fafc';
-  let h='<svg width="100%" viewBox="0 0 450 '+Math.round(Hs)+'" role="img"><title>3D axonometric massing</title>';
-  h+='<rect width="100%" height="100%" fill="#ffffff"/>';
-  h+=pl([[-4,-6,0],[W+4,-6,0],[W+4,D+4,0],[-4,D+4,0]],'#f1f5f9',0.7,0);
-
-  const sorted=B.slice().sort((a,b)=>(b.y+b.d)-(a.y+a.d)||(a.x-b.x));
-  const ww=S.win[0],wh=S.win[1],sill=S.win[2];
-  sorted.forEach(b=>{
-    const x=b.x,y=b.y,w=b.w,d=b.d,x1=x+w,y1=y+d,r=b.rise;
-    const ov=S.ov,ex0=x-ov,ex1=x1+ov,ey0=y-ov,ey1=y1+ov,ez=hz-ov*sl;
-    h+=pl([[x,y,0],[x1,y,0],[x1,y,hz],[x,y,hz]],WALL);
-    if(rf==='shed')h+=pl([[x1,y,0],[x1,y1,0],[x1,y1,hz+r],[x1,y,hz]],SIDE);
-    else h+=pl([[x1,y,0],[x1,y1,0],[x1,y1,hz],[x1,y,hz]],SIDE);
-    if(!b.g){
-      const n=Math.floor((w-2)/(ww+3.5));
-      if(n>=1){
-        const sp=w/n;
-        for(let f=0;f<p.st;f++)for(let i=0;i<n;i++){
-          const cx=x+sp*(i+0.5),z0=f*fh+sill;
-          h+=wn([[cx-ww/2,y,z0],[cx+ww/2,y,z0],[cx+ww/2,y,z0+wh],[cx-ww/2,y,z0+wh]]);
-        }
-      }
-    }else{
-      const gw=Math.min(w-2,16),gx=x+(w-gw)/2;
-      h+=pl([[gx,y,0],[gx+gw,y,0],[gx+gw,y,7],[gx,y,7]],'#e2e8f0');
-      [1.75,3.5,5.25].forEach(z=>{h+=pl([[gx,y,z],[gx+gw,y,z],[gx,y,z],[gx+gw,y,z]],'none',1,0.6)});
+    if (isGround && room.name === 'Foyer') {
+      doors.push({ x1: centerX - 1.5, y1: room.y, x2: centerX + 1.5, y2: room.y, nx: 0, ny: 1, kind: 'entry' });
     }
-    if(rf==='flat'){
-      h+=pl([[ex0,ey0,hz],[ex1,ey0,hz],[ex1,ey0,hz+0.8],[ex0,ey0,hz+0.8]],SIDE);
-      h+=pl([[ex1,ey0,hz],[ex1,ey1,hz],[ex1,ey1,hz+0.8],[ex1,ey0,hz+0.8]],SIDE);
-      h+=pl([[ex0,ey0,hz+0.8],[ex1,ey0,hz+0.8],[ex1,ey1,hz+0.8],[ex0,ey1,hz+0.8]],WALL);
-    }else if(rf==='shed'){
-      h+=pl([[ex0,ey0,hz-ov*0.3],[ex1,ey0,hz-ov*0.3],[ex1,ey1,hz+r],[ex0,ey1,hz+r]],ROOF);
-    }else if(rf==='hip'){
-      const ins=Math.min(w,d)/2;let A,Bp;
-      if(b.ax==='x'){A=[x+ins,y+ins,hz+r];Bp=[x1-ins,y+ins,hz+r];h+=pl([[ex0,ey0,ez],[ex1,ey0,ez],Bp,A],ROOF);h+=pl([[ex1,ey0,ez],[ex1,ey1,ez],Bp],ROOF,0.75)}
-      else{A=[x+ins,y+ins,hz+r];Bp=[x+ins,y1-ins,hz+r];h+=pl([[ex0,ey0,ez],[ex1,ey0,ez],A],ROOF);h+=pl([[ex1,ey0,ez],[ex1,ey1,ez],Bp,A],ROOF,0.75)}
-    }else if(b.ax==='x'){
-      h+=pl([[ex0,ey0,ez],[ex1,ey0,ez],[ex1,y+d/2,hz+r],[ex0,y+d/2,hz+r]],ROOF);
-      h+=pl([[x1,y,hz],[x1,y1,hz],[x1,y+d/2,hz+r]],SIDE);
-    }else{
-      h+=pl([[x,y,hz],[x1,y,hz],[x+w/2,y,hz+r]],WALL);
-      h+=pl([[ex1,ey0,ez],[ex1,ey1,ez],[x+w/2,ey1,hz+r],[x+w/2,ey0,hz+r]],ROOF,0.75);
+    if (isGround && room.type === 'garage') {
+      const overheadWidth = Math.max(8, room.w - 4);
+      doors.push({ x1: centerX - overheadWidth / 2, y1: room.y, x2: centerX + overheadWidth / 2, y2: room.y, nx: 0, ny: 1, kind: 'garage' });
     }
   });
-  if(pe&&pe.side==='t'){h+=pl([[pe.c-1.6,0,0],[pe.c+1.6,0,0],[pe.c+1.6,0,7],[pe.c-1.6,0,7]],'#0f172a',0.85)}
-  h+='</svg>';
-  return h;
+  return doors;
 }
 
-/* ---------- exports ---------- */
-function stripRoom(r){return{n:r.n,t:r.t,x:r.x,y:r.y,w:r.w,h:r.h,a:r.a,s:r.s,m:r.m,ad:r.ad}}
-function currentRes(){return state.res&&state.res[typeof activeOptIdx==='number'?activeOptIdx:0]}
-function exportDXF(res){
-  const L=[];
-  const g=(c,v)=>{L.push(String(c));L.push(String(v))};
-  g(0,'SECTION');g(2,'HEADER');g(9,'$ACADVER');g(1,'AC1009');g(0,'ENDSEC');
-  g(0,'SECTION');g(2,'ENTITIES');
-  const line=(layer,x1,y1,x2,y2)=>{g(0,'LINE');g(8,layer);g(10,x1.toFixed(3));g(20,(-y1).toFixed(3));g(30,0);g(11,x2.toFixed(3));g(21,(-y2).toFixed(3));g(31,0)};
-  const text=(layer,x,y,t,h)=>{g(0,'TEXT');g(8,layer);g(10,x.toFixed(3));g(20,(-y).toFixed(3));g(30,0);g(40,h);g(1,t)};
-  res.fl.forEach((rooms,fi2)=>{
-    const ox=fi2*(res.W+12),pre='FLOOR'+(fi2+1)+'_';
-    rooms.forEach(r=>{
-      if(r.t==='patio')return;
-      line(pre+'WALLS_INTERIOR',ox+r.x,r.y,ox+r.x+r.w,r.y);
-      line(pre+'WALLS_INTERIOR',ox+r.x+r.w,r.y,ox+r.x+r.w,r.y+r.h);
-      line(pre+'WALLS_INTERIOR',ox+r.x+r.w,r.y+r.h,ox+r.x,r.y+r.h);
-      line(pre+'WALLS_INTERIOR',ox+r.x,r.y+r.h,ox+r.x,r.y);
-      text(pre+'ROOM_LABELS',ox+r.x+r.w/2-2,r.y+r.h/2,r.n,1.2);
-      text(pre+'ROOM_LABELS',ox+r.x+r.w/2-2,r.y+r.h/2+1.6,r.w.toFixed(1)+' x '+r.h.toFixed(1)+' ft',0.8);
-    });
-    getExtWalls(rooms).forEach(w=>{line(pre+'WALLS_EXTERIOR',ox+w.x1,w.y1,ox+w.x2,w.y2)});
+/* Mirrors a finished floor left-right and/or top-bottom to create another option. */
+function flipFloor(floor, envelope, variant) {
+  const copy = JSON.parse(JSON.stringify(floor));
+  const mapX = x => variant.flipX ? envelope.W - x : x;
+  const mapY = y => variant.flipY ? envelope.D - y : y;
+  copy.rooms.forEach(r => {
+    const x0 = mapX(r.x), x1 = mapX(r.x + r.w), y0 = mapY(r.y), y1 = mapY(r.y + r.h);
+    r.x = Math.min(x0, x1); r.w = Math.abs(x1 - x0);
+    r.y = Math.min(y0, y1); r.h = Math.abs(y1 - y0);
   });
-  g(0,'ENDSEC');g(0,'EOF');
-  const blob=new Blob([L.join('\n')+'\n'],{type:'application/dxf'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='plan_'+res.k+'.dxf';
-  document.body.appendChild(a);a.click();a.remove();
+  copy.doors.forEach(d => {
+    d.x1 = mapX(d.x1); d.x2 = mapX(d.x2); d.y1 = mapY(d.y1); d.y2 = mapY(d.y2);
+    if (variant.flipX) d.nx = -d.nx;
+    if (variant.flipY) d.ny = -d.ny;
+  });
+  return copy;
 }
 
-/* ---------- generation ---------- */
-function readP(){
-  const popOn=$('popToggle').checked;
-  return{
-    w:+$('w').value,d:+$('d').value,bd:+$('bd').value,ba:+$('ba').value,
-    st:+$('st').value,off:$('off').checked,gar:+$('gar').value,
-    mud:$('mud').checked,pan:$('pan').checked,gym:$('gym').checked,
-    pat:$('pat').checked,adp:$('adp').checked,f:+$('fr').value,hs:$('hs').value,
-    fin:$('fin').value,sty:$('sty').value,roof:$('rf').value,
-    entP:$('entP').value,entS:$('entS').value,tb:+$('tb').value||475000,
-    sh:popOn?$('sh').value:'rect',popd:+$('popd').value
+/* ---------------- results: areas, size checks, cost ---------------- */
+
+function summarize(floors, settings) {
+  const rooms = [].concat.apply([], floors.map(f => f.rooms));
+  const area = list => list.reduce((t, r) => t + r.w * r.h, 0);
+  const livingArea = area(rooms.filter(r => r.type !== 'garage'));
+  const garageArea = area(rooms.filter(r => r.type === 'garage'));
+  const hallArea = area(rooms.filter(r => r.type === 'hall'));
+  const checked = rooms.filter(r => r.minSide);
+  const failed = checked.filter(r => Math.min(r.w, r.h) < r.minSide - 0.3);
+  const rate = COST_PER_SQFT[settings.finish];
+  const cost = Math.round((livingArea * rate + garageArea * rate * 0.4) / 1000) * 1000;
+  return {
+    livingArea: livingArea, garageArea: garageArea,
+    hallPercent: Math.round(hallArea / Math.max(livingArea, 1) * 100),
+    roomCount: checked.length, passCount: checked.length - failed.length,
+    failedNames: failed.map(r => r.name), cost: cost, overBudget: cost - settings.budget
   };
 }
-function mirrorRes(rc,W){rc.forEach(r=>{r.x=W-r.x-r.w})}
-function run(scroll){
-  try{
-    const bt=$('btnCreateText');
-    if(bt){bt.textContent='Generating...';setTimeout(()=>{bt.textContent='Generate Plans'},500)}
-    const p=readP();
-    const P=build(p,rng(seed*97+5));
-    const gw=p.gar===2?20:p.gar===1?12:0;
-    state.res=['A','B','C','D','E'].map((s,i)=>{
-      const W=p.w,D=p.d;
-      const geo=layoutMulti(s,P,W,D,p.sh,p.popd,gw,p.pat);
-      const net=geo.footRects.reduce((a,f)=>a+f.w*f.d,0);
-      const S=scaleP(P,p,net);
-      const g=Object.assign({},S);let u=null;
-      if(p.st===2){
-        g.M=null;g.MC=null;g.MB=null;g.Bd=[];g.BC=[];g.Ba=[];
-        u={M:S.M,MC:S.MC,MB:S.MB,Bd:S.Bd,BC:S.BC,Ba:S.Ba,stairs:S.stairs};
-      }
-      const lay1=layoutMulti(s,g,W,D,p.sh,p.popd,gw,p.pat);
-      const fl=[lay1.rooms];
-      if(u)fl.push(layoutMulti(s,u,W,D,p.sh,p.popd,gw,false).rooms);
-      const foot=lay1.footRects.map(f=>Object.assign({},f));
-      if(p.sh!=='multi'&&i%2===1){fl.forEach(rc=>mirrorRes(rc,W));foot.forEach(f=>{f.x=W-f.x-f.w})}
-      const res={
-        k:s,
-        title:'Option '+s+': '+(p.sh==='multi'?OPT_INFO[s][0]:lay1.shapeName),
-        sub:p.sh==='multi'?OPT_INFO[s][1]:'Same footprint with a different room arrangement.',
-        shapeName:lay1.shapeName,fl:fl,footRects:foot,W:W,D:D,p:p,hist:[],hi:-1
-      };
-      finalize(res);
-      pushHist(res);
-      return res;
-    });
-    edSel=null;edFloor=0;
-    $('stale').innerHTML='';
-    renderActiveStage();
-    if(scroll&&window.innerWidth<=900){
-      const st=$('stage');if(st)st.scrollIntoView({behavior:'smooth',block:'start'});
-    }
-  }catch(err){
-    console.error('Generation error:',err);
-    const mount=$('stageMount');
-    if(mount)mount.innerHTML='<div class="plan-sheet" style="color:var(--danger);border:1px solid var(--danger)"><strong>Error generating plan:</strong> '+esc(err.message)+'<br><small style="color:var(--text-sub)">'+esc(err.stack||'')+'</small></div>';
-  }
+
+function describeVariant(variant, hasGarage) {
+  const entrySide = variant.flipY ? 'south' : 'north';
+  const garageSide = variant.flipX ? 'east' : 'west';
+  return 'Entry on the ' + entrySide + (hasGarage ? ', garage on the ' + garageSide : '');
 }
 
-/* ---------- edit history ---------- */
-function snapOf(res){return JSON.stringify(res.fl.map(rc=>rc.map(stripRoom)))}
-function pushHist(res){
-  const sn=snapOf(res);
-  if(res.hist[res.hi]===sn)return;
-  res.hist.splice(res.hi+1);
-  res.hist.push(sn);
-  res.hi=res.hist.length-1;
-}
-function restoreHist(res,i){
-  res.fl=JSON.parse(res.hist[i]);
-  res.hi=i;
-  finalize(res);
+function buildNotes(plan) {
+  const s = plan.settings, m = plan.summary, notes = [];
+  notes.push('Path of travel: the entry foyer opens onto a central hall that reaches every room, so no room is a walk-through.');
+  if (s.garage > 0) notes.push('The garage opens to the hall, with the mudroom and laundry directly beside it.');
+  const stretch = (m.livingArea) / plan.programArea;
+  if (stretch > 1.35) notes.push('Rooms are about ' + Math.round((stretch - 1) * 100) + '% larger than their standard sizes. Add rooms or raise the room count to use the extra space.');
+  if (stretch < 0.9) notes.push('This program normally needs about ' + formatArea(plan.programArea) + ', so some rooms are squeezed. Increase the size or remove a room.');
+  if (m.failedNames.length) notes.push('Below minimum size: ' + m.failedNames.slice(0, 4).join(', ') + '.');
+  if (plan.depthRaised) notes.push('Depth was raised to fit the garage and both room rows.');
+  if (s.adaptable) notes.push('Adaptable mode: rooms are 15% larger, the hall is wider, and doors are 36 in wide.');
+  return notes;
 }
 
-/* ---------- rendering ---------- */
-function renderActiveStage(){
-  const mount=$('stageMount');
-  if(!state.res||!state.res.length){mount.innerHTML='';return}
-  if(activeView==='edit'){renderEditorView(mount);return}
-  if(activeOptIdx==='all'){
-    mount.innerHTML='<div class="cmp-grid">'+state.res.map((r,i)=>renderSheetHTML(r,i,false)).join('')+'</div>';
-    return;
-  }
-  const cur=state.res[activeOptIdx];
-  mount.innerHTML=cur?renderSheetHTML(cur,activeOptIdx,true):'';
-}
-function renderSheetHTML(cur,idx,isSingle){
-  let h='<div class="plan-sheet">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px;flex-wrap:wrap">';
-  h+='<div><h2 style="font-size:17px;font-weight:700">'+esc(cur.title)+'</h2><div style="font-size:12.5px;color:var(--text-sub)">'+esc(cur.sub)+' · <strong>'+esc(cur.shapeName)+'</strong></div></div>';
-  h+='<div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--accent)">'+fi(cur.W)+' × '+fi(cur.D)+' envelope</div></div>';
-  h+='<div class="metrics-strip">'
-    +'<div class="metric-box"><div class="label">Net Area</div><div class="value">'+fa(cur.area)+'</div><div class="subtext">'+cur.fl.length+' level'+(cur.fl.length>1?'s':'')+'</div></div>'
-    +'<div class="metric-box"><div class="label">Est. Budget</div><div class="value">'+fm(cur.hard)+'</div><div class="subtext">'+(cur.diff<=0?'Within budget':'+'+fm(cur.diff)+' over')+'</div></div>'
-    +'<div class="metric-box"><div class="label">Solar Alignment</div><div class="value">'+cur.sun+'<span style="font-size:12px;font-weight:400">/100</span></div><div class="subtext">Front faces '+NM[cl(cur.p.f)]+'</div></div>'
-    +'<div class="metric-box"><div class="label">Size Check</div><div class="value">'+cur.passN+'/'+cur.M+'</div><div class="subtext">'+cur.circ+'% hallway</div></div>'
-    +'</div>';
-  if(activeView==='3d'){
-    h+=massMulti(cur.footRects,cur.W,cur.D,cur.p,cur.pe);
-    h+='<div style="font-size:11.5px;color:var(--text-muted);margin-top:6px">3D massing shows the generated footprint. Room edits in the Layout Editor change the 2D plan only.</div>';
-  }else{
-    cur.fl.forEach((rc,i)=>{
-      if(cur.fl.length>1)h+='<div style="font-size:12px;font-weight:700;text-transform:uppercase;margin:12px 0 4px;color:var(--text-muted)">'+(i?'Upper Floor':'Ground Level')+'</div>';
-      const dl=cur.doors[i].list.slice();
-      if(i===0){
-        if(cur.pe)dl.push(cur.pe);
-        if(cur.se)dl.push(cur.se);
-        cur.patioDoors.forEach(d=>dl.push(d));
-        const gd=garDoorMulti(cur.ew[0]);if(gd)dl.push(gd);
-      }
-      h+=planSVG(rc,cur.W,cur.D,{F:cur.p.f,open:STY[cur.p.sty].open,doors:dl,extWalls:cur.ew[i]});
-    });
-  }
-  if(isSingle)h+='<div class="notes-grid">'+cur.nts.map(x=>'<div class="note-card">'+esc(x)+'</div>').join('')+'</div>';
-  h+='</div>';
-  return h;
-}
+/* ---------------- build every option ---------------- */
 
-/* ---------- layout editor ---------- */
-function detectSharedWalls(rooms){
-  const eps=0.15,walls=[];
-  for(let i=0;i<rooms.length;i++){
-    for(let j=i+1;j<rooms.length;j++){
-      const a=rooms[i],b=rooms[j];
-      let right=null;
-      if(Math.abs(a.x+a.w-b.x)<eps)right=b;else if(Math.abs(b.x+b.w-a.x)<eps)right=a;
-      if(right){
-        const y0=Math.max(a.y,b.y),y1=Math.min(a.y+a.h,b.y+b.h);
-        if(y1-y0>1.5)walls.push({orient:'v',pos:right.x,a:y0,b:y1,x1:right.x,y1:y0,x2:right.x,y2:y1});
-      }
-      let bot=null;
-      if(Math.abs(a.y+a.h-b.y)<eps)bot=b;else if(Math.abs(b.y+b.h-a.y)<eps)bot=a;
-      if(bot){
-        const x0=Math.max(a.x,b.x),x1=Math.min(a.x+a.w,b.x+b.w);
-        if(x1-x0>1.5)walls.push({orient:'h',pos:bot.y,a:x0,b:x1,x1:x0,y1:bot.y,x2:x1,y2:bot.y});
-      }
-    }
-  }
-  return walls;
-}
-function wallSets(rooms,w){
-  const eps=0.15,L=[],R=[];
-  const ov=(a0,a1)=>Math.min(a1,w.b)-Math.max(a0,w.a)>0.5;
-  rooms.forEach((r,i)=>{
-    if(w.orient==='v'){
-      if(Math.abs(r.x+r.w-w.pos)<eps&&ov(r.y,r.y+r.h))L.push(i);
-      else if(Math.abs(r.x-w.pos)<eps&&ov(r.y,r.y+r.h))R.push(i);
-    }else{
-      if(Math.abs(r.y+r.h-w.pos)<eps&&ov(r.x,r.x+r.w))L.push(i);
-      else if(Math.abs(r.y-w.pos)<eps&&ov(r.x,r.x+r.w))R.push(i);
-    }
+function buildAllPlans(settings) {
+  const garageWidth = settings.garage === 2 ? 20 : settings.garage === 1 ? 12 : 0;
+  const envelope = computeEnvelope(settings, garageWidth);
+  const hallWidth = settings.adaptable ? HALL_ADAPTABLE : HALL_STANDARD;
+  const program = buildProgram(settings, garageWidth);
+  const programArea = program.reduce((t, f) => t + sumArea(f.north.concat(f.south).filter(r => r.type !== 'garage')), 0);
+
+  const baseFloors = program.map((floor, index) => {
+    const startX = index === 0 ? 0 : garageWidth;
+    const rowWidth = index === 0 ? envelope.W : envelope.mainWidth;
+    const rooms = layoutFloor(floor, envelope.D, startX, rowWidth, hallWidth);
+    return { label: floor.label, rooms: rooms, doors: placeDoors(rooms, index === 0, hallWidth) };
   });
-  return{L:L,R:R};
+
+  const depthRaised = settings.sizeMode === 'dims' && envelope.D > settings.depth;
+  return VARIANTS.map(variant => {
+    const floors = baseFloors.map(f => flipFloor(f, envelope, variant));
+    const plan = {
+      variant: variant, envelope: envelope, floors: floors, settings: settings,
+      programArea: programArea, depthRaised: depthRaised,
+      subtitle: describeVariant(variant, garageWidth > 0),
+      summary: summarize(floors, settings)
+    };
+    plan.notes = buildNotes(plan);
+    return plan;
+  });
 }
-function renderEditorView(mount){
-  if(activeOptIdx==='all'){
-    mount.innerHTML='<div class="plan-sheet"><strong>Layout Editor</strong><div style="color:var(--text-sub);margin-top:6px">Pick a single option (A to E) in the tab bar above to edit its rooms.</div></div>';
-    return;
-  }
-  const res=state.res[activeOptIdx];
-  if(!res){mount.innerHTML='';return}
-  if(edFloor>=res.fl.length)edFloor=0;
-  const rooms=res.fl[edFloor];
-  if(edSel!=null&&!rooms[edSel])edSel=null;
-  checkRects(rooms,res.p.adp);
-  const bd=boundsOf(rooms,res.W,res.D);edBounds=bd;
-  const W=bd.W,D=bd.D,s=Math.min(380/W,420/D),pw=W*s,ox=(450-pw)/2,oy=24;
-  edView={s:s,ox:ox,oy:oy};
-  const X=x=>ox+x*s,Y=y=>oy+y*s;
 
-  let h='<div class="plan-sheet">';
-  h+='<div class="ed-toolbar">';
-  h+='<button class="ed-btn" id="edUndo" type="button"'+(res.hi<=0?' disabled':'')+'>↩ Undo</button>';
-  h+='<button class="ed-btn" id="edRedo" type="button"'+(res.hi>=res.hist.length-1?' disabled':'')+'>↪ Redo</button>';
-  h+='<button class="ed-btn" id="edRotate" type="button"'+(edSel==null?' disabled':'')+'>Rotate (R)</button>';
-  h+='<button class="ed-btn" id="edDelete" type="button"'+(edSel==null?' disabled':'')+'>Delete</button>';
-  h+='<button class="ed-btn" id="edReset" type="button">Reset layout</button>';
-  h+='<button class="ed-btn" id="edDld" type="button">Download SVG</button>';
-  h+='</div>';
-  if(res.fl.length>1){
-    h+='<div class="nav-tabs" style="margin-bottom:10px">';
-    res.fl.forEach((f,i)=>{h+='<button class="nav-tab'+(i===edFloor?' active':'')+'" data-floor="'+i+'" type="button">'+(i?'Upper Floor':'Ground Level')+'</button>'});
-    h+='</div>';
-  }
-  h+='<div class="ed-hint">Tap a room to select it. Drag it to move, drag a corner square to resize, or drag a blue dashed wall to resize the rooms on both sides of it.</div>';
+/* ===== UI ===== (everything below touches the page) */
 
-  h+='<svg id="edSvg" width="100%" viewBox="0 0 450 '+Math.round(D*s+oy*2)+'" style="touch-action:none;user-select:none;display:block">';
-  h+='<defs><pattern id="ed-grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M 15 0 L 0 0 0 15" fill="none" stroke="#cbd5e1" stroke-width="0.5" opacity="0.7"/></pattern></defs>';
-  h+='<rect width="100%" height="100%" fill="#ffffff"/><rect width="100%" height="100%" fill="url(#ed-grid)"/>';
+const $ = id => document.getElementById(id);
 
-  rooms.forEach((r,i)=>{
-    const isSel=edSel===i;
-    const rx=X(r.x),ry=Y(r.y),rw=r.w*s,rh=r.h*s;
-    const fill=isSel?'#eff6ff':(r.t==='patio'?'#f8fafc':'#ffffff');
-    const stroke=isSel?'#2563eb':(r.bad?'#ef4444':'#0f172a');
-    h+='<rect class="ed-room" data-idx="'+i+'" x="'+rx.toFixed(1)+'" y="'+ry.toFixed(1)+'" width="'+rw.toFixed(1)+'" height="'+rh.toFixed(1)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+(isSel?2.5:1.2)+'" style="cursor:move"'+(r.t==='patio'?' stroke-dasharray="4 3"':'')+'/>';
-    if(rw>34&&rh>22){
-      h+='<text x="'+(rx+rw/2).toFixed(1)+'" y="'+(ry+rh/2-4).toFixed(1)+'" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="central" pointer-events="none">'+esc(r.n)+'</text>';
-      h+='<text x="'+(rx+rw/2).toFixed(1)+'" y="'+(ry+rh/2+9).toFixed(1)+'" font-size="9" font-family="monospace" fill="#475569" text-anchor="middle" dominant-baseline="central" pointer-events="none">'+fi(r.w)+'×'+fi(r.h)+'</text>';
+function readSettings() {
+  return {
+    sizeMode: document.querySelector('input[name=sizeMode]:checked').value,
+    area: +$('area').value, width: +$('width').value, depth: +$('depth').value,
+    bedrooms: +$('bedrooms').value, bathrooms: +$('bathrooms').value,
+    levels: +$('levels').value, garage: +$('garage').value,
+    office: $('office').checked, mudroom: $('mudroom').checked, pantry: $('pantry').checked,
+    gym: $('gym').checked, adaptable: $('adaptable').checked,
+    budget: +$('budget').value, finish: $('finish').value
+  };
+}
+
+/* Greys out whichever size inputs are not in use. */
+function applySizeMode() {
+  const byArea = document.querySelector('input[name=sizeMode]:checked').value === 'area';
+  $('area').disabled = !byArea;
+  $('width').disabled = byArea;
+  $('depth').disabled = byArea;
+  $('areaField').classList.toggle('off', !byArea);
+  $('widthField').classList.toggle('off', byArea);
+  $('depthField').classList.toggle('off', byArea);
+}
+
+function updateLabels() {
+  $('areaOut').textContent = formatArea(+$('area').value);
+  $('widthOut').textContent = formatLength(+$('width').value);
+  $('depthOut').textContent = formatLength(+$('depth').value);
+  $('budgetOut').textContent = formatMoney(+$('budget').value);
+}
+
+/* Draws one floor as SVG. */
+function floorSvg(floor, envelope) {
+  const scale = Math.min(400 / envelope.W, 340 / envelope.D);
+  const offsetX = (450 - envelope.W * scale) / 2, offsetY = 34;
+  const X = x => offsetX + x * scale, Y = y => offsetY + y * scale;
+  const height = Math.round(envelope.D * scale + offsetY + 16);
+  let svg = '<svg width="100%" viewBox="0 0 450 ' + height + '" role="img" style="background:#fff;border-radius:8px"><title>' + floor.label + '</title>';
+
+  floor.rooms.forEach(r => {
+    svg += '<rect x="' + X(r.x).toFixed(1) + '" y="' + Y(r.y).toFixed(1) + '" width="' + (r.w * scale).toFixed(1) + '" height="' + (r.h * scale).toFixed(1) + '" fill="' + ROOM_COLORS[r.type] + '" stroke="#64748b" stroke-width="1"/>';
+    const wide = r.w * scale, tall = r.h * scale;
+    const cx = X(r.x + r.w / 2), cy = Y(r.y + r.h / 2);
+    if (r.type === 'hall') {
+      if (wide > 60) svg += '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" font-size="8" text-anchor="middle" dominant-baseline="central" fill="#94a3b8">HALL</text>';
+    } else if (wide > 46 && tall > 28) {
+      svg += '<text x="' + cx.toFixed(1) + '" y="' + (cy - 4).toFixed(1) + '" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#0f172a">' + r.name + '</text>';
+      svg += '<text x="' + cx.toFixed(1) + '" y="' + (cy + 8).toFixed(1) + '" font-size="8" font-family="monospace" text-anchor="middle" dominant-baseline="central" fill="#475569">' + formatLength(r.w) + '×' + formatLength(r.h) + '</text>';
+    } else if (wide > 20 && tall > 14) {
+      svg += '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" font-size="8" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#0f172a">' + r.name.slice(0, 4) + '</text>';
     }
   });
 
-  edWalls=detectSharedWalls(rooms);
-  edWalls.forEach((w,wi)=>{
-    const x1=X(w.x1),y1=Y(w.y1),x2=X(w.x2),y2=Y(w.y2),isH=w.orient==='h';
-    h+='<line class="ed-wall-hit" data-widx="'+wi+'" x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="transparent" stroke-width="12" pointer-events="stroke" style="cursor:'+(isH?'ns-resize':'ew-resize')+'"/>';
-    h+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="3 3" opacity="0.7" pointer-events="none"/>';
+  /* Outer walls */
+  const minX = Math.min.apply(null, floor.rooms.map(r => r.x)), maxX = Math.max.apply(null, floor.rooms.map(r => r.x + r.w));
+  const minY = Math.min.apply(null, floor.rooms.map(r => r.y)), maxY = Math.max.apply(null, floor.rooms.map(r => r.y + r.h));
+  svg += '<rect x="' + X(minX).toFixed(1) + '" y="' + Y(minY).toFixed(1) + '" width="' + ((maxX - minX) * scale).toFixed(1) + '" height="' + ((maxY - minY) * scale).toFixed(1) + '" fill="none" stroke="#0f172a" stroke-width="3.5"/>';
+
+  /* Doors */
+  floor.doors.forEach(d => {
+    const ax = X(d.x1), ay = Y(d.y1), bx = X(d.x2), by = Y(d.y2);
+    if (d.kind === 'garage') {
+      svg += '<rect x="' + Math.min(ax, bx).toFixed(1) + '" y="' + (ay - 3).toFixed(1) + '" width="' + Math.abs(bx - ax).toFixed(1) + '" height="6" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.2"/>';
+      return;
+    }
+    const leaf = Math.hypot(d.x2 - d.x1, d.y2 - d.y1);
+    const tipX = X(d.x1 + d.nx * leaf), tipY = Y(d.y1 + d.ny * leaf);
+    const radius = leaf * scale;
+    const cross = (bx - ax) * (tipY - ay) - (by - ay) * (tipX - ax);
+    const color = d.kind === 'entry' ? '#2563eb' : '#0f172a';
+    svg += '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" stroke="#fff" stroke-width="5"/>';
+    svg += '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + tipX.toFixed(1) + '" y2="' + tipY.toFixed(1) + '" stroke="' + color + '" stroke-width="1.4"/>';
+    svg += '<path d="M' + bx.toFixed(1) + ',' + by.toFixed(1) + ' A' + radius.toFixed(1) + ',' + radius.toFixed(1) + ' 0 0 ' + (cross > 0 ? 0 : 1) + ' ' + tipX.toFixed(1) + ',' + tipY.toFixed(1) + '" fill="none" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="3 2"/>';
   });
-  getExtWalls(rooms).forEach(w=>{
-    h+='<line x1="'+X(w.x1).toFixed(1)+'" y1="'+Y(w.y1).toFixed(1)+'" x2="'+X(w.x2).toFixed(1)+'" y2="'+Y(w.y2).toFixed(1)+'" stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" pointer-events="none"/>';
+
+  /* Overall dimensions */
+  svg += '<text x="225" y="18" font-size="10" font-family="monospace" font-weight="600" text-anchor="middle" fill="#2563eb">WIDTH ' + formatLength(envelope.W) + '   ·   DEPTH ' + formatLength(envelope.D) + '</text>';
+  return svg + '</svg>';
+}
+
+function sheetHtml(plan, showNotes) {
+  const m = plan.summary, e = plan.envelope;
+  let h = '<div class="sheet"><h2>' + plan.variant.name + '</h2><div class="sub">' + plan.subtitle + ' · ' + formatLength(e.W) + ' × ' + formatLength(e.D) + ' envelope</div>';
+  h += '<div class="metrics">'
+    + '<div class="metric"><span>Living area</span><b>' + formatArea(m.livingArea) + '</b></div>'
+    + '<div class="metric"><span>Est. cost</span><b>' + formatMoney(m.cost) + '</b>' + (m.overBudget > 0 ? '+' + formatMoney(m.overBudget) + ' over budget' : 'Within budget') + '</div>'
+    + '<div class="metric"><span>Size check</span><b>' + m.passCount + '/' + m.roomCount + '</b>' + m.hallPercent + '% hallway</div>'
+    + '</div>';
+  plan.floors.forEach(floor => {
+    if (plan.floors.length > 1) h += '<div class="floor-label">' + floor.label + '</div>';
+    h += floorSvg(floor, e);
   });
-  if(edSel!=null){
-    const r=rooms[edSel],hw=9;
-    const rx=X(r.x),ry=Y(r.y),rw=r.w*s,rh=r.h*s;
-    [['nw',rx,ry,'nwse-resize'],['ne',rx+rw,ry,'nesw-resize'],['se',rx+rw,ry+rh,'nwse-resize'],['sw',rx,ry+rh,'nesw-resize']].forEach(c=>{
-      h+='<rect class="ed-handle" data-handle="'+c[0]+'" x="'+(c[1]-hw/2).toFixed(1)+'" y="'+(c[2]-hw/2).toFixed(1)+'" width="'+hw+'" height="'+hw+'" fill="#2563eb" stroke="#ffffff" stroke-width="1" style="cursor:'+c[3]+'"/>';
-    });
+  if (showNotes) h += '<div class="notes">' + plan.notes.map(n => '<div class="note">' + n + '</div>').join('') + '</div>';
+  return h + '</div>';
+}
+
+function render() {
+  const mount = $('mount');
+  if (!plans.length) { mount.innerHTML = ''; return; }
+  $('tabs').innerHTML = VARIANTS.map((v, i) => '<button class="btn' + (activeTab === i ? ' active' : '') + '" data-tab="' + i + '" type="button">' + v.name + '</button>').join('')
+    + '<button class="btn' + (activeTab === 'all' ? ' active' : '') + '" data-tab="all" type="button">Compare all</button>';
+  mount.innerHTML = activeTab === 'all'
+    ? '<div class="grid">' + plans.map(p => sheetHtml(p, false)).join('') + '</div>'
+    : sheetHtml(plans[activeTab], true);
+}
+
+function refresh() {
+  try {
+    applySizeMode();
+    updateLabels();
+    plans = buildAllPlans(readSettings());
+    render();
+  } catch (err) {
+    console.error(err);
+    $('mount').innerHTML = '<div class="sheet error"><b>Could not build a plan:</b> ' + err.message + '</div>';
   }
-  h+='</svg>';
-
-  const bad=rooms.filter(x=>x.bad&&x.n!=='Hall');
-  const dd=computeDoors(rooms,res.p.adp);
-  h+='<div style="margin-top:10px">';
-  if(bad.length)bad.forEach(x=>{h+='<span class="ed-chip bad">'+esc(x.n)+' is '+fi(Math.max(x.w,x.h))+'×'+fi(Math.min(x.w,x.h))+', PDF size '+fi(x.m[1])+'×'+fi(x.m[0])+'</span>'});
-  else h+='<span class="ed-chip ok">All checked rooms meet their PDF size</span>';
-  if(dd.miss.length)h+='<span class="ed-chip bad">No door link: '+esc(dd.miss.join(', '))+'</span>';
-  else h+='<span class="ed-chip ok">Every room has a door</span>';
-  h+='</div>';
-
-  if(edSel!=null){
-    const r=rooms[edSel];
-    h+='<div class="insp">'
-      +'<div class="field"><label>Name</label><input type="text" id="iN" value="'+esc(r.n)+'"></div>'
-      +'<div class="field"><label>Width (ft)</label><input type="number" id="iW" step="0.5" min="2" value="'+(Math.round(r.w*10)/10)+'"></div>'
-      +'<div class="field"><label>Length (ft)</label><input type="number" id="iH" step="0.5" min="2" value="'+(Math.round(r.h*10)/10)+'"></div>'
-      +'<div class="field"><label>X (ft)</label><input type="number" id="iX" step="0.5" value="'+(Math.round(r.x*10)/10)+'"></div>'
-      +'<div class="field"><label>Y (ft)</label><input type="number" id="iY" step="0.5" value="'+(Math.round(r.y*10)/10)+'"></div>'
-      +'</div>';
-  }
-  h+='</div>';
-  mount.innerHTML=h;
-}
-function edPt(e){
-  const sv=$('edSvg');if(!sv||!edView)return null;
-  const b=sv.getBoundingClientRect(),k=450/b.width;
-  return{x:((e.clientX-b.left)*k-edView.ox)/edView.s,y:((e.clientY-b.top)*k-edView.oy)/edView.s};
-}
-  function edDown(e){
-  if(activeView!=='edit'||activeOptIdx==='all')return;
-  if(!e.target.closest||!e.target.closest('#edSvg'))return;
-  const res=state.res&&state.res[activeOptIdx];if(!res)return;
-  const rooms=res.fl[edFloor];
-  const pt=edPt(e);if(!pt)return;
-  const t=e.target;
-  const handle=t.closest('.ed-handle');
-  const wallHit=t.closest('.ed-wall-hit');
-  const roomEl=t.closest('.ed-room');
-  const b={W:edBounds.W,D:edBounds.D};
-  if(handle&&edSel!=null&&rooms[edSel]){
-    const r=rooms[edSel];
-    drag={mode:'handle',h:handle.dataset.handle,i:edSel,sx:pt.x,sy:pt.y,o:{x:r.x,y:r.y,w:r.w,h:r.h},moved:false,b:b};
-  }else if(wallHit){
-    const w=edWalls[+wallHit.dataset.widx];if(!w)return;
-    drag={mode:'wall',w:w,sets:wallSets(rooms,w),sx:pt.x,sy:pt.y,orig:rooms.map(r=>({x:r.x,y:r.y,w:r.w,h:r.h})),moved:false,b:b};
-  }else if(roomEl){
-    const i=+roomEl.dataset.idx,r=rooms[i];if(!r)return;
-    edSel=i;
-    drag={mode:'move',i:i,sx:pt.x,sy:pt.y,o:{x:r.x,y:r.y,w:r.w,h:r.h},moved:false,b:b};
-  }else{
-    edSel=null;
-  }
-  try{$('stageMount').setPointerCapture(e.pointerId)}catch(_){}
-  e.preventDefault();
-  renderActiveStage();
-}
-function edMove(e){
-  if(!drag)return;
-  const res=state.res&&state.res[activeOptIdx];if(!res){drag=null;return}
-  const rooms=res.fl[edFloor];
-  const pt=edPt(e);if(!pt)return;
-  const dx=pt.x-drag.sx,dy=pt.y-drag.sy;
-  if(!drag.moved&&Math.abs(dx)<0.25&&Math.abs(dy)<0.25)return;
-  drag.moved=true;
-  const sn=v=>Math.round(v*2)/2;
-  if(drag.mode==='move'){
-    const r=rooms[drag.i];if(!r)return;
-    r.x=Math.max(0,Math.min(Math.max(0,drag.b.W-r.w),sn(drag.o.x+dx)));
-    r.y=Math.max(0,Math.min(Math.max(0,drag.b.D-r.h),sn(drag.o.y+dy)));
-  }else if(drag.mode==='handle'){
-    const r=rooms[drag.i];if(!r)return;
-    const o=drag.o,hd=drag.h,MN=2;
-    let x=o.x,y=o.y,w=o.w,h=o.h;
-    if(hd.indexOf('e')>-1)w=Math.max(MN,sn(o.w+dx));
-    if(hd.indexOf('s')>-1)h=Math.max(MN,sn(o.h+dy));
-    if(hd.indexOf('w')>-1){const nw=Math.max(MN,sn(o.w-dx));x=o.x+(o.w-nw);w=nw}
-    if(hd.indexOf('n')>-1){const nh=Math.max(MN,sn(o.h-dy));y=o.y+(o.h-nh);h=nh}
-    if(x<0){w+=x;x=0}
-    if(y<0){h+=y;y=0}
-    if(x+w>drag.b.W)w=Math.max(MN,drag.b.W-x);
-    if(y+h>drag.b.D)h=Math.max(MN,drag.b.D-y);
-    r.x=x;r.y=y;r.w=Math.max(MN,w);r.h=Math.max(MN,h);
-  }else if(drag.mode==='wall'){
-    const horiz=drag.w.orient==='h';
-    let delta=sn(horiz?dy:dx);
-    drag.sets.L.forEach(i=>{const o=drag.orig[i],sz=horiz?o.h:o.w;if(sz+delta<2)delta=2-sz});
-    drag.sets.R.forEach(i=>{const o=drag.orig[i],sz=horiz?o.h:o.w;if(sz-delta<2)delta=sz-2});
-    drag.sets.L.forEach(i=>{const o=drag.orig[i],r=rooms[i];if(horiz)r.h=o.h+delta;else r.w=o.w+delta});
-    drag.sets.R.forEach(i=>{
-      const o=drag.orig[i],r=rooms[i];
-      if(horiz){r.y=o.y+delta;r.h=o.h-delta}else{r.x=o.x+delta;r.w=o.w-delta}
-    });
-  }
-  renderActiveStage();
-}
-function edUp(e){
-  if(!drag)return;
-  const moved=drag.moved;drag=null;
-  try{$('stageMount').releasePointerCapture(e.pointerId)}catch(_){}
-  if(!moved)return;
-  const res=state.res&&state.res[activeOptIdx];if(!res)return;
-  finalize(res);pushHist(res);
-  renderActiveStage();
 }
 
-function edUndo(res){if(res.hi>0){restoreHist(res,res.hi-1);edSel=null;renderActiveStage()}}
-function edRedo(res){if(res.hi<res.hist.length-1){restoreHist(res,res.hi+1);edSel=null;renderActiveStage()}}
-function edRotate(res){
-  const r=res.fl[edFloor][edSel];if(!r)return;
-  const t=r.w;r.w=r.h;r.h=t;
-  finalize(res);pushHist(res);renderActiveStage();
-}
-function edDelete(res){
-  const rooms=res.fl[edFloor];if(!rooms[edSel])return;
-  rooms.splice(edSel,1);edSel=null;
-  finalize(res);pushHist(res);renderActiveStage();
-}
-function edReset(res){
-  restoreHist(res,0);
-  res.hist=res.hist.slice(0,1);res.hi=0;
-  edSel=null;renderActiveStage();
-}
-function edDownload(){
-  const sv=$('edSvg');if(!sv)return;
-  let t=new XMLSerializer().serializeToString(sv);
-  if(t.indexOf('xmlns=')<0)t=t.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
-  const blob=new Blob([t],{type:'image/svg+xml'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='edited_plan.svg';
-  document.body.appendChild(a);a.click();a.remove();
-}
-function edClick(e){
-  if(activeView!=='edit')return;
-  const b=e.target.closest&&e.target.closest('button');
-  if(!b)return;
-  if(b.dataset.floor!==undefined){edFloor=+b.dataset.floor;edSel=null;renderActiveStage();return}
-  const res=state.res&&state.res[activeOptIdx];if(!res)return;
-  const id=b.id;
-  if(id==='edUndo')edUndo(res);
-  else if(id==='edRedo')edRedo(res);
-  else if(id==='edRotate')edRotate(res);
-  else if(id==='edDelete')edDelete(res);
-  else if(id==='edReset')edReset(res);
-  else if(id==='edDld')edDownload();
-}
-function edInspChange(e){
-  const id=e.target.id;
-  if(!/^i[NWHXY]$/.test(id))return;
-  const res=state.res&&state.res[activeOptIdx];if(!res||edSel==null)return;
-  const r=res.fl[edFloor][edSel];if(!r)return;
-  const v=e.target.value;
-  if(id==='iN'){r.n=(v||'').trim()||r.n}
-  else{
-    const n=parseFloat(v);if(!isFinite(n))return;
-    if(id==='iW')r.w=Math.max(2,n);
-    else if(id==='iH')r.h=Math.max(2,n);
-    else if(id==='iX')r.x=Math.max(0,n);
-    else if(id==='iY')r.y=Math.max(0,n);
-  }
-  finalize(res);pushHist(res);renderActiveStage();
-}
-function edKey(e){
-  if(activeView!=='edit'||activeOptIdx==='all')return;
-  const tag=(e.target&&e.target.tagName)||'';
-  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA')return;
-  const res=state.res&&state.res[activeOptIdx];if(!res)return;
-  const k=(e.key||'').toLowerCase();
-  if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();if(e.shiftKey)edRedo(res);else edUndo(res)}
-  else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();edRedo(res)}
-  else if(k==='r'&&edSel!=null&&!e.ctrlKey&&!e.metaKey){edRotate(res)}
-  else if((k==='delete'||k==='backspace')&&edSel!=null){e.preventDefault();edDelete(res)}
-}
-function wireEditor(){
-  const mount=$('stageMount');
-  mount.addEventListener('pointerdown',edDown);
-  mount.addEventListener('click',edClick);
-  mount.addEventListener('change',edInspChange);
-  document.addEventListener('pointermove',edMove);
-  document.addEventListener('pointerup',edUp);
-  document.addEventListener('pointercancel',edUp);
-  document.addEventListener('keydown',edKey);
+function downloadFile(name, text, type) {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([text], { type: type }));
+  link.download = name;
+  document.body.appendChild(link); link.click(); link.remove();
 }
 
-/* ---------- page controls ---------- */
-const PRE={
-  courtyard:{sh:'U',w:52,d:56,sty:'mod',rf:'flat',st:'1'},
-  farm:{sh:'T',w:46,d:52,sty:'farm',rf:'gable',st:'1'},
-  ranch:{sh:'L',w:56,d:44,sty:'ranch',rf:'hip',st:'1'},
-  compact:{sh:'rect',w:32,d:38,sty:'open',rf:'shed',st:'2',pop:false},
-  mcm:{sh:'L',w:48,d:44,sty:'mid',rf:'flat',st:'1'},
-  colonial:{sh:'rect',w:36,d:48,sty:'col',rf:'gable',st:'2',pop:false},
-  medv:{sh:'U',w:54,d:58,sty:'med',rf:'hip',st:'1'},
-  beach:{sh:'stagger',w:38,d:50,sty:'coast',rf:'shed',st:'1'},
-  cabin:{sh:'rect',w:28,d:34,sty:'craft',rf:'gambrel',st:'1',pop:false},
-  tudor:{sh:'T',w:50,d:55,sty:'tudor',rf:'gable',st:'2'}
-};
-function syncWD(){
-  const W=+$('w').value,D=+$('d').value;
-  $('wo').textContent=fi(W);$('do').textContent=fi(D);
-  $('ar').value=W*D;$('ao').textContent=fa(W*D);
+function setUnits(metric) {
+  useMetric = metric;
+  $('unitImperial').classList.toggle('active', !metric);
+  $('unitMetric').classList.toggle('active', metric);
+  updateLabels();
+  render();
 }
-function markStale(){
-  if(state.res)$('stale').innerHTML='<div class="stale-note">Settings changed. Press Generate Plans to update.</div>';
-}
-function setPop(on){
-  $('popToggle').checked=on;
-  $('sh').disabled=!on;
-  $('popd').disabled=!on;
-}
-function setUnits(metric){
-  isMetric=metric;
-  $('uImp').classList.toggle('active',!metric);
-  $('uMet').classList.toggle('active',metric);
-  syncWD();
-  if(state.res){state.res.forEach(r=>finalize(r));renderActiveStage()}
-}
-function setView(v){
-  activeView=v;
-  $('v2d').classList.toggle('active',v==='2d');
-  $('v3d').classList.toggle('active',v==='3d');
-  $('vEd').classList.toggle('active',v==='edit');
-  edSel=null;edFloor=0;
-  renderActiveStage();
-}
-function initApp(){
-  syncWD();
-  $('tbo').textContent=fm(+$('tb').value);
-  $('w').addEventListener('input',syncWD);
-  $('d').addEventListener('input',syncWD);
-  $('ar').addEventListener('input',()=>{
-    const A=+$('ar').value,ratio=(+$('w').value)/(+$('d').value);
-    let D=Math.sqrt(A/ratio),W=ratio*D;
-    W=Math.min(75,Math.max(20,Math.round(W)));
-    D=Math.min(85,Math.max(25,Math.round(D)));
-    $('w').value=W;$('d').value=D;
-    $('wo').textContent=fi(W);$('do').textContent=fi(D);
-    $('ao').textContent=fa(W*D);
+
+function init() {
+  $('sidebar').addEventListener('input', refresh);
+  $('sidebar').addEventListener('change', refresh);
+  $('tabs').addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    activeTab = button.dataset.tab === 'all' ? 'all' : +button.dataset.tab;
+    render();
   });
-  $('tb').addEventListener('input',()=>{$('tbo').textContent=fm(+$('tb').value)});
-  $('popToggle').addEventListener('change',()=>setPop($('popToggle').checked));
-  document.querySelectorAll('.sidebar input,.sidebar select').forEach(el=>{
-    el.addEventListener('change',markStale);
-    el.addEventListener('input',markStale);
+  $('unitImperial').addEventListener('click', () => setUnits(false));
+  $('unitMetric').addEventListener('click', () => setUnits(true));
+  $('printPage').addEventListener('click', () => window.print());
+  $('saveJson').addEventListener('click', () => {
+    if (!plans.length) return;
+    const plan = plans[activeTab === 'all' ? 0 : activeTab];
+    downloadFile('floorplan_' + plan.variant.name.slice(-1) + '.json',
+      JSON.stringify({ settings: plan.settings, envelope: plan.envelope, floors: plan.floors }, null, 2), 'application/json');
   });
-
-  $('uImp').addEventListener('click',()=>setUnits(false));
-  $('uMet').addEventListener('click',()=>setUnits(true));
-
-  $('optionTabs').addEventListener('click',e=>{
-    const b=e.target.closest('.nav-tab');if(!b)return;
-    document.querySelectorAll('#optionTabs .nav-tab').forEach(t=>t.classList.remove('active'));
-    b.classList.add('active');
-    activeOptIdx=b.dataset.opt==='all'?'all':+b.dataset.opt;
-    edSel=null;edFloor=0;
-    renderActiveStage();
-  });
-  $('v2d').addEventListener('click',()=>setView('2d'));
-  $('v3d').addEventListener('click',()=>setView('3d'));
-  $('vEd').addEventListener('click',()=>setView('edit'));
-  $('layerBar').addEventListener('click',e=>{
-    const p=e.target.closest('.layer-pill');if(!p)return;
-    const lay=p.dataset.layer;
-    layers[lay]=!layers[lay];
-    p.classList.toggle('on',layers[lay]);
-    renderActiveStage();
-  });
-
-  document.querySelectorAll('.preset-chip').forEach(chip=>{
-    chip.addEventListener('click',()=>{
-      const pr=PRE[chip.dataset.pre];if(!pr)return;
-      setPop(pr.pop!==false);
-      $('sh').value=pr.sh;
-      $('w').value=pr.w;$('d').value=pr.d;
-      $('sty').value=pr.sty;$('rf').value=pr.rf;$('st').value=pr.st;
-      syncWD();
-      run(true);
-    });
-  });
-
-  $('create').addEventListener('click',()=>{seed++;run(true)});
-  $('btnExportDxf').addEventListener('click',()=>{const r=currentRes();if(r)exportDXF(r)});
-  $('btnExportJson').addEventListener('click',()=>{
-    const r=currentRes();if(!r)return;
-    const data={title:r.title,envelope:{W:r.W,D:r.D},settings:r.p,floors:r.fl.map(rc=>rc.map(stripRoom))};
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='floorplan_'+r.k+'.json';
-    document.body.appendChild(a);a.click();a.remove();
-  });
-  $('btnPrint').addEventListener('click',()=>window.print());
-
-  wireEditor();
-  run(false);
+  refresh();
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initApp);
-else initApp();
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>
