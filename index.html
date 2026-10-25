@@ -901,5 +901,388 @@ function init() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 </script>
+<!-- =====================================================================
+  SPATIAL SEPARATION TAB  (BC Building Code: Part 9 and Part 3)
+  ===================================================================== -->
+
+<style>
+  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid rgba(128,128,128,.45);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;position:sticky;top:0;z-index:50;background:Canvas}
+  #ss-tabs button{font:inherit;font-size:14px;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;color:inherit;cursor:pointer;opacity:.7}
+  #ss-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-color:rgba(128,128,128,.45);background:Canvas;margin-bottom:-1px;border-bottom:1px solid Canvas}
+  #ss-tabs button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+  #ss-panel{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:960px;margin:0 auto;padding:20px 16px 60px;line-height:1.45}
+  #ss-panel[hidden],#ss-main[hidden]{display:none}
+  #ss-panel h2{margin:0 0 4px;font-size:22px}
+  #ss-panel h3{margin:22px 0 8px;font-size:15px}
+  #ss-panel .ss-sub{margin:0 0 16px;opacity:.7;font-size:13px}
+  #ss-panel .ss-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  #ss-panel label{display:flex;flex-direction:column;gap:3px;font-size:13px}
+  #ss-panel input,#ss-panel select,#ss-panel textarea,#ss-panel button.ss-btn{font:inherit;font-size:14px;padding:6px 8px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:Field;color:FieldText;box-sizing:border-box;width:100%}
+  #ss-panel button.ss-btn{width:auto;cursor:pointer;background:ButtonFace;color:ButtonText}
+  #ss-panel .ss-check{flex-direction:row;align-items:flex-start;gap:8px}
+  #ss-panel .ss-check input{width:auto;margin-top:3px}
+  #ss-panel .ss-row{display:grid;grid-template-columns:2fr 1fr 1fr 70px auto;gap:8px;margin-bottom:6px;align-items:end}
+  #ss-panel .ss-row.ss-head{font-size:12px;opacity:.7;align-items:end;margin-bottom:2px}
+  @media(max-width:600px){#ss-panel .ss-row{grid-template-columns:1fr 1fr 1fr 60px auto}#ss-panel .ss-row .ss-lbl{grid-column:1/-1}}
+  #ss-panel .ss-result{margin-top:20px;border:2px solid rgba(128,128,128,.55);border-radius:6px;padding:14px 16px}
+  #ss-panel .ss-result.ss-ok{border-color:#2e8b57}
+  #ss-panel .ss-result.ss-bad{border-color:#c0392b}
+  #ss-panel .ss-verdict{font-size:18px;font-weight:700;margin:0 0 8px}
+  #ss-panel .ss-ok .ss-verdict{color:#2e8b57}
+  #ss-panel .ss-bad .ss-verdict{color:#c0392b}
+  #ss-panel table.ss-t{border-collapse:collapse;width:100%;font-size:14px}
+  #ss-panel table.ss-t td{padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25)}
+  #ss-panel table.ss-t td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  #ss-panel ul.ss-notes{margin:10px 0 0;padding-left:18px;font-size:13px}
+  #ss-panel ul.ss-notes li{margin-bottom:3px}
+  #ss-panel .ss-warn{color:#b9770e}
+  #ss-panel details{margin-top:22px;border:1px solid rgba(128,128,128,.4);border-radius:6px;padding:8px 12px}
+  #ss-panel summary{cursor:pointer;font-weight:600;font-size:14px}
+  #ss-panel textarea{min-height:140px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #ss-panel .ss-small{font-size:12px;opacity:.75}
+  #ss-panel .ss-x{padding:6px 10px}
+</style>
+
+<div id="ss-panel" hidden>
+  <h2>Spatial separation</h2>
+  <p class="ss-sub">Maximum unprotected openings in an exposing building face. A checking aid only. Confirm every result against the current BC Building Code.</p>
+
+  <div class="ss-grid">
+    <label>Code basis
+      <select id="ss-mode">
+        <option value="p9">Part 9 (houses / small buildings)</option>
+        <option value="p3">Part 3 (large buildings)</option>
+      </select>
+    </label>
+    <label>Units for lengths
+      <select id="ss-unit">
+        <option value="m">metres</option>
+        <option value="mm">millimetres</option>
+        <option value="ft">decimal feet</option>
+      </select>
+    </label>
+    <label>Limiting distance (actual)
+      <input id="ss-ld" type="number" step="any" min="0" placeholder="e.g. 3">
+    </label>
+  </div>
+
+  <h3>Exposing building face</h3>
+  <div class="ss-grid">
+    <label>Width <input id="ss-w" type="number" step="any" min="0"></label>
+    <label>Height (grade to top-storey ceiling) <input id="ss-h" type="number" step="any" min="0"></label>
+    <label>Or enter area directly (units², overrides W × H) <input id="ss-area" type="number" step="any" min="0"></label>
+  </div>
+
+  <h3>Conditions</h3>
+  <div class="ss-grid">
+    <label class="ss-check" id="ss-resp-wrap"><input id="ss-resp" type="checkbox"><span>Fire department response over 10 min in 10% or more of calls (Part 9: halves the limiting distance if any storey is unsprinklered)</span></label>
+    <label class="ss-check"><input id="ss-spr" type="checkbox"><span>Building is sprinklered</span></label>
+  </div>
+
+  <h3>Table used for the percentage</h3>
+  <div class="ss-grid">
+    <label>Table
+      <select id="ss-tbl"></select>
+    </label>
+    <label>Face-area rows
+      <select id="ss-rowmode">
+        <option value="step">Use the next row up (maximum area rows)</option>
+        <option value="interp">Interpolate between rows</option>
+      </select>
+    </label>
+  </div>
+  <p class="ss-small" id="ss-tblmsg"></p>
+
+  <h3>Proposed unprotected openings</h3>
+  <div class="ss-row ss-head"><span>Label</span><span>Width</span><span>Height</span><span>Qty</span><span></span></div>
+  <div id="ss-ops"></div>
+  <button class="ss-btn" id="ss-add" type="button">Add opening</button>
+
+  <div class="ss-result" id="ss-out" aria-live="polite"></div>
+
+  <details id="ss-tabledit">
+    <summary>Code tables (enter once, saved in this browser)</summary>
+    <p class="ss-small">Copy the percentage table from your code book. First row: limiting distances in metres. First column: exposing building face area in m². Values: percent. Separate cells with commas or tabs, so you can paste straight from a spreadsheet. For a table with no area rows, use a single row with any area (e.g. 0). Leave the top-left cell blank or put a label there.</p>
+    <p class="ss-small">Example layout (these numbers are placeholders, not code values):</p>
+    <pre class="ss-small" style="margin:0 0 10px">area, 1.2, 2, 3
+20, 0, 0, 0
+40, 0, 0, 0</pre>
+    <div class="ss-grid">
+      <label>Table name <input id="ss-tname" type="text" placeholder="e.g. Part 9 Table 9.10.15.4 (house)"></label>
+      <label>Saved tables <select id="ss-tsaved"></select></label>
+    </div>
+    <label style="margin-top:10px">Table data <textarea id="ss-tdata" spellcheck="false"></textarea></label>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="ss-btn" id="ss-tsave" type="button">Save table</button>
+      <button class="ss-btn" id="ss-tdel" type="button">Delete selected</button>
+      <button class="ss-btn" id="ss-tbackup" type="button">Copy all tables (backup)</button>
+    </div>
+    <p class="ss-small" id="ss-tstatus"></p>
+  </details>
+</div>
+
+<script>
+(function () {
+  var MAIN_LABEL = "Main tool";          // <-- rename your existing tab here
+  var SS_LABEL   = "Spatial separation";
+  var LS_KEY = "ssTablesV1";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var me = document.currentScript;
+  var panel = $("ss-panel");
+
+  /* ---------- tabs: wrap the existing page ---------- */
+  var main = document.createElement("div");
+  main.id = "ss-main";
+  Array.prototype.slice.call(document.body.childNodes).forEach(function (n) {
+    if (n === me || n === panel) return;
+    main.appendChild(n);
+  });
+  var tabs = document.createElement("div");
+  tabs.id = "ss-tabs";
+  tabs.setAttribute("role", "tablist");
+  function mkTab(label, key) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.setAttribute("role", "tab"); b.dataset.key = key;
+    b.addEventListener("click", function () { show(key); });
+    return b;
+  }
+  var tMain = mkTab(MAIN_LABEL, "main"), tSS = mkTab(SS_LABEL, "ss");
+  tabs.appendChild(tMain); tabs.appendChild(tSS);
+  document.body.insertBefore(tabs, document.body.firstChild);
+  document.body.insertBefore(main, panel);
+  function show(key) {
+    var isSS = key === "ss";
+    main.hidden = isSS; panel.hidden = !isSS;
+    tMain.setAttribute("aria-selected", String(!isSS));
+    tSS.setAttribute("aria-selected", String(isSS));
+    try { history.replaceState(null, "", isSS ? "#spatial-separation" : location.pathname + location.search); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  show(location.hash === "#spatial-separation" ? "ss" : "main");
+
+  /* ---------- helpers ---------- */
+  var UNIT = { m: 1, mm: 0.001, ft: 0.3048 };
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function f(n, d) { return (+n).toFixed(d === undefined ? 2 : d); }
+
+  /* ---------- table storage ---------- */
+  var tables = [];
+  function loadTables() { try { tables = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { tables = []; } }
+  function saveTables() { try { localStorage.setItem(LS_KEY, JSON.stringify(tables)); return true; } catch (e) { return false; } }
+
+  function parseTable(text) {
+    var lines = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    if (lines.length < 2) throw new Error("Need a header row of limiting distances and at least one data row.");
+    var split = function (l) { return l.split(/[,\t;]+/).map(function (c) { return c.trim(); }); };
+    var head = split(lines[0]).slice(1).map(parseFloat);
+    if (head.length < 1 || head.some(isNaN)) throw new Error("Header row must list limiting distances (numbers) after the first cell.");
+    for (var i = 1; i < head.length; i++) if (head[i] <= head[i - 1]) throw new Error("Limiting distances must increase left to right.");
+    var rows = lines.slice(1).map(function (l, idx) {
+      var c = split(l), a = parseFloat(c[0]), v = c.slice(1).map(parseFloat);
+      if (isNaN(a)) throw new Error("Row " + (idx + 2) + ": first cell must be a face area.");
+      if (v.length !== head.length || v.some(isNaN)) throw new Error("Row " + (idx + 2) + ": expected " + head.length + " percentage values.");
+      return { a: a, v: v };
+    });
+    for (var j = 1; j < rows.length; j++) if (rows[j].a <= rows[j - 1].a) throw new Error("Face areas must increase down the rows.");
+    return { lds: head, rows: rows };
+  }
+
+  function lerp(x, x0, x1, y0, y1) { return x1 === x0 ? y0 : y0 + (y1 - y0) * (x - x0) / (x1 - x0); }
+  function colInterp(vals, lds, ld) {
+    if (ld <= lds[0]) return vals[0];
+    if (ld >= lds[lds.length - 1]) return vals[vals.length - 1];
+    for (var i = 0; i < lds.length - 1; i++)
+      if (ld >= lds[i] && ld <= lds[i + 1]) return lerp(ld, lds[i], lds[i + 1], vals[i], vals[i + 1]);
+  }
+  function lookup(tbl, area, ld, mode) {
+    var notes = [], t = tbl, lds = t.lds, rows = t.rows;
+    if (ld < lds[0]) notes.push("Limiting distance is below the first column (" + lds[0] + " m): value from the first column used. Check the code for what applies below that.");
+    if (ld > lds[lds.length - 1]) notes.push("Limiting distance is beyond the last column (" + lds[lds.length - 1] + " m): last column used. Check whether the code allows more.");
+    var pct;
+    if (rows.length === 1) { pct = colInterp(rows[0].v, lds, ld); }
+    else if (area > rows[rows.length - 1].a) {
+      pct = colInterp(rows[rows.length - 1].v, lds, ld);
+      notes.push("Face area " + f(area, 1) + " m² is larger than the biggest row (" + rows[rows.length - 1].a + " m²): last row used. Check the code for larger faces.");
+    } else if (area <= rows[0].a) {
+      pct = colInterp(rows[0].v, lds, ld);
+    } else if (mode === "step") {
+      var r = rows.find(function (r) { return area <= r.a; });
+      pct = colInterp(r.v, lds, ld);
+    } else {
+      var k = 0; while (area > rows[k + 1].a) k++;
+      var p0 = colInterp(rows[k].v, lds, ld), p1 = colInterp(rows[k + 1].v, lds, ld);
+      pct = lerp(area, rows[k].a, rows[k + 1].a, p0, p1);
+    }
+    return { pct: pct, notes: notes };
+  }
+
+  /* ---------- table UI ---------- */
+  function refreshTableLists(selectName) {
+    var opts = tables.map(function (t, i) { return '<option value="' + i + '">' + esc(t.name) + "</option>"; }).join("");
+    $("ss-tbl").innerHTML = tables.length ? opts : '<option value="">No table saved yet</option>';
+    $("ss-tsaved").innerHTML = tables.length ? opts : '<option value="">None</option>';
+    if (selectName !== undefined) {
+      var idx = tables.findIndex(function (t) { return t.name === selectName; });
+      if (idx >= 0) { $("ss-tbl").value = idx; $("ss-tsaved").value = idx; }
+    }
+    $("ss-tblmsg").textContent = tables.length ? "" : "Open “Code tables” at the bottom of this page and enter the table from your code book. The limiting-distance-squared check for Part 9 works without a table.";
+  }
+  $("ss-tsaved").addEventListener("change", function () {
+    var t = tables[+$("ss-tsaved").value]; if (!t) return;
+    $("ss-tname").value = t.name; $("ss-tdata").value = t.csv;
+  });
+  $("ss-tsave").addEventListener("click", function () {
+    var name = $("ss-tname").value.trim(), csv = $("ss-tdata").value, st = $("ss-tstatus");
+    if (!name) { st.textContent = "Give the table a name."; return; }
+    try { parseTable(csv); } catch (e) { st.textContent = "Not saved: " + e.message; return; }
+    var i = tables.findIndex(function (t) { return t.name === name; });
+    if (i >= 0) tables[i].csv = csv; else tables.push({ name: name, csv: csv });
+    st.textContent = saveTables() ? "Saved “" + name + "”." : "Could not save in this browser (storage blocked). The table works until you close the page.";
+    refreshTableLists(name); calc();
+  });
+  $("ss-tdel").addEventListener("click", function () {
+    var i = +$("ss-tsaved").value; if (isNaN(i) || !tables[i]) return;
+    if (!confirm("Delete “" + tables[i].name + "”?")) return;
+    tables.splice(i, 1); saveTables(); refreshTableLists(); $("ss-tname").value = ""; $("ss-tdata").value = ""; calc();
+  });
+  $("ss-tbackup").addEventListener("click", function () {
+    var txt = tables.map(function (t) { return "# " + t.name + "\n" + t.csv; }).join("\n\n");
+    var done = function () { $("ss-tstatus").textContent = "Copied to clipboard."; };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, function () { $("ss-tstatus").textContent = "Copy failed."; });
+    else $("ss-tstatus").textContent = "Clipboard not available here.";
+  });
+
+  /* ---------- openings list ---------- */
+  function addOpening(label, w, h, q) {
+    var d = document.createElement("div"); d.className = "ss-row";
+    d.innerHTML =
+      '<label class="ss-lbl"><input type="text" class="ss-ol" placeholder="e.g. W1 living room" value="' + esc(label || "") + '"></label>' +
+      '<label><input type="number" step="any" min="0" class="ss-ow" value="' + (w || "") + '"></label>' +
+      '<label><input type="number" step="any" min="0" class="ss-oh" value="' + (h || "") + '"></label>' +
+      '<label><input type="number" step="1" min="1" class="ss-oq" value="' + (q || 1) + '"></label>' +
+      '<button type="button" class="ss-btn ss-x" aria-label="Remove opening">✕</button>';
+    d.querySelector("button").addEventListener("click", function () { d.remove(); calc(); });
+    $("ss-ops").appendChild(d);
+  }
+  $("ss-add").addEventListener("click", function () { addOpening(); });
+  addOpening();
+
+  /* ---------- calculation ---------- */
+  function calc() {
+    var out = $("ss-out"), p9 = $("ss-mode").value === "p9";
+    var u = UNIT[$("ss-unit").value];
+    $("ss-resp-wrap").style.display = p9 ? "" : "none";
+
+    var LD = num("ss-ld") * u;
+    var A = num("ss-area") * u * u || num("ss-w") * u * num("ss-h") * u;
+    var spr = $("ss-spr").checked;
+
+    var ops = Array.prototype.map.call($("ss-ops").children, function (r) {
+      var w = (parseFloat(r.querySelector(".ss-ow").value) || 0) * u,
+          h = (parseFloat(r.querySelector(".ss-oh").value) || 0) * u,
+          q = Math.max(1, parseInt(r.querySelector(".ss-oq").value, 10) || 1);
+      return { label: r.querySelector(".ss-ol").value.trim() || "Opening", a: w * h, q: q };
+    }).filter(function (o) { return o.a > 0; });
+    var proposed = ops.reduce(function (s, o) { return s + o.a * o.q; }, 0);
+
+    if (!(A > 0) || !(LD >= 0) || $("ss-ld").value === "") {
+      out.className = "ss-result";
+      out.innerHTML = '<p class="ss-verdict">Enter the limiting distance and the face size to see a result.</p>';
+      return;
+    }
+
+    var notes = [], effLD = LD;
+    if (p9 && $("ss-resp").checked && !spr) {
+      effLD = LD / 2;
+      notes.push("Limiting distance halved for calculation (Part 9 response-time rule): " + f(LD) + " m becomes " + f(effLD) + " m. The 50% individual-opening check below still uses the actual distance.");
+    } else if (p9 && $("ss-resp").checked && spr) {
+      notes.push("Response-time halving does not apply because the building is sprinklered. Confirm every storey is sprinklered.");
+    }
+
+    var allowed = 0, basis = "", tblPct = null;
+    var tbl = null, tblName = "";
+    var ti = +$("ss-tbl").value;
+    if (tables[ti]) {
+      try { tbl = parseTable(tables[ti].csv); tblName = tables[ti].name; } catch (e) { notes.push('<span class="ss-warn">Saved table is invalid: ' + esc(e.message) + "</span>"); }
+    }
+    var rowsTxt = "";
+    if (effLD < 1.2) {
+      allowed = 0; basis = "Limiting distance under 1.2 m: no unprotected openings permitted";
+    } else {
+      var cands = [];
+      if (tbl) {
+        var L = lookup(tbl, A, effLD, $("ss-rowmode").value);
+        tblPct = L.pct; notes = notes.concat(L.notes.map(function (n) { return '<span class="ss-warn">' + esc(n) + "</span>"; }));
+        cands.push({ area: Math.min(A, A * tblPct / 100), why: "Table: " + tblName + " (" + f(tblPct, 1) + "%)" });
+      } else {
+        notes.push('<span class="ss-warn">No table selected, so the percentage method is not included in this result.</span>');
+      }
+      if (p9) cands.push({ area: Math.min(A, effLD * effLD), why: "Limiting distance squared (" + f(effLD) + " m)² = " + f(effLD * effLD) + " m²" });
+      if (cands.length) {
+        cands.sort(function (a, b) { return b.area - a.area; });
+        allowed = cands[0].area; basis = cands[0].why;
+        if (p9 && cands.length > 1) notes.push("Part 9 allows the least restrictive of the methods. Governing method: " + esc(basis) + ".");
+      }
+    }
+
+    var pass = proposed <= allowed + 1e-9, hasMethod = (effLD < 1.2) || tbl || p9;
+    var rows = [
+      ["Exposing building face area", f(A) + " m² (" + f(A * 10.7639, 0) + " ft²)"],
+      ["Limiting distance (actual)", f(LD) + " m"],
+      ["Limiting distance used", f(effLD) + " m"],
+      ["Basis", basis || "n/a"],
+      ["Maximum unprotected openings", f(allowed) + " m² (" + f(allowed * 10.7639, 1) + " ft²) = " + f(100 * allowed / A, 1) + "% of face"],
+      ["Proposed unprotected openings", f(proposed) + " m² (" + f(proposed * 10.7639, 1) + " ft²) = " + f(100 * proposed / A, 1) + "% of face"],
+      ["Remaining allowance", f(allowed - proposed) + " m²"]
+    ];
+
+    /* individual opening limits */
+    var indiv = [];
+    if (!spr && LD <= 2) {
+      if (p9) {
+        var lim = 0.5 * allowed;
+        indiv.push("Part 9: with an actual limiting distance of 2 m or less in a non-sprinklered building, each opening or group of openings may not exceed 50% of the maximum aggregate area (" + f(lim) + " m²). Openable windows of 0.35 m² or less that meet the egress requirements are exempt.");
+        ops.forEach(function (o) { if (o.a > lim + 1e-9 && o.a > 0.35) indiv.push('<span class="ss-warn">' + esc(o.label) + " is " + f(o.a) + " m², over " + f(lim) + " m².</span>"); });
+      } else if (LD >= 1.2) {
+        var lim3 = 0.24 * Math.pow(2 * LD - 1.2, 2);
+        indiv.push("Part 3: individual openings may not exceed 0.24[(2 × LD) − 1.2]² = " + f(lim3) + " m² (also check Table 3.2.3.1.-A).");
+        ops.forEach(function (o) { if (o.a > lim3 + 1e-9) indiv.push('<span class="ss-warn">' + esc(o.label) + " is " + f(o.a) + " m², over " + f(lim3) + " m².</span>"); });
+      }
+    }
+    var indivFail = indiv.some(function (s) { return s.indexOf("ss-warn") > -1; });
+
+    var verdict, cls;
+    if (!hasMethod) { verdict = "Select a table to get a result."; cls = "ss-result"; }
+    else if (!ops.length) { verdict = "Maximum allowed: " + f(allowed) + " m² (" + f(100 * allowed / A, 1) + "% of face). Add openings to check them."; cls = "ss-result"; }
+    else if (pass && !indivFail) { verdict = "Complies on aggregate area"; cls = "ss-result ss-ok"; }
+    else if (pass && indivFail) { verdict = "Aggregate area OK, but an individual opening is too large"; cls = "ss-result ss-bad"; }
+    else { verdict = "Over the limit by " + f(proposed - allowed) + " m²"; cls = "ss-result ss-bad"; }
+
+    var html = '<p class="ss-verdict">' + verdict + '</p><table class="ss-t">' +
+      rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + esc(r[1]) + "</td></tr>"; }).join("") + "</table>";
+    if (ops.length) {
+      html += '<h3 style="margin-top:14px">Openings</h3><table class="ss-t">' +
+        ops.map(function (o) { return "<tr><td>" + esc(o.label) + " × " + o.q + "</td><td>" + f(o.a) + " m² each, " + f(o.a * o.q) + " m² total</td></tr>"; }).join("") + "</table>";
+    }
+    var all = indiv.concat(notes);
+    all.push("Construction of the exposing building face (cladding, fire-resistance rating, soffits) also depends on limiting distance. Check Subsection 9.10.15 or 3.2.3 as applicable.");
+    html += '<ul class="ss-notes">' + all.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
+    out.className = cls; out.innerHTML = html;
+  }
+
+  /* ---------- wire up ---------- */
+  ["ss-mode", "ss-unit", "ss-ld", "ss-w", "ss-h", "ss-area", "ss-resp", "ss-spr", "ss-tbl", "ss-rowmode"].forEach(function (id) {
+    $(id).addEventListener("input", calc); $(id).addEventListener("change", calc);
+  });
+  $("ss-ops").addEventListener("input", calc);
+
+  loadTables();
+  refreshTableLists();
+  if (tables[0]) { $("ss-tname").value = tables[0].name; $("ss-tdata").value = tables[0].csv; }
+  calc();
+})();
+</script>
 </body>
 </html>
