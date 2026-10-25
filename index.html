@@ -1284,5 +1284,234 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   calc();
 })();
 </script>
+<!-- =====================================================================
+  ROOF VENTILATION TAB  (BC Building Code Part 9, Section 9.19)
+  ===================================================================== -->
+
+<style>
+  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid rgba(128,128,128,.45);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;position:sticky;top:0;z-index:50;background:Canvas}
+  #ss-tabs button{font:inherit;font-size:14px;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;color:inherit;cursor:pointer;opacity:.7}
+  #ss-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-color:rgba(128,128,128,.45);background:Canvas;margin-bottom:-1px;border-bottom:1px solid Canvas}
+  #ss-tabs button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+  #rv-panel{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:960px;margin:0 auto;padding:20px 16px 60px;line-height:1.45}
+  #rv-panel[hidden]{display:none}
+  #rv-panel h2{margin:0 0 4px;font-size:22px}
+  #rv-panel h3{margin:16px 0 8px;font-size:15px}
+  #rv-panel .rv-sub{margin:0 0 16px;opacity:.7;font-size:13px}
+  #rv-panel .rv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  #rv-panel label{display:flex;flex-direction:column;gap:3px;font-size:13px}
+  #rv-panel input,#rv-panel select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:Field;color:FieldText;box-sizing:border-box;width:100%}
+  #rv-panel button.rv-btn{font:inherit;font-size:14px;padding:6px 12px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:ButtonFace;color:ButtonText;cursor:pointer}
+  #rv-panel .rv-card{margin-top:16px;border:1px solid rgba(128,128,128,.5);border-radius:6px;padding:12px 14px}
+  #rv-panel .rv-cardhead{display:flex;gap:8px;align-items:end;margin-bottom:8px}
+  #rv-panel .rv-cardhead label{flex:1}
+  #rv-panel .rv-vrow{display:grid;grid-template-columns:2fr 1fr 1fr 80px auto;gap:8px;margin-bottom:6px;align-items:end}
+  #rv-panel .rv-vrow.rv-head{font-size:12px;opacity:.7;margin-bottom:2px}
+  @media(max-width:600px){#rv-panel .rv-vrow{grid-template-columns:1fr 1fr 1fr 70px auto}#rv-panel .rv-vrow .rv-vn{grid-column:1/-1}}
+  #rv-panel .rv-result{margin-top:12px;border-left:4px solid rgba(128,128,128,.55);padding:6px 12px}
+  #rv-panel .rv-result.rv-ok{border-color:#2e8b57}
+  #rv-panel .rv-result.rv-bad{border-color:#c0392b}
+  #rv-panel .rv-verdict{font-size:16px;font-weight:700;margin:0 0 6px}
+  #rv-panel .rv-ok .rv-verdict{color:#2e8b57}
+  #rv-panel .rv-bad .rv-verdict{color:#c0392b}
+  #rv-panel table.rv-t{border-collapse:collapse;width:100%;font-size:14px}
+  #rv-panel table.rv-t td{padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25)}
+  #rv-panel table.rv-t td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  #rv-panel ul.rv-notes{margin:8px 0 0;padding-left:18px;font-size:13px}
+  #rv-panel .rv-warn{color:#b9770e}
+  #rv-panel .rv-total{margin-top:20px;border:2px solid rgba(128,128,128,.55);border-radius:6px;padding:12px 16px}
+  #rv-panel .rv-small{font-size:12px;opacity:.75}
+</style>
+
+<div id="rv-panel" hidden>
+  <h2>Roof ventilation</h2>
+  <p class="rv-sub">Attic and roof space venting for Part 9 houses (BC Building Code, Section 9.19). A checking aid only. Confirm results against the current code.</p>
+
+  <div class="rv-grid">
+    <label>Units for lengths
+      <select id="rv-unit">
+        <option value="m">metres</option>
+        <option value="mm">millimetres</option>
+        <option value="ft">decimal feet</option>
+      </select>
+    </label>
+    <label>Vent net free area (NFA) entered as
+      <select id="rv-nfa">
+        <option value="cm2">cm² per unit</option>
+        <option value="in2">in² per unit</option>
+      </select>
+    </label>
+  </div>
+  <p class="rv-small">Use the manufacturer's net free area (the open area after screens and louvres). For continuous vents, enter the NFA per metre or foot as the unit and the length as the quantity.</p>
+
+  <div id="rv-secs"></div>
+  <p><button type="button" class="rv-btn" id="rv-addsec">Add roof section</button></p>
+
+  <div class="rv-total" id="rv-total" aria-live="polite"></div>
+</div>
+
+<script>
+(function () {
+  var MAIN_LABEL = "Main tool";   // only used if the spatial separation block isn't present
+  var RV_LABEL = "Roof ventilation";
+  var $ = function (id) { return document.getElementById(id); };
+  var me = document.currentScript, panel = $("rv-panel");
+
+  /* ---------- tabs ---------- */
+  var tabs = $("ss-tabs"), tRV = document.createElement("button");
+  tRV.type = "button"; tRV.textContent = RV_LABEL; tRV.setAttribute("role", "tab"); tRV.setAttribute("aria-selected", "false");
+
+  if (!tabs) {
+    // standalone: build tab bar and wrap the page
+    var main = document.createElement("div"); main.id = "ss-main";
+    Array.prototype.slice.call(document.body.childNodes).forEach(function (n) { if (n !== me && n !== panel) main.appendChild(n); });
+    tabs = document.createElement("div"); tabs.id = "ss-tabs"; tabs.setAttribute("role", "tablist");
+    var tM = document.createElement("button"); tM.type = "button"; tM.textContent = MAIN_LABEL; tM.setAttribute("role", "tab"); tM.setAttribute("aria-selected", "true");
+    tM.addEventListener("click", function () { main.hidden = false; panel.hidden = true; tM.setAttribute("aria-selected", "true"); tRV.setAttribute("aria-selected", "false"); });
+    tabs.appendChild(tM);
+    document.body.insertBefore(tabs, document.body.firstChild);
+    document.body.insertBefore(main, panel);
+  }
+  var others = Array.prototype.slice.call(tabs.querySelectorAll("button"));
+  tabs.appendChild(tRV);
+
+  function showRV() {
+    ["ss-main", "ss-panel"].forEach(function (id) { var el = $(id); if (el) el.hidden = true; });
+    panel.hidden = false;
+    others.forEach(function (b) { b.setAttribute("aria-selected", "false"); });
+    tRV.setAttribute("aria-selected", "true");
+    try { history.replaceState(null, "", "#roof-ventilation"); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  function hideRV() { panel.hidden = true; tRV.setAttribute("aria-selected", "false"); }
+  tRV.addEventListener("click", showRV);
+  others.forEach(function (b) { b.addEventListener("click", hideRV); });
+  if (location.hash === "#roof-ventilation") showRV();
+
+  /* ---------- helpers ---------- */
+  var UNIT = { m: 1, mm: 0.001, ft: 0.3048 };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function f(n, d) { return (+n).toFixed(d === undefined ? 1 : d); }
+  function val(el) { var v = parseFloat(el.value); return isFinite(v) ? v : 0; }
+  var secN = 0;
+
+  /* ---------- sections ---------- */
+  function addVent(card, name, loc, nfa, qty) {
+    var r = document.createElement("div"); r.className = "rv-vrow";
+    r.innerHTML =
+      '<label class="rv-vn"><input type="text" class="rv-vname" placeholder="e.g. Continuous soffit vent" value="' + esc(name || "") + '"></label>' +
+      '<label><select class="rv-vloc"><option value="top">Top (ridge / high)</option><option value="bottom">Bottom (soffit / low)</option><option value="other">Other (gable, mid)</option></select></label>' +
+      '<label><input type="number" step="any" min="0" class="rv-vnfa" placeholder="NFA per unit" value="' + (nfa || "") + '"></label>' +
+      '<label><input type="number" step="any" min="0" class="rv-vqty" placeholder="Qty" value="' + (qty || "") + '"></label>' +
+      '<button type="button" class="rv-btn" aria-label="Remove vent">✕</button>';
+    r.querySelector(".rv-vloc").value = loc || "bottom";
+    r.querySelector("button").addEventListener("click", function () { r.remove(); calc(); });
+    card.querySelector(".rv-vents").appendChild(r);
+  }
+  function addSection() {
+    secN++;
+    var c = document.createElement("div"); c.className = "rv-card";
+    c.innerHTML =
+      '<div class="rv-cardhead"><label>Roof section name<input type="text" class="rv-name" value="Roof section ' + secN + '"></label>' +
+      '<button type="button" class="rv-btn rv-del">Remove section</button></div>' +
+      '<div class="rv-grid">' +
+      '<label>Insulated ceiling width<input type="number" step="any" min="0" class="rv-w"></label>' +
+      '<label>Insulated ceiling length<input type="number" step="any" min="0" class="rv-l"></label>' +
+      '<label>Or area directly (units², overrides W × L)<input type="number" step="any" min="0" class="rv-a"></label>' +
+      '<label>Roof construction<select class="rv-frame"><option value="attic">Attic (ceiling joists, trusses or rafters with attic space)</option><option value="joist">Roof joists (flat or cathedral, no attic)</option></select></label>' +
+      '<label class="rv-slopewrap">Roof slope, rise per 12 run<input type="number" step="any" min="0" class="rv-slope" value="6"></label>' +
+      '</div>' +
+      '<h3>Vents provided</h3>' +
+      '<div class="rv-vrow rv-head"><span>Vent</span><span>Location</span><span>NFA per unit</span><span>Qty</span><span></span></div>' +
+      '<div class="rv-vents"></div>' +
+      '<button type="button" class="rv-btn rv-addv">Add vent</button>' +
+      '<div class="rv-result"></div>';
+    c.querySelector(".rv-del").addEventListener("click", function () { c.remove(); calc(); });
+    c.querySelector(".rv-addv").addEventListener("click", function () { addVent(c); });
+    $("rv-secs").appendChild(c);
+    addVent(c, "Ridge vent", "top");
+    addVent(c, "Soffit vent", "bottom");
+    calc();
+  }
+  $("rv-addsec").addEventListener("click", addSection);
+
+  /* ---------- calculation ---------- */
+  var IN2 = 6.4516, FT2 = 10.7639;
+  function calc() {
+    var u = UNIT[$("rv-unit").value], nf = $("rv-nfa").value === "in2" ? IN2 : 1;
+    var cards = $("rv-secs").children, totReq = 0, totHave = 0, allOk = true, counted = 0, anyData = false;
+
+    Array.prototype.forEach.call(cards, function (c) {
+      c.querySelector(".rv-slopewrap").style.display = c.querySelector(".rv-frame").value === "attic" ? "" : "none";
+      var res = c.querySelector(".rv-result");
+      var A = val(c.querySelector(".rv-a")) * u * u || val(c.querySelector(".rv-w")) * u * val(c.querySelector(".rv-l")) * u;
+      if (!(A > 0)) { res.className = "rv-result"; res.innerHTML = '<p class="rv-verdict">Enter the insulated ceiling size to see the requirement.</p>'; allOk = false; return; }
+      anyData = true;
+
+      var frame = c.querySelector(".rv-frame").value, rise = val(c.querySelector(".rv-slope"));
+      var lowSlope = frame === "attic" && rise < 2;   // less than 1 in 6 = under 2 in 12
+      var div = (frame === "joist" || lowSlope) ? 150 : 300;
+      var why = frame === "joist" ? "roof constructed with roof joists" : lowSlope ? "roof slope less than 1 in 6" : "attic space, slope 1 in 6 or steeper";
+      var req = A * 10000 / div;                       // cm²
+
+      var by = { top: 0, bottom: 0, other: 0 }, lastBy = {};
+      Array.prototype.forEach.call(c.querySelectorAll(".rv-vents .rv-vrow"), function (r) {
+        var loc = r.querySelector(".rv-vloc").value, per = val(r.querySelector(".rv-vnfa")) * nf, q = val(r.querySelector(".rv-vqty"));
+        by[loc] += per * q;
+        if (per > 0) lastBy[loc] = { name: r.querySelector(".rv-vname").value.trim() || "vent", per: per };
+      });
+      var have = by.top + by.bottom + by.other;
+      var needTop = req * 0.25, needBot = req * 0.25;
+      var okTot = have >= req - 1e-9, okTop = by.top >= needTop - 1e-9, okBot = by.bottom >= needBot - 1e-9;
+      var ok = okTot && okTop && okBot;
+
+      totReq += req; totHave += have; counted++; if (!ok) allOk = false;
+
+      function cm(x) { return f(x, 0) + " cm² (" + f(x / IN2, 1) + " in²)"; }
+      function more(short, loc) {
+        var p = lastBy[loc]; if (!p || short <= 0) return "";
+        return " Add about " + f(Math.ceil(short / p.per * 10) / 10, 1) + " more units of “" + esc(p.name) + "”.";
+      }
+      var rows = [
+        ["Insulated ceiling area", f(A, 2) + " m² (" + f(A * FT2, 0) + " ft²)"],
+        ["Ratio required", "1/" + div + " (" + why + ")"],
+        ["Required vent area", cm(req)],
+        ["Provided vent area", cm(have)],
+        ["Top vents (min 25% of required)", cm(by.top) + " — need " + cm(needTop)],
+        ["Bottom vents (min 25% of required)", cm(by.bottom) + " — need " + cm(needBot)]
+      ];
+      var notes = [];
+      if (!okTot) notes.push('<span class="rv-warn">Short by ' + cm(req - have) + " in total.</span>");
+      if (!okTop) notes.push('<span class="rv-warn">Top vents short by ' + cm(needTop - by.top) + " of the 25% minimum.</span>" + more(needTop - by.top, "top"));
+      if (!okBot) notes.push('<span class="rv-warn">Bottom vents short by ' + cm(needBot - by.bottom) + " of the 25% minimum.</span>" + more(needBot - by.bottom, "bottom"));
+      if (!okTot && okTop && okBot) {
+        var p = lastBy.bottom || lastBy.top || lastBy.other;
+        if (p) notes.push("To close the total gap, add about " + f(Math.ceil((req - have) / p.per * 10) / 10, 1) + " more units of “" + esc(p.name) + "”.");
+      }
+      if (by.top + by.bottom === 0 && have > 0) notes.push('<span class="rv-warn">No vents are marked top or bottom. The code expects vents high and low so air flows through the space.</span>');
+      if (frame === "joist") notes.push("Roof joist spaces must be interconnected with purlins at least 38 × 38 mm on top of the joists, unless each joist space is vented separately (9.19.1.2).");
+      notes.push("A space must be left between the insulation and the roof sheathing, and insulation must not block airflow to the vents (9.19.1.1 and 9.19.1.3).");
+      notes.push("Attic or roof spaces of 3 m² or more need an access hatch. Check 9.19.2.1 for the other criteria.");
+      notes.push("Mansard and gambrel roofs follow 9.19.1.4.");
+
+      res.className = "rv-result " + (ok ? "rv-ok" : "rv-bad");
+      res.innerHTML = '<p class="rv-verdict">' + (ok ? "Complies" : "Does not comply yet") + "</p>" +
+        '<table class="rv-t">' + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
+        '<ul class="rv-notes">' + notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
+    });
+
+    var t = $("rv-total");
+    if (!counted) { t.innerHTML = "Add the insulated ceiling size for a roof section to see the total."; return; }
+    t.innerHTML = "<strong>" + (allOk ? "All sections comply" : "At least one section needs attention") + "</strong>" +
+      '<table class="rv-t" style="margin-top:6px"><tr><td>Total required vent area</td><td>' + f(totReq, 0) + " cm² (" + f(totReq / IN2, 1) + " in²)</td></tr>" +
+      "<tr><td>Total provided</td><td>" + f(totHave, 0) + " cm² (" + f(totHave / IN2, 1) + " in²)</td></tr></table>" +
+      '<p class="rv-small" style="margin:8px 0 0">Each section is checked on its own, because vent area can only count toward the roof space it serves. The code also permits omitting venting where it can be shown to be unnecessary (9.19.1.1).</p>';
+  }
+
+  $("rv-panel").addEventListener("input", calc);
+  $("rv-panel").addEventListener("change", calc);
+  addSection();
+})();
+</script>
 </body>
 </html>
