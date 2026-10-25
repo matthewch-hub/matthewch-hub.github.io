@@ -1513,5 +1513,25 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   addSection();
 })();
 </script>
+<style>
+  /* dark theme for the added tabs */
+  #ss-tabs, #ss-panel, #rv-panel { color-scheme: dark; color: #e5e7eb; }
+
+  #ss-tabs { background: #0b1220; border-bottom-color: #1e2a44; }
+  #ss-tabs button { color: #cbd5e1; opacity: 1; }
+  #ss-tabs button:hover { background: #111a2e; }
+  #ss-tabs button[aria-selected="true"] {
+    color: #fff; background: #16213a;
+    border-color: #1e2a44; border-bottom-color: #16213a;
+    box-shadow: inset 0 2px 0 #5aa2ff;
+  }
+
+  #ss-panel, #rv-panel {
+    background: #0b1220; max-width: none;
+    padding-left: max(16px, calc((100% - 960px) / 2));
+    padding-right: max(16px, calc((100% - 960px) / 2));
+    min-height: calc(100vh - 44px);
+  }
+</style>
 </body>
 </html>
