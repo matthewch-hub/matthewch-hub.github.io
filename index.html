@@ -2092,176 +2092,257 @@ function init() {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 </script>
 <!-- =====================================================================
-  SPATIAL SEPARATION TAB  (BC Building Code: Part 9 and Part 3)
+  CODE-CHECK TOOLS: shared look for the Spatial separation and Roof ventilation tabs.
+  They use the same colours as the rest of the site, so they follow light and dark mode.
   ===================================================================== -->
-
 <style>
-  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid rgba(128,128,128,.45);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;position:sticky;top:0;z-index:50;background:Canvas}
-  #ss-tabs button{font:inherit;font-size:14px;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;color:inherit;cursor:pointer;opacity:.7}
-  #ss-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-color:rgba(128,128,128,.45);background:Canvas;margin-bottom:-1px;border-bottom:1px solid Canvas}
-  #ss-tabs button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-  #ss-panel{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:960px;margin:0 auto;padding:20px 16px 60px;line-height:1.45}
-  #ss-panel[hidden],#ss-main[hidden]{display:none}
-  #ss-panel h2{margin:0 0 4px;font-size:22px}
-  #ss-panel h3{margin:22px 0 8px;font-size:15px}
-  #ss-panel .ss-sub{margin:0 0 16px;opacity:.7;font-size:13px}
-  #ss-panel .ss-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-  #ss-panel label{display:flex;flex-direction:column;gap:3px;font-size:13px}
-  #ss-panel input,#ss-panel select,#ss-panel textarea,#ss-panel button.ss-btn{font:inherit;font-size:14px;padding:6px 8px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:Field;color:FieldText;box-sizing:border-box;width:100%}
-  #ss-panel button.ss-btn{width:auto;cursor:pointer;background:ButtonFace;color:ButtonText}
-  #ss-panel .ss-check{flex-direction:row;align-items:flex-start;gap:8px}
-  #ss-panel .ss-check input{width:auto;margin-top:3px}
-  #ss-panel .ss-row{display:grid;grid-template-columns:2fr 1fr 1fr 70px auto;gap:8px;margin-bottom:6px;align-items:end}
-  #ss-panel .ss-row.ss-head{font-size:12px;opacity:.7;align-items:end;margin-bottom:2px}
-  @media(max-width:600px){#ss-panel .ss-row{grid-template-columns:1fr 1fr 1fr 60px auto}#ss-panel .ss-row .ss-lbl{grid-column:1/-1}}
-  #ss-panel .ss-result{margin-top:20px;border:2px solid rgba(128,128,128,.55);border-radius:6px;padding:14px 16px}
-  #ss-panel .ss-result.ss-ok{border-color:#2e8b57}
-  #ss-panel .ss-result.ss-bad{border-color:#c0392b}
-  #ss-panel .ss-verdict{font-size:18px;font-weight:700;margin:0 0 8px}
-  #ss-panel .ss-ok .ss-verdict{color:#2e8b57}
-  #ss-panel .ss-bad .ss-verdict{color:#c0392b}
-  #ss-panel table.ss-t{border-collapse:collapse;width:100%;font-size:14px}
-  #ss-panel table.ss-t td{padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25)}
-  #ss-panel table.ss-t td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-  #ss-panel ul.ss-notes{margin:10px 0 0;padding-left:18px;font-size:13px}
-  #ss-panel ul.ss-notes li{margin-bottom:3px}
-  #ss-panel .ss-warn{color:#b9770e}
-  #ss-panel details{margin-top:22px;border:1px solid rgba(128,128,128,.4);border-radius:6px;padding:8px 12px}
-  #ss-panel summary{cursor:pointer;font-weight:600;font-size:14px}
-  #ss-panel textarea{min-height:140px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-  #ss-panel .ss-small{font-size:12px;opacity:.75}
-  #ss-panel .ss-x{padding:6px 10px}
+  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;position:sticky;top:0;z-index:50;background:#161616;border-bottom:1px solid #2e2e2c;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  #ss-tabs button{font:inherit;font-size:13px;letter-spacing:.02em;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;background:transparent;color:#cfcfcb;cursor:pointer}
+  #ss-tabs button:hover{background:#222220}
+  #ss-tabs button[aria-selected="true"]{color:#fff;font-weight:600;background:#262624;border-color:#2e2e2c;box-shadow:inset 0 2px 0 #f2f2f0}
+  #ss-tabs button:focus-visible{outline:2px solid #f2f2f0;outline-offset:2px}
+  #ss-main[hidden],.tool[hidden],.tool [hidden]{display:none!important}
+  .tool table.list td.wide{width:38%}
+  .tool table.list td.size{width:70px}
+  .tool{max-width:1120px;margin:0 auto;padding:22px 16px 70px;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+  .tool .tool-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .tool .eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--sub)}
+  .tool h2{font-size:24px;margin:2px 0 4px;letter-spacing:.01em}
+  .tool h3{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin:0 0 10px}
+  .tool h4{font-size:13px;margin:16px 0 8px}
+  .tool .lead{color:var(--sub);max-width:760px;margin:0}
+  .tool .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tool .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px;margin-top:14px}
+  .tool .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .tool label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--sub)}
+  .tool label.f small{font-weight:400}
+  .tool input,.tool select,.tool textarea{font:inherit;font-size:14px;padding:7px 8px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
+  .tool input:focus,.tool select:focus,.tool textarea:focus{outline:2px solid var(--text);outline-offset:-1px}
+  .tool .check{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer}
+  .tool .check input{width:auto;margin-top:3px}
+  .tool .hint{font-size:12px;color:var(--sub);margin:6px 0 0}
+  .tool table.list{width:100%;border-collapse:collapse;font-size:13px}
+  .tool table.list th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);padding:4px 6px;border-bottom:1px solid var(--line)}
+  .tool table.list td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .tool table.list td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tool table.list input{padding:5px 6px}
+  .tool table.list input[type=checkbox]{width:auto}
+  .tool .x{padding:4px 9px}
+  .tool .wall-head,.tool .sec-head{display:flex;gap:8px;align-items:center}
+  .tool .wall-head input,.tool .sec-head input{font-size:16px;font-weight:700;border-color:transparent;background:transparent;padding-left:0}
+  .tool .wall-head input:hover,.tool .sec-head input:hover{border-color:var(--line)}
+  .tool .split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:12px}
+  @media (max-width:860px){.tool .split{grid-template-columns:1fr}}
+  .tool .result{border:1px solid var(--line);border-left:4px solid var(--line);padding:12px 14px;background:var(--bg)}
+  .tool .result.pass{border-left-color:#3a8f5c}
+  .tool .result.fail{border-left-color:var(--bad)}
+  .tool .verdict{font-size:17px;font-weight:700;margin:0 0 8px}
+  .tool .pass .verdict,.tool .tag.pass{color:#3a8f5c}
+  .tool .fail .verdict,.tool .tag.fail{color:var(--bad)}
+  .tool .tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .tool .tag.wait{color:var(--sub)}
+  .tool .gauge{margin:10px 0 6px}
+  .tool .gauge .bar{position:relative;height:12px;border:1px solid var(--line);background:var(--panel)}
+  .tool .gauge .fill{position:absolute;left:0;top:0;bottom:0;background:var(--text)}
+  .tool .gauge .fill.over{background:var(--bad)}
+  .tool .gauge .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:#3a8f5c}
+  .tool .gauge .labels{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:3px}
+  .tool .facts{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  .tool .facts td{padding:3px 0;border-bottom:1px dotted var(--line)}
+  .tool .facts td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .tool ul.notes{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--sub)}
+  .tool ul.notes li{margin-bottom:4px}
+  .tool ul.notes b{color:var(--text)}
+  .tool .warn{color:var(--bad)}
+  .tool .sketch{background:#fff;border:1px solid var(--line)}
+  .tool .sketch:empty{display:none}
+  .tool .sketch svg{display:block;width:100%}
+  .tool .quick{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .tool .quick select{width:auto}
+  .tool .big{font-size:22px;font-weight:700}
+  .tool details.fold>summary h3{margin:0}
+  .tool textarea{min-height:130px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .tool pre{font-size:12px;color:var(--sub);margin:4px 0 10px}
+  @media print{
+    #ss-tabs,.tool .no-print,.tool .btn,.tool button,.tool details.fold{display:none!important}
+    .tool{max-width:none;padding:0}
+    .tool .card{break-inside:avoid;border-color:#999}
+    .tool input,.tool select{border:none;background:none;padding:0}
+  }
 </style>
 
-<div id="ss-panel" hidden>
-  <h2>Spatial separation</h2>
-  <p class="ss-sub">Maximum unprotected openings in an exposing building face. A checking aid only. Confirm every result against the current BC Building Code.</p>
-
-  <div class="ss-grid">
-    <label>Code basis
-      <select id="ss-mode">
-        <option value="p9">Part 9 (houses / small buildings)</option>
-        <option value="p3">Part 3 (large buildings)</option>
-      </select>
-    </label>
-    <label>Units for lengths
-      <select id="ss-unit">
-        <option value="m">metres</option>
-        <option value="mm">millimetres</option>
-        <option value="ft">decimal feet</option>
-      </select>
-    </label>
-    <label>Limiting distance (actual)
-      <input id="ss-ld" type="number" step="any" min="0" placeholder="e.g. 3">
-    </label>
+<!-- =====================================================================
+  SPATIAL SEPARATION TAB  (BC Building Code Part 9, Subsection 9.10.15; Part 3 with your own table)
+  ===================================================================== -->
+<div id="ss-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Code check</div>
+      <h2>Spatial separation</h2>
+      <p class="lead">How much glass each wall facing a property line may have, based on its limiting distance (the distance from the wall to the property line, or to the centre of a street). Built on BC Building Code Part 9, Subsection 9.10.15. A checking aid only: confirm results with the current code and your building official.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="ss-print" type="button">Print report</button><button class="btn" id="ss-reset" type="button">Start over</button></div>
   </div>
 
-  <h3>Exposing building face</h3>
-  <div class="ss-grid">
-    <label>Width <input id="ss-w" type="number" step="any" min="0"></label>
-    <label>Height (grade to top-storey ceiling) <input id="ss-h" type="number" step="any" min="0"></label>
-    <label>Or enter area directly (units², overrides W × H) <input id="ss-area" type="number" step="any" min="0"></label>
+  <div class="card">
+    <h3>Settings</h3>
+    <div class="grid">
+      <label class="f">Code basis
+        <select id="ss-basis"><option value="p9">Part 9 houses (built-in Table 9.10.15.4)</option><option value="custom">A table I entered (Part 3 or local changes)</option></select></label>
+      <label class="f">Lengths in
+        <select id="ss-units"><option value="ft">Feet and inches (e.g. 12'6")</option><option value="m">Metres</option></select></label>
+      <label class="f">Window and door sizes in
+        <select id="ss-open-units"><option value="in">Inches (e.g. 36 × 48)</option><option value="mm">Millimetres</option></select></label>
+      <label class="f">Between table rows
+        <select id="ss-rows"><option value="step">Use the next larger face area (safer)</option><option value="interp">Interpolate between rows</option></select></label>
+      <label class="f" id="ss-custom-pick-wrap" hidden>Which table
+        <select id="ss-custom-pick"></select></label>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <label class="check"><input type="checkbox" id="ss-sprinklered"><span>The building is sprinklered</span></label>
+      <label class="check"><input type="checkbox" id="ss-slow"><span>Fire department takes more than 10 minutes in 10% or more of calls (halves the limiting distance unless every storey is sprinklered, 9.10.15.3)</span></label>
+    </div>
   </div>
 
-  <h3>Conditions</h3>
-  <div class="ss-grid">
-    <label class="ss-check" id="ss-resp-wrap"><input id="ss-resp" type="checkbox"><span>Fire department response over 10 min in 10% or more of calls (Part 9: halves the limiting distance if any storey is unsprinklered)</span></label>
-    <label class="ss-check"><input id="ss-spr" type="checkbox"><span>Building is sprinklered</span></label>
+  <div class="card no-print" id="ss-import-card">
+    <h3>Bring in a wall from your floor plans</h3>
+    <div class="row">
+      <select id="ss-import-plan" style="width:auto"></select>
+      <select id="ss-import-side" style="width:auto"><option value="l">Left side</option><option value="r">Right side</option><option value="b">Back</option><option value="t">Front</option></select>
+      <button class="btn" id="ss-import" type="button">Add this wall with its windows</button>
+    </div>
+    <p class="hint" id="ss-import-hint">Copies the wall's width, an estimated height and every window and glazed door on that side, on every floor. Then enter the limiting distance.</p>
   </div>
 
-  <h3>Table used for the percentage</h3>
-  <div class="ss-grid">
-    <label>Table
-      <select id="ss-tbl"></select>
-    </label>
-    <label>Face-area rows
-      <select id="ss-rowmode">
-        <option value="step">Use the next row up (maximum area rows)</option>
-        <option value="interp">Interpolate between rows</option>
-      </select>
-    </label>
-  </div>
-  <p class="ss-small" id="ss-tblmsg"></p>
+  <div class="card" id="ss-summary"></div>
+  <div id="ss-walls"></div>
+  <p class="no-print"><button class="btn" id="ss-add-wall" type="button">+ Add a wall</button></p>
 
-  <h3>Proposed unprotected openings</h3>
-  <div class="ss-row ss-head"><span>Label</span><span>Width</span><span>Height</span><span>Qty</span><span></span></div>
-  <div id="ss-ops"></div>
-  <button class="ss-btn" id="ss-add" type="button">Add opening</button>
-
-  <div class="ss-result" id="ss-out" aria-live="polite"></div>
-
-  <details id="ss-tabledit">
-    <summary>Code tables (enter once, saved in this browser)</summary>
-    <p class="ss-small">Copy the percentage table from your code book. First row: limiting distances in metres. First column: exposing building face area in m². Values: percent. Separate cells with commas or tabs, so you can paste straight from a spreadsheet. For a table with no area rows, use a single row with any area (e.g. 0). Leave the top-left cell blank or put a label there.</p>
-    <p class="ss-small">Example layout (these numbers are placeholders, not code values):</p>
-    <pre class="ss-small" style="margin:0 0 10px">area, 1.2, 2, 3
+  <details class="card fold" id="ss-custom">
+    <summary><h3>Your own tables (Part 3 or local changes)</h3></summary>
+    <p class="hint">Copy a percentage table from your code book. First row: limiting distances in metres. First column: exposing building face area in m². Values: percent. Separate cells with commas or tabs, so you can paste straight from a spreadsheet.</p>
+    <pre>area, 1.2, 2, 3
 20, 0, 0, 0
 40, 0, 0, 0</pre>
-    <div class="ss-grid">
-      <label>Table name <input id="ss-tname" type="text" placeholder="e.g. Part 9 Table 9.10.15.4 (house)"></label>
-      <label>Saved tables <select id="ss-tsaved"></select></label>
+    <div class="grid">
+      <label class="f">Table name <input id="ss-tname" type="text" placeholder="e.g. Table 3.2.3.1.-B"></label>
+      <label class="f">Saved tables <select id="ss-tsaved"></select></label>
     </div>
-    <label style="margin-top:10px">Table data <textarea id="ss-tdata" spellcheck="false"></textarea></label>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-      <button class="ss-btn" id="ss-tsave" type="button">Save table</button>
-      <button class="ss-btn" id="ss-tdel" type="button">Delete selected</button>
-      <button class="ss-btn" id="ss-tbackup" type="button">Copy all tables (backup)</button>
+    <label class="f" style="margin-top:10px">Table data <textarea id="ss-tdata" spellcheck="false"></textarea></label>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="ss-tsave" type="button">Save table</button>
+      <button class="btn" id="ss-tdel" type="button">Delete selected</button>
+      <button class="btn" id="ss-tbackup" type="button">Copy all tables (backup)</button>
     </div>
-    <p class="ss-small" id="ss-tstatus"></p>
+    <p class="hint" id="ss-tstatus"></p>
   </details>
 </div>
 
 <script>
+/* =====================================================================
+   SPATIAL SEPARATION CHECKER
+   For each exposing wall: the face area (width × height), the limiting distance, and the glazed openings.
+   The allowed glazed area is the larger of (a) Table 9.10.15.4 and (c) the limiting distance squared
+   (Part 9 lets you use whichever is less restrictive). All maths is done in metres.
+   ===================================================================== */
 (function () {
-  var MAIN_LABEL = "ArchPlan Studio";    // <-- rename your existing tab here
-  var SS_LABEL   = "Spatial separation";
-  var LS_KEY = "ssTablesV1";
-
+  var MAIN_LABEL = "ArchPlan Studio", TOOL_LABEL = "Spatial separation";
+  var SAVE_KEY = "mcSpatialSeparationV2", TABLES_KEY = "ssTablesV1";
   var $ = function (id) { return document.getElementById(id); };
-  var me = document.currentScript;
-  var panel = $("ss-panel");
+  var me = document.currentScript, panel = $("ss-panel");
 
-  /* ---------- tabs: wrap the existing page ---------- */
+  /* ---------- tabs: wrap the floor plan tool and add a tab bar ---------- */
   var main = document.createElement("div");
   main.id = "ss-main";
-  Array.prototype.slice.call(document.body.childNodes).forEach(function (n) {
-    if (n === me || n === panel) return;
-    main.appendChild(n);
-  });
+  Array.prototype.slice.call(document.body.childNodes).forEach(function (n) { if (n !== me && n !== panel) main.appendChild(n); });
   var tabs = document.createElement("div");
-  tabs.id = "ss-tabs";
-  tabs.setAttribute("role", "tablist");
-  function mkTab(label, key) {
+  tabs.id = "ss-tabs"; tabs.setAttribute("role", "tablist");
+  function makeTab(label, key) {
     var b = document.createElement("button");
     b.type = "button"; b.textContent = label; b.setAttribute("role", "tab"); b.dataset.key = key;
     b.addEventListener("click", function () { show(key); });
     return b;
   }
-  var tMain = mkTab(MAIN_LABEL, "main"), tSS = mkTab(SS_LABEL, "ss");
-  tabs.appendChild(tMain); tabs.appendChild(tSS);
+  var tabMain = makeTab(MAIN_LABEL, "main"), tabTool = makeTab(TOOL_LABEL, "ss");
+  tabs.appendChild(tabMain); tabs.appendChild(tabTool);
   document.body.insertBefore(tabs, document.body.firstChild);
   document.body.insertBefore(main, panel);
   function show(key) {
-    var isSS = key === "ss";
-    main.hidden = isSS; panel.hidden = !isSS;
-    tMain.setAttribute("aria-selected", String(!isSS));
-    tSS.setAttribute("aria-selected", String(isSS));
-    try { history.replaceState(null, "", isSS ? "#spatial-separation" : location.pathname + location.search); } catch (e) {}
+    var isTool = key === "ss";
+    main.hidden = isTool; panel.hidden = !isTool;
+    tabMain.setAttribute("aria-selected", String(!isTool)); tabTool.setAttribute("aria-selected", String(isTool));
+    /* remember the open tab in the address; leave other tabs' addresses (like #roof-ventilation) alone */
+    try { if (isTool) history.replaceState(null, "", "#spatial-separation"); else if (location.hash === "#spatial-separation") history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    if (isTool) refreshImportList();
     window.scrollTo(0, 0);
   }
-  show(location.hash === "#spatial-separation" ? "ss" : "main");
 
-  /* ---------- helpers ---------- */
-  var UNIT = { m: 1, mm: 0.001, ft: 0.3048 };
-  function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function f(n, d) { return (+n).toFixed(d === undefined ? 2 : d); }
+  /* ---------- the code table built in: BC Building Code Table 9.10.15.4 (houses) ----------
+     Rows: largest exposing face area (m²). Columns: limiting distance (m). Values: % of the face that may be glazed.
+     A dash in the code (no limit) is entered as 100. Values as published in BCBC 2018 / NBC 2015. */
+  var HOUSE_TABLE = {
+    name: "BCBC Table 9.10.15.4 (houses)",
+    distances: [1.2, 1.5, 2, 4, 6, 8, 10, 12, 16, 20, 25],
+    rows: [
+      { area: 30, pct: [7, 9, 12, 39, 88, 100, 100, 100, 100, 100, 100] },
+      { area: 40, pct: [7, 8, 11, 32, 69, 100, 100, 100, 100, 100, 100] },
+      { area: 50, pct: [7, 8, 10, 28, 57, 100, 100, 100, 100, 100, 100] },
+      { area: 100, pct: [7, 8, 9, 18, 34, 56, 84, 100, 100, 100, 100] },
+      { area: Infinity, pct: [7, 7, 8, 12, 19, 28, 40, 55, 92, 100, 100] }
+    ]
+  };
+  /* Common window and door sizes for the quick-add list (width × height in inches). */
+  var COMMON_SIZES = [
+    ["Window 24 × 36", 24, 36, true], ["Window 30 × 48", 30, 48, true], ["Bedroom window 36 × 48", 36, 48, true],
+    ["Window 48 × 48", 48, 48, true], ["Window 48 × 60", 48, 60, true], ["Window 60 × 60", 60, 60, true], ["Window 72 × 60", 72, 60, true],
+    ["Patio door 72 × 80", 72, 80, true], ["Glazed door 36 × 80", 36, 80, true], ["Solid door 36 × 80 (not counted)", 36, 80, false]
+  ];
 
-  /* ---------- table storage ---------- */
+  /* ---------- small helpers ---------- */
+  var SQ_FT_PER_SQ_M = 10.7639;
+  function escapeText(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function round(n, d) { return (+n).toFixed(d == null ? 2 : d); }
+  /* Reads a length typed by the user and returns metres. Understands 12'6", 12' 6, 12.5, 3.8 m, 3800 mm and 150". */
+  function readLength(text, units) {
+    var t = String(text == null ? "" : text).trim().toLowerCase().replace(/,/g, ".");
+    if (!t) return NaN;
+    var m;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*mm$/))) return +m[1] / 1000;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*m$/))) return +m[1];
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft|feet)\s*-?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|in)?)?$/))) return (+m[1] + (m[2] ? +m[2] / 12 : 0)) * 0.3048;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*(?:"|in)$/))) return +m[1] * 0.0254;
+    if (/^\d+(?:\.\d+)?$/.test(t)) return units === "ft" ? +t * 0.3048 : +t;
+    return NaN;
+  }
+  /* Reads a window or door dimension: plain numbers are inches or millimetres, depending on the setting. */
+  function readOpening(text, units) {
+    var t = String(text == null ? "" : text).trim().toLowerCase();
+    if (!t) return NaN;
+    if (/^\d+(?:\.\d+)?$/.test(t)) return units === "in" ? +t * 0.0254 : +t / 1000;
+    return readLength(t, "ft");
+  }
+  function showLength(metres, units) {
+    if (!isFinite(metres)) return "–";
+    if (units === "m") return round(metres) + " m";
+    var inches = Math.round(metres / 0.0254), ft = Math.floor(inches / 12);
+    return ft + "' " + (inches - ft * 12) + '"';
+  }
+  function showArea(sqm) { return round(sqm, 1) + " m² (" + Math.round(sqm * SQ_FT_PER_SQ_M) + " sq ft)"; }
+  function lerp(x, x0, x1, y0, y1) { return x1 === x0 ? y0 : y0 + (y1 - y0) * (x - x0) / (x1 - x0); }
+
+  /* ---------- saved state ---------- */
+  function freshState() {
+    return { basis: "p9", units: "ft", openUnits: "in", rows: "step", custom: 0, sprinklered: false, slow: false,
+      walls: [{ name: "Left side", ld: "", width: "", height: "", openings: [{ label: "", w: "", h: "", qty: 1, counts: true, egress: false }] }] };
+  }
+  var state = freshState();
+  try { var saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.walls) state = Object.assign(freshState(), saved); } catch (e) {}
+  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- your own tables (kept from the first version, same storage) ---------- */
   var tables = [];
-  function loadTables() { try { tables = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { tables = []; } }
-  function saveTables() { try { localStorage.setItem(LS_KEY, JSON.stringify(tables)); return true; } catch (e) { return false; } }
-
+  try { tables = JSON.parse(localStorage.getItem(TABLES_KEY)) || []; } catch (e) { tables = []; }
+  function saveTables() { try { localStorage.setItem(TABLES_KEY, JSON.stringify(tables)); return true; } catch (e) { return false; } }
   function parseTable(text) {
     var lines = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
     if (lines.length < 2) throw new Error("Need a header row of limiting distances and at least one data row.");
@@ -2273,455 +2354,622 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
       var c = split(l), a = parseFloat(c[0]), v = c.slice(1).map(parseFloat);
       if (isNaN(a)) throw new Error("Row " + (idx + 2) + ": first cell must be a face area.");
       if (v.length !== head.length || v.some(isNaN)) throw new Error("Row " + (idx + 2) + ": expected " + head.length + " percentage values.");
-      return { a: a, v: v };
+      return { area: a, pct: v };
     });
-    for (var j = 1; j < rows.length; j++) if (rows[j].a <= rows[j - 1].a) throw new Error("Face areas must increase down the rows.");
-    return { lds: head, rows: rows };
+    for (var j = 1; j < rows.length; j++) if (rows[j].area <= rows[j - 1].area) throw new Error("Face areas must increase down the rows.");
+    return { distances: head, rows: rows };
   }
-
-  function lerp(x, x0, x1, y0, y1) { return x1 === x0 ? y0 : y0 + (y1 - y0) * (x - x0) / (x1 - x0); }
-  function colInterp(vals, lds, ld) {
-    if (ld <= lds[0]) return vals[0];
-    if (ld >= lds[lds.length - 1]) return vals[vals.length - 1];
-    for (var i = 0; i < lds.length - 1; i++)
-      if (ld >= lds[i] && ld <= lds[i + 1]) return lerp(ld, lds[i], lds[i + 1], vals[i], vals[i + 1]);
+  function refreshTableLists() {
+    var opts = tables.map(function (t, i) { return '<option value="' + i + '">' + escapeText(t.name) + "</option>"; }).join("");
+    $("ss-custom-pick").innerHTML = opts || '<option value="">No table saved yet</option>';
+    $("ss-tsaved").innerHTML = opts || '<option value="">None</option>';
+    if (tables[state.custom]) $("ss-custom-pick").value = state.custom;
   }
-  function lookup(tbl, area, ld, mode) {
-    var notes = [], t = tbl, lds = t.lds, rows = t.rows;
-    if (ld < lds[0]) notes.push("Limiting distance is below the first column (" + lds[0] + " m): value from the first column used. Check the code for what applies below that.");
-    if (ld > lds[lds.length - 1]) notes.push("Limiting distance is beyond the last column (" + lds[lds.length - 1] + " m): last column used. Check whether the code allows more.");
-    var pct;
-    if (rows.length === 1) { pct = colInterp(rows[0].v, lds, ld); }
-    else if (area > rows[rows.length - 1].a) {
-      pct = colInterp(rows[rows.length - 1].v, lds, ld);
-      notes.push("Face area " + f(area, 1) + " m² is larger than the biggest row (" + rows[rows.length - 1].a + " m²): last row used. Check the code for larger faces.");
-    } else if (area <= rows[0].a) {
-      pct = colInterp(rows[0].v, lds, ld);
-    } else if (mode === "step") {
-      var r = rows.find(function (r) { return area <= r.a; });
-      pct = colInterp(r.v, lds, ld);
-    } else {
-      var k = 0; while (area > rows[k + 1].a) k++;
-      var p0 = colInterp(rows[k].v, lds, ld), p1 = colInterp(rows[k + 1].v, lds, ld);
-      pct = lerp(area, rows[k].a, rows[k + 1].a, p0, p1);
-    }
-    return { pct: pct, notes: notes };
-  }
-
-  /* ---------- table UI ---------- */
-  function refreshTableLists(selectName) {
-    var opts = tables.map(function (t, i) { return '<option value="' + i + '">' + esc(t.name) + "</option>"; }).join("");
-    $("ss-tbl").innerHTML = tables.length ? opts : '<option value="">No table saved yet</option>';
-    $("ss-tsaved").innerHTML = tables.length ? opts : '<option value="">None</option>';
-    if (selectName !== undefined) {
-      var idx = tables.findIndex(function (t) { return t.name === selectName; });
-      if (idx >= 0) { $("ss-tbl").value = idx; $("ss-tsaved").value = idx; }
-    }
-    $("ss-tblmsg").textContent = tables.length ? "" : "Open “Code tables” at the bottom of this page and enter the table from your code book. The limiting-distance-squared check for Part 9 works without a table.";
-  }
-  $("ss-tsaved").addEventListener("change", function () {
-    var t = tables[+$("ss-tsaved").value]; if (!t) return;
-    $("ss-tname").value = t.name; $("ss-tdata").value = t.csv;
-  });
+  $("ss-tsaved").addEventListener("change", function () { var t = tables[+$("ss-tsaved").value]; if (t) { $("ss-tname").value = t.name; $("ss-tdata").value = t.csv; } });
   $("ss-tsave").addEventListener("click", function () {
     var name = $("ss-tname").value.trim(), csv = $("ss-tdata").value, st = $("ss-tstatus");
     if (!name) { st.textContent = "Give the table a name."; return; }
     try { parseTable(csv); } catch (e) { st.textContent = "Not saved: " + e.message; return; }
     var i = tables.findIndex(function (t) { return t.name === name; });
     if (i >= 0) tables[i].csv = csv; else tables.push({ name: name, csv: csv });
-    st.textContent = saveTables() ? "Saved “" + name + "”." : "Could not save in this browser (storage blocked). The table works until you close the page.";
-    refreshTableLists(name); calc();
+    st.textContent = saveTables() ? "Saved “" + name + "”." : "Could not save in this browser (storage blocked).";
+    refreshTableLists(); recalc();
   });
   $("ss-tdel").addEventListener("click", function () {
     var i = +$("ss-tsaved").value; if (isNaN(i) || !tables[i]) return;
     if (!confirm("Delete “" + tables[i].name + "”?")) return;
-    tables.splice(i, 1); saveTables(); refreshTableLists(); $("ss-tname").value = ""; $("ss-tdata").value = ""; calc();
+    tables.splice(i, 1); saveTables(); refreshTableLists(); $("ss-tname").value = ""; $("ss-tdata").value = ""; recalc();
   });
   $("ss-tbackup").addEventListener("click", function () {
     var txt = tables.map(function (t) { return "# " + t.name + "\n" + t.csv; }).join("\n\n");
-    var done = function () { $("ss-tstatus").textContent = "Copied to clipboard."; };
-    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, function () { $("ss-tstatus").textContent = "Copy failed."; });
-    else $("ss-tstatus").textContent = "Clipboard not available here.";
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { $("ss-tstatus").textContent = "Copied to clipboard."; }, function () { $("ss-tstatus").textContent = "Copy failed."; });
   });
 
-  /* ---------- openings list ---------- */
-  function addOpening(label, w, h, q) {
-    var d = document.createElement("div"); d.className = "ss-row";
-    d.innerHTML =
-      '<label class="ss-lbl"><input type="text" class="ss-ol" placeholder="e.g. W1 living room" value="' + esc(label || "") + '"></label>' +
-      '<label><input type="number" step="any" min="0" class="ss-ow" value="' + (w || "") + '"></label>' +
-      '<label><input type="number" step="any" min="0" class="ss-oh" value="' + (h || "") + '"></label>' +
-      '<label><input type="number" step="1" min="1" class="ss-oq" value="' + (q || 1) + '"></label>' +
-      '<button type="button" class="ss-btn ss-x" aria-label="Remove opening">✕</button>';
-    d.querySelector("button").addEventListener("click", function () { d.remove(); calc(); });
-    $("ss-ops").appendChild(d);
+  /* ---------- the code check ---------- */
+  function activeTable() {
+    if (state.basis === "p9") return HOUSE_TABLE;
+    var t = tables[state.custom]; if (!t) return null;
+    try { var p = parseTable(t.csv); p.name = t.name; return p; } catch (e) { return null; }
   }
-  $("ss-add").addEventListener("click", function () { addOpening(); });
-  addOpening();
+  /* Percentage from a table row at a limiting distance, interpolating between distance columns. */
+  function rowPercent(pct, distances, ld) {
+    if (ld <= distances[0]) return pct[0];
+    if (ld >= distances[distances.length - 1]) return pct[pct.length - 1];
+    for (var i = 0; i < distances.length - 1; i++) if (ld <= distances[i + 1]) return lerp(ld, distances[i], distances[i + 1], pct[i], pct[i + 1]);
+  }
+  function tablePercent(table, faceArea, ld) {
+    var rows = table.rows, d = table.distances;
+    if (ld < d[0]) return 0;
+    if (faceArea <= rows[0].area || rows.length === 1) return rowPercent(rows[0].pct, d, ld);
+    var k = rows.findIndex(function (r) { return faceArea <= r.area; });
+    if (k < 0) return rowPercent(rows[rows.length - 1].pct, d, ld);
+    if (state.rows === "step" || !isFinite(rows[k].area)) return rowPercent(rows[k].pct, d, ld);
+    return lerp(faceArea, rows[k - 1].area, rows[k].area, rowPercent(rows[k - 1].pct, d, ld), rowPercent(rows[k].pct, d, ld));
+  }
+  /* The largest glazed area allowed on a face, and which rule gives it. ld is the distance used (already halved if needed). */
+  function allowedGlazing(faceArea, ld) {
+    if (!(ld >= 1.2)) return { area: 0, how: "Limiting distance under 1.2 m: no glazed openings allowed", pct: 0 };
+    var table = activeTable(), best = { area: 0, how: "No table chosen", pct: 0 };
+    if (table) { var p = tablePercent(table, faceArea, ld); best = { area: faceArea * p / 100, how: table.name + ": " + round(p, 1) + "%", pct: p }; }
+    if (state.basis === "p9" && ld * ld > best.area) best = { area: Math.min(faceArea, ld * ld), how: "Limiting distance squared: (" + round(ld) + " m)² = " + round(ld * ld) + " m²", pct: 100 * Math.min(faceArea, ld * ld) / faceArea };
+    return best;
+  }
+  function halving() { return state.slow && !state.sprinklered; }
 
-  /* ---------- calculation ---------- */
-  function calc() {
-    var out = $("ss-out"), p9 = $("ss-mode").value === "p9";
-    var u = UNIT[$("ss-unit").value];
-    $("ss-resp-wrap").style.display = p9 ? "" : "none";
-
-    var LD = num("ss-ld") * u;
-    var A = num("ss-area") * u * u || num("ss-w") * u * num("ss-h") * u;
-    var spr = $("ss-spr").checked;
-
-    var ops = Array.prototype.map.call($("ss-ops").children, function (r) {
-      var w = (parseFloat(r.querySelector(".ss-ow").value) || 0) * u,
-          h = (parseFloat(r.querySelector(".ss-oh").value) || 0) * u,
-          q = Math.max(1, parseInt(r.querySelector(".ss-oq").value, 10) || 1);
-      return { label: r.querySelector(".ss-ol").value.trim() || "Opening", a: w * h, q: q };
-    }).filter(function (o) { return o.a > 0; });
-    var proposed = ops.reduce(function (s, o) { return s + o.a * o.q; }, 0);
-
-    if (!(A > 0) || !(LD >= 0) || $("ss-ld").value === "") {
-      out.className = "ss-result";
-      out.innerHTML = '<p class="ss-verdict">Enter the limiting distance and the face size to see a result.</p>';
-      return;
+  function checkWall(wall) {
+    var u = state.units, ld = readLength(wall.ld, u), width = readLength(wall.width, u), height = readLength(wall.height, u);
+    var face = width * height, out = { ld: ld, face: face, ok: null, notes: [], tooBig: [], build: [] };
+    var openings = wall.openings.map(function (o) {
+      var w = readOpening(o.w, state.openUnits), h = readOpening(o.h, state.openUnits), q = Math.max(1, parseInt(o.qty, 10) || 1);
+      return { label: o.label || "Opening", area: w > 0 && h > 0 ? w * h : 0, qty: q, counts: o.counts !== false, egress: !!o.egress };
+    });
+    out.openings = openings;
+    out.proposed = openings.reduce(function (s, o) { return s + (o.counts ? o.area * o.qty : 0); }, 0);
+    if (!(face > 0) || !(ld >= 0)) { out.waiting = !(face > 0) ? "Enter the wall's width and height." : "Enter the limiting distance."; return out; }
+    var used = halving() ? ld / 2 : ld;
+    out.used = used;
+    var allow = allowedGlazing(face, used);
+    out.allowed = allow.area; out.how = allow.how;
+    out.ok = out.proposed <= out.allowed + 1e-9;
+    if (halving()) out.notes.push("Limiting distance halved for the glazing check (slow fire department response, not sprinklered): " + round(ld) + " m is treated as " + round(used) + " m.");
+    if (state.basis === "p9" && activeTable() && used >= 1.2) out.notes.push("Part 9 lets you use whichever is larger: the table or the limiting distance squared. Using: " + escapeText(allow.how) + ".");
+    if (!activeTable() && state.basis !== "p9") out.notes.push('<span class="warn">No table chosen: add one under “Your own tables”.</span>');
+    /* individual openings: at 2 m or less (not sprinklered) no single opening may exceed half the allowed total */
+    out.tooBig = [];
+    if (state.basis === "p9" && !state.sprinklered && ld <= 2 && ld >= 1.2) {
+      var cap = 0.5 * out.allowed;
+      out.notes.push("At 2 m or less, no single opening (or close group) may be more than half the allowed total: " + showArea(cap) + ". Openable egress windows are exempt; tick “Egress” on those.");
+      openings.forEach(function (o) { if (o.counts && !o.egress && o.area > cap + 1e-9) out.tooBig.push(o.label); });
     }
-
-    var notes = [], effLD = LD;
-    if (p9 && $("ss-resp").checked && !spr) {
-      effLD = LD / 2;
-      notes.push("Limiting distance halved for calculation (Part 9 response-time rule): " + f(LD) + " m becomes " + f(effLD) + " m. The 50% individual-opening check below still uses the actual distance.");
-    } else if (p9 && $("ss-resp").checked && spr) {
-      notes.push("Response-time halving does not apply because the building is sprinklered. Confirm every storey is sprinklered.");
+    if (state.basis === "custom" && !state.sprinklered && ld >= 1.2) {
+      var cap3 = 0.24 * Math.pow(2 * ld - 1.2, 2);
+      out.notes.push("Part 3: each opening may be at most 0.24 × (2 × LD − 1.2)² = " + showArea(cap3) + " (also check Table 3.2.3.1.-A).");
+      openings.forEach(function (o) { if (o.counts && o.area > cap3 + 1e-9) out.tooBig.push(o.label); });
     }
-
-    var allowed = 0, basis = "", tblPct = null;
-    var tbl = null, tblName = "";
-    var ti = +$("ss-tbl").value;
-    if (tables[ti]) {
-      try { tbl = parseTable(tables[ti].csv); tblName = tables[ti].name; } catch (e) { notes.push('<span class="ss-warn">Saved table is invalid: ' + esc(e.message) + "</span>"); }
+    if (out.tooBig.length) out.ok = false;
+    /* the smallest limiting distance that would make this glazing work */
+    out.minLd = null;
+    if (out.proposed > 0) for (var t = 0; t <= 40; t += 0.05) { var tu = halving() ? t / 2 : t; if (allowedGlazing(face, tu).area >= out.proposed - 1e-9) { out.minLd = t; break; } }
+    /* wall construction and soffits by actual limiting distance (Article 9.10.15.5) */
+    out.build = [];
+    if (state.basis === "p9") {
+      if (ld < 0.6) out.build.push("<b>Wall:</b> at least 45 min fire-resistance rating, with metal or noncombustible cladding (or one of the other options in 9.10.15.5.(2)), or a wall assembly tested to CAN/ULC-S134.");
+      else if (ld < 1.2) out.build.push("<b>Wall:</b> at least 45 min fire-resistance rating, with noncombustible cladding or one of the options in 9.10.15.5.(3) (for example fire-retardant-treated wood with a flame-spread rating of 25 or less), or a CAN/ULC-S134 tested assembly.");
+      else out.build.push("<b>Wall:</b> no extra fire-resistance rating or cladding requirement from Article 9.10.15.5 at this distance.");
+      if (ld <= 0.45) out.build.push("<b>Soffit:</b> no roof soffit may be built above this wall (limiting distance 0.45 m or less).");
+      else if (ld < 1.2) out.build.push("<b>Soffit:</b> the soffit face must stay at least 0.45 m from the property line, have no vents or openings, and be protected with a listed material (within 1.2 m of the line).");
+      else out.build.push("<b>Soffit:</b> no special soffit protection at this distance.");
     }
-    var rowsTxt = "";
-    if (effLD < 1.2) {
-      allowed = 0; basis = "Limiting distance under 1.2 m: no unprotected openings permitted";
-    } else {
-      var cands = [];
-      if (tbl) {
-        var L = lookup(tbl, A, effLD, $("ss-rowmode").value);
-        tblPct = L.pct; notes = notes.concat(L.notes.map(function (n) { return '<span class="ss-warn">' + esc(n) + "</span>"; }));
-        cands.push({ area: Math.min(A, A * tblPct / 100), why: "Table: " + tblName + " (" + f(tblPct, 1) + "%)" });
-      } else {
-        notes.push('<span class="ss-warn">No table selected, so the percentage method is not included in this result.</span>');
-      }
-      if (p9) cands.push({ area: Math.min(A, effLD * effLD), why: "Limiting distance squared (" + f(effLD) + " m)² = " + f(effLD * effLD) + " m²" });
-      if (cands.length) {
-        cands.sort(function (a, b) { return b.area - a.area; });
-        allowed = cands[0].area; basis = cands[0].why;
-        if (p9 && cands.length > 1) notes.push("Part 9 allows the least restrictive of the methods. Governing method: " + esc(basis) + ".");
-      }
-    }
-
-    var pass = proposed <= allowed + 1e-9, hasMethod = (effLD < 1.2) || tbl || p9;
-    var rows = [
-      ["Exposing building face area", f(A) + " m² (" + f(A * 10.7639, 0) + " ft²)"],
-      ["Limiting distance (actual)", f(LD) + " m"],
-      ["Limiting distance used", f(effLD) + " m"],
-      ["Basis", basis || "n/a"],
-      ["Maximum unprotected openings", f(allowed) + " m² (" + f(allowed * 10.7639, 1) + " ft²) = " + f(100 * allowed / A, 1) + "% of face"],
-      ["Proposed unprotected openings", f(proposed) + " m² (" + f(proposed * 10.7639, 1) + " ft²) = " + f(100 * proposed / A, 1) + "% of face"],
-      ["Remaining allowance", f(allowed - proposed) + " m²"]
-    ];
-
-    /* individual opening limits */
-    var indiv = [];
-    if (!spr && LD <= 2) {
-      if (p9) {
-        var lim = 0.5 * allowed;
-        indiv.push("Part 9: with an actual limiting distance of 2 m or less in a non-sprinklered building, each opening or group of openings may not exceed 50% of the maximum aggregate area (" + f(lim) + " m²). Openable windows of 0.35 m² or less that meet the egress requirements are exempt.");
-        ops.forEach(function (o) { if (o.a > lim + 1e-9 && o.a > 0.35) indiv.push('<span class="ss-warn">' + esc(o.label) + " is " + f(o.a) + " m², over " + f(lim) + " m².</span>"); });
-      } else if (LD >= 1.2) {
-        var lim3 = 0.24 * Math.pow(2 * LD - 1.2, 2);
-        indiv.push("Part 3: individual openings may not exceed 0.24[(2 × LD) − 1.2]² = " + f(lim3) + " m² (also check Table 3.2.3.1.-A).");
-        ops.forEach(function (o) { if (o.a > lim3 + 1e-9) indiv.push('<span class="ss-warn">' + esc(o.label) + " is " + f(o.a) + " m², over " + f(lim3) + " m².</span>"); });
-      }
-    }
-    var indivFail = indiv.some(function (s) { return s.indexOf("ss-warn") > -1; });
-
-    var verdict, cls;
-    if (!hasMethod) { verdict = "Select a table to get a result."; cls = "ss-result"; }
-    else if (!ops.length) { verdict = "Maximum allowed: " + f(allowed) + " m² (" + f(100 * allowed / A, 1) + "% of face). Add openings to check them."; cls = "ss-result"; }
-    else if (pass && !indivFail) { verdict = "Complies on aggregate area"; cls = "ss-result ss-ok"; }
-    else if (pass && indivFail) { verdict = "Aggregate area OK, but an individual opening is too large"; cls = "ss-result ss-bad"; }
-    else { verdict = "Over the limit by " + f(proposed - allowed) + " m²"; cls = "ss-result ss-bad"; }
-
-    var html = '<p class="ss-verdict">' + verdict + '</p><table class="ss-t">' +
-      rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + esc(r[1]) + "</td></tr>"; }).join("") + "</table>";
-    if (ops.length) {
-      html += '<h3 style="margin-top:14px">Openings</h3><table class="ss-t">' +
-        ops.map(function (o) { return "<tr><td>" + esc(o.label) + " × " + o.q + "</td><td>" + f(o.a) + " m² each, " + f(o.a * o.q) + " m² total</td></tr>"; }).join("") + "</table>";
-    }
-    var all = indiv.concat(notes);
-    all.push("Construction of the exposing building face (cladding, fire-resistance rating, soffits) also depends on limiting distance. Check Subsection 9.10.15 or 3.2.3 as applicable.");
-    html += '<ul class="ss-notes">' + all.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
-    out.className = cls; out.innerHTML = html;
+    return out;
   }
 
-  /* ---------- wire up ---------- */
-  ["ss-mode", "ss-unit", "ss-ld", "ss-w", "ss-h", "ss-area", "ss-resp", "ss-spr", "ss-tbl", "ss-rowmode"].forEach(function (id) {
-    $(id).addEventListener("input", calc); $(id).addEventListener("change", calc);
+  /* ---------- drawing: the face to scale, with its openings packed in rows, plus a gauge ---------- */
+  function sketch(wall, r) {
+    var u = state.units, W = readLength(wall.width, u), H = readLength(wall.height, u);
+    if (!(W > 0 && H > 0)) return '<p class="hint" style="padding:12px">Enter the width and height to see the wall.</p>';
+    var boxW = 520, scale = Math.min(boxW / W, 220 / H), x0 = 30, y0 = 18, w = W * scale, h = H * scale, svg = "";
+    svg += '<rect x="' + x0 + '" y="' + y0 + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="#fff" stroke="#151515" stroke-width="2.4"/>';
+    svg += '<line x1="' + (x0 - 14) + '" y1="' + (y0 + h).toFixed(1) + '" x2="' + (x0 + w + 14).toFixed(1) + '" y2="' + (y0 + h).toFixed(1) + '" stroke="#151515" stroke-width="1"/>';
+    var gap = 0.3 * scale, cx = x0 + gap, cy = y0 + gap, rowH = 0, over = false;
+    var list = [];
+    r.openings.forEach(function (o) { for (var i = 0; i < Math.min(o.qty, 40); i++) list.push(o); });
+    list.forEach(function (o) {
+      if (!(o.area > 0)) return;
+      var ow = readOpening(wall.openings[r.openings.indexOf(o)].w, state.openUnits) * scale, oh = readOpening(wall.openings[r.openings.indexOf(o)].h, state.openUnits) * scale;
+      if (cx + ow > x0 + w - gap) { cx = x0 + gap; cy += rowH + gap; rowH = 0; }
+      if (cy + oh > y0 + h - 1) over = true;
+      var bad = r.tooBig.indexOf(o.label) > -1;
+      svg += '<rect x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" width="' + ow.toFixed(1) + '" height="' + oh.toFixed(1) + '" fill="' + (o.counts ? (bad ? "#f6d7d3" : "#e6e6e3") : "#fff") + '" stroke="' + (bad ? "#b3261e" : "#555") + '" stroke-width="0.9"' + (o.counts ? "" : ' stroke-dasharray="3 2"') + "/>";
+      if (o.counts) svg += '<line x1="' + cx.toFixed(1) + '" y1="' + cy.toFixed(1) + '" x2="' + (cx + ow).toFixed(1) + '" y2="' + (cy + oh).toFixed(1) + '" stroke="#bbb" stroke-width="0.5"/>';
+      cx += ow + gap; rowH = Math.max(rowH, oh);
+    });
+    svg += '<text x="' + (x0 + w / 2).toFixed(1) + '" y="' + (y0 + h + 16).toFixed(1) + '" font-size="10" text-anchor="middle" fill="#444">' + escapeText(showLength(W, u)) + " wide × " + escapeText(showLength(H, u)) + " high · " + round(W * H, 1) + " m²</text>";
+    var note = over ? '<p class="hint" style="padding:0 12px 10px">The openings do not all fit on this wall as drawn. Check the sizes.</p>' : "";
+    return '<svg viewBox="0 0 ' + (x0 * 2 + Math.max(w, 120)).toFixed(0) + " " + (y0 + h + 26).toFixed(0) + '">' + svg + "</svg>" + note + '<p class="hint" style="padding:0 12px 10px">Openings are packed in rows to show how much of the wall they take, not where they really go. Grey = counted glass; dashed = not counted.</p>';
+  }
+  function gauge(r) {
+    if (!(r.allowed >= 0) || !(r.face > 0)) return "";
+    var max = Math.max(r.allowed, r.proposed, 0.01) * 1.1, used = Math.min(100, r.proposed / max * 100), mark = r.allowed / max * 100;
+    return '<div class="gauge"><div class="bar"><div class="fill' + (r.proposed > r.allowed + 1e-9 ? " over" : "") + '" style="width:' + used.toFixed(1) + '%"></div><div class="mark" style="left:' + mark.toFixed(1) + '%"></div></div>'
+      + '<div class="labels"><span>Glass proposed: ' + round(r.proposed, 2) + " m²</span><span>Allowed: " + round(r.allowed, 2) + " m² (green line)</span></div></div>";
+  }
+
+  /* ---------- page building ---------- */
+  function wallCard(wall, i) {
+    var u = state.units === "ft" ? "e.g. 12'6\"" : "e.g. 3.8", ou = state.openUnits === "in" ? "in" : "mm";
+    var rows = wall.openings.map(function (o, j) {
+      return "<tr>" +
+        '<td class="wide"><input data-wall="' + i + '" data-open="' + j + '" data-field="label" value="' + escapeText(o.label) + '" placeholder="e.g. W1 bedroom" title="' + escapeText(o.label) + '"></td>' +
+        '<td class="size"><input data-wall="' + i + '" data-open="' + j + '" data-field="w" value="' + escapeText(o.w) + '" inputmode="decimal" placeholder="' + ou + '"></td>' +
+        '<td class="size"><input data-wall="' + i + '" data-open="' + j + '" data-field="h" value="' + escapeText(o.h) + '" inputmode="decimal" placeholder="' + ou + '"></td>' +
+        '<td style="width:64px"><input data-wall="' + i + '" data-open="' + j + '" data-field="qty" type="number" min="1" step="1" value="' + escapeText(o.qty) + '"></td>' +
+        '<td style="text-align:center"><input type="checkbox" data-wall="' + i + '" data-open="' + j + '" data-field="counts"' + (o.counts !== false ? " checked" : "") + ' title="Counts as glazed opening"></td>' +
+        '<td style="text-align:center"><input type="checkbox" data-wall="' + i + '" data-open="' + j + '" data-field="egress"' + (o.egress ? " checked" : "") + ' title="Openable egress window"></td>' +
+        '<td class="num"></td>' +
+        '<td><button class="btn x no-print" type="button" data-action="remove-opening" data-wall="' + i + '" data-open="' + j + '" aria-label="Remove opening">✕</button></td></tr>';
+    }).join("");
+    return '<div class="card" data-wall-card="' + i + '">' +
+      '<div class="wall-head"><input data-wall="' + i + '" data-field="name" value="' + escapeText(wall.name) + '" aria-label="Wall name">' +
+      '<span class="tag wait" id="ss-tag-' + i + '"></span>' +
+      '<button class="btn no-print" type="button" data-action="copy-wall" data-wall="' + i + '">Copy</button><button class="btn no-print" type="button" data-action="remove-wall" data-wall="' + i + '">Remove</button></div>' +
+      '<div class="grid" style="margin-top:8px">' +
+      '<label class="f">Limiting distance <small>to the property line</small><input data-wall="' + i + '" data-field="ld" value="' + escapeText(wall.ld) + '" placeholder="' + u + '"></label>' +
+      '<label class="f">Wall width <small>this face, one direction</small><input data-wall="' + i + '" data-field="width" value="' + escapeText(wall.width) + '" placeholder="' + u + '"></label>' +
+      '<label class="f">Wall height <small>finished ground to top-storey ceiling</small><input data-wall="' + i + '" data-field="height" value="' + escapeText(wall.height) + '" placeholder="' + u + '"></label>' +
+      "</div>" +
+      '<div class="split"><div>' +
+      '<h4>Windows and doors on this wall</h4>' +
+      '<table class="list"><thead><tr><th>Label</th><th>Width</th><th>Height</th><th>Qty</th><th title="Counts toward the glazing limit">Glass</th><th title="Openable egress window (exempt from the 50% rule)">Egress</th><th class="num">Area</th><th></th></tr></thead><tbody>' + rows + "</tbody></table>" +
+      '<div class="quick no-print"><select data-action="quick-add" data-wall="' + i + '"><option value="">+ Add a common size…</option>' + COMMON_SIZES.map(function (c, k) { return '<option value="' + k + '">' + c[0] + "</option>"; }).join("") + "</select>" +
+      '<button class="btn" type="button" data-action="add-opening" data-wall="' + i + '">+ Add a blank row</button></div>' +
+      '<p class="hint">Sizes are the frame or rough opening width × height. Solid doors are not glazed openings; untick “Glass” for those.</p>' +
+      '</div><div><div class="result" id="ss-result-' + i + '"></div><div class="sketch" id="ss-sketch-' + i + '" style="margin-top:10px"></div></div></div></div>';
+  }
+  function render() {
+    $("ss-basis").value = state.basis; $("ss-units").value = state.units; $("ss-open-units").value = state.openUnits; $("ss-rows").value = state.rows;
+    $("ss-sprinklered").checked = state.sprinklered; $("ss-slow").checked = state.slow;
+    $("ss-custom-pick-wrap").hidden = state.basis !== "custom";
+    refreshTableLists();
+    $("ss-walls").innerHTML = state.walls.map(wallCard).join("");
+    recalc();
+  }
+  function recalc() {
+    var u = state.units, results = state.walls.map(checkWall), summary = [];
+    results.forEach(function (r, i) {
+      var box = $("ss-result-" + i), tag = $("ss-tag-" + i), wall = state.walls[i];
+      if (!box) return;
+      var card = document.querySelector('[data-wall-card="' + i + '"]');
+      r.openings.forEach(function (o, j) { var cell = card.querySelectorAll("tbody tr")[j]; if (cell) cell.querySelector("td.num").textContent = o.area > 0 ? round(o.area * o.qty, 2) + " m²" : ""; });
+      $("ss-sketch-" + i).innerHTML = sketch(wall, r);
+      if (r.waiting) { box.className = "result"; box.innerHTML = '<p class="verdict">' + r.waiting + "</p>"; tag.className = "tag wait"; tag.textContent = "Incomplete"; summary.push({ wall: wall, r: r }); return; }
+      var verdict = r.ok ? "Complies" : r.tooBig.length && r.proposed <= r.allowed + 1e-9 ? "Total is fine, but an opening is too large" : r.allowed === 0 ? "No glazed openings allowed at this distance" : "Too much glass: over by " + showArea(r.proposed - r.allowed);
+      if (!r.proposed && r.ok) verdict = "Up to " + showArea(r.allowed) + " of glass allowed";
+      box.className = "result " + (r.ok ? "pass" : "fail");
+      tag.className = "tag " + (r.ok ? "pass" : "fail"); tag.textContent = r.ok ? "Complies" : "Does not comply";
+      var facts = [
+        ["Exposing face area", showArea(r.face)],
+        ["Limiting distance used", showLength(r.used, "m") + (u === "ft" ? " (" + showLength(r.used, "ft") + ")" : "")],
+        ["Glass allowed", showArea(r.allowed) + " · " + round(100 * r.allowed / r.face, 1) + "% of the wall"],
+        ["Glass proposed", showArea(r.proposed) + " · " + round(100 * r.proposed / r.face, 1) + "% of the wall"],
+        ["Room left", r.allowed >= r.proposed ? showArea(r.allowed - r.proposed) : "none"],
+        ["Smallest limiting distance that works", r.minLd == null ? (r.proposed ? "over 40 m" : "–") : showLength(r.minLd, "m") + (u === "ft" ? " (" + showLength(r.minLd, "ft") + ")" : "")]
+      ];
+      var notes = (r.tooBig.length ? ['<span class="warn">Too large on its own: ' + r.tooBig.map(escapeText).join(", ") + ".</span>"] : []).concat(r.notes, r.build);
+      box.innerHTML = '<p class="verdict">' + verdict + "</p>" + gauge(r) + '<table class="facts">' + facts.map(function (f) { return "<tr><td>" + f[0] + "</td><td>" + f[1] + "</td></tr>"; }).join("") + "</table>" +
+        '<p class="hint">Governing rule: ' + escapeText(r.how) + "</p>" + '<ul class="notes">' + notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
+      summary.push({ wall: wall, r: r });
+    });
+    /* summary of all walls */
+    var done = summary.filter(function (s) { return !s.r.waiting; }), allOk = done.length && done.every(function (s) { return s.r.ok; });
+    $("ss-summary").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Summary</h3><span class="tag ' + (!done.length ? "wait" : allOk ? "pass" : "fail") + '">' + (!done.length ? "Waiting for wall details" : allOk ? "All checked walls comply" : "Some walls need changes") + "</span></div>" +
+      '<table class="list" style="margin-top:8px"><thead><tr><th>Wall</th><th class="num">Limiting distance</th><th class="num">Glass allowed</th><th class="num">Glass proposed</th><th>Result</th></tr></thead><tbody>' +
+      summary.map(function (s) {
+        var r = s.r;
+        return "<tr><td>" + escapeText(s.wall.name || "Wall") + '</td><td class="num">' + (isFinite(r.ld) ? showLength(r.ld, state.units) : "–") + '</td><td class="num">' + (r.waiting ? "–" : round(r.allowed, 2) + " m²") + '</td><td class="num">' + round(r.proposed, 2) + " m²</td><td>" +
+          (r.waiting ? '<span class="tag wait">Incomplete</span>' : '<span class="tag ' + (r.ok ? "pass" : "fail") + '">' + (r.ok ? "Complies" : "Does not comply") + "</span>") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+    save();
+  }
+
+  /* ---------- bring in a wall from the floor plan tool ---------- */
+  function floorPlans() { try { return typeof plans !== "undefined" && plans.length ? plans : []; } catch (e) { return []; } }
+  function refreshImportList() {
+    var list = floorPlans();
+    $("ss-import-plan").innerHTML = list.length ? list.map(function (p, i) { return '<option value="' + i + '">Option ' + p.letter + " · " + escapeText(p.desc) + "</option>"; }).join("") : '<option value="">No floor plans yet</option>';
+    $("ss-import").disabled = !list.length;
+    $("ss-import-hint").textContent = list.length ? "Copies the wall's width, an estimated height and every window and glazed door on that side, on every floor. Then enter the limiting distance." : "Generate plans in the ArchPlan Studio tab first, then come back here.";
+  }
+  function importWall(plan, side) {
+    var names = { t: "Front", b: "Back", l: "Left side", r: "Right side" }, sideOfBay = { n: "t", s: "b", w: "l", e: "r" };
+    var mainFloor = plan.floors.find(function (f) { return f.kind === "main"; });
+    var xs = [], ys = [];
+    mainFloor.rooms.forEach(function (r) { xs.push(r.x, r.x + r.w); ys.push(r.y, r.y + r.h); });
+    var widthFt = side === "t" || side === "b" ? Math.max.apply(null, xs) - Math.min.apply(null, xs) : Math.max.apply(null, ys) - Math.min.apply(null, ys);
+    var heightFt = plan.floors.some(function (f) { return f.kind === "upper"; }) ? 19.5 : 10;
+    var found = {};
+    function add(label, wi, hi, counts, egress) {
+      var key = label + "|" + wi + "|" + hi + "|" + counts;
+      if (found[key]) found[key].qty++; else found[key] = { label: label, w: wi, h: hi, qty: 1, counts: counts, egress: egress };
+    }
+    plan.floors.forEach(function (f) {
+      var floorName = f.kind === "main" ? "" : f.kind === "upper" ? " (upper)" : " (basement)";
+      f.windows.forEach(function (w) {
+        var room = f.rooms[w.ri], wallSide = w.diag ? (room.bay ? sideOfBay[room.bay.sd] : null) : w.side;
+        if (wallSide === side) add(room.n + " window" + floorName, w.wi, w.hi, true, room.t === "sleep");
+      });
+      f.doors.forEach(function (d) {
+        if (d.b !== -1) return;
+        var doorSide = d.ny === 1 ? "t" : d.ny === -1 ? "b" : d.nx === 1 ? "l" : "r";
+        if (doorSide !== side) return;
+        var wide = Math.round(Math.hypot(d.x2 - d.x1, d.y2 - d.y1) * 12);
+        if (d.kind === "patio") add("Patio door" + floorName, wide, 80, true, false);
+        else if (d.kind === "entry") add("Front door (solid)", wide, 80, false, false);
+        else if (d.kind === "garage") add("Garage door (solid)", wide, 84, false, false);
+      });
+    });
+    var toLen = function (ft) { return state.units === "ft" ? Math.floor(ft) + "'" + Math.round((ft - Math.floor(ft)) * 12) + '"' : (ft * 0.3048).toFixed(2); };
+    var toOpen = function (inches) { return state.openUnits === "in" ? String(inches) : String(Math.round(inches * 25.4)); };
+    var openings = Object.keys(found).map(function (k) { var o = found[k]; return { label: o.label, w: toOpen(o.w), h: toOpen(o.h), qty: o.qty, counts: o.counts, egress: o.egress }; });
+    if (!openings.length) openings.push({ label: "", w: "", h: "", qty: 1, counts: true, egress: false });
+    state.walls.push({ name: names[side] + " · Option " + plan.letter, ld: "", width: toLen(widthFt), height: toLen(heightFt), openings: openings });
+  }
+
+  /* ---------- events ---------- */
+  function wireSetting(id, key, isCheck) { $(id).addEventListener("change", function () { state[key] = isCheck ? $(id).checked : $(id).value; if (key === "basis" || key === "units" || key === "openUnits") render(); else recalc(); }); }
+  wireSetting("ss-basis", "basis"); wireSetting("ss-units", "units"); wireSetting("ss-open-units", "openUnits"); wireSetting("ss-rows", "rows");
+  wireSetting("ss-sprinklered", "sprinklered", true); wireSetting("ss-slow", "slow", true);
+  $("ss-custom-pick").addEventListener("change", function () { state.custom = +$("ss-custom-pick").value; recalc(); });
+  $("ss-walls").addEventListener("input", function (e) {
+    var t = e.target, wi = t.dataset.wall, field = t.dataset.field; if (wi == null || !field) return;
+    var wall = state.walls[+wi], target = t.dataset.open != null ? wall.openings[+t.dataset.open] : wall;
+    target[field] = t.type === "checkbox" ? t.checked : t.value;
+    recalc();
   });
-  $("ss-ops").addEventListener("input", calc);
+  $("ss-walls").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset.action === "quick-add" && t.value !== "") {
+      var c = COMMON_SIZES[+t.value], wall = state.walls[+t.dataset.wall];
+      var blank = wall.openings.length === 1 && !wall.openings[0].w && !wall.openings[0].h && !wall.openings[0].label;
+      var item = { label: c[0].replace(" (not counted)", ""), w: state.openUnits === "in" ? String(c[1]) : String(Math.round(c[1] * 25.4)), h: state.openUnits === "in" ? String(c[2]) : String(Math.round(c[2] * 25.4)), qty: 1, counts: c[3], egress: false };
+      if (blank) wall.openings[0] = item; else wall.openings.push(item);
+      render();
+    } else if (t.type === "checkbox") recalc();
+  });
+  $("ss-walls").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !b.dataset.action) return;
+    var wi = +b.dataset.wall, wall = state.walls[wi];
+    if (b.dataset.action === "remove-opening") { wall.openings.splice(+b.dataset.open, 1); if (!wall.openings.length) wall.openings.push({ label: "", w: "", h: "", qty: 1, counts: true, egress: false }); }
+    else if (b.dataset.action === "add-opening") wall.openings.push({ label: "", w: "", h: "", qty: 1, counts: true, egress: false });
+    else if (b.dataset.action === "remove-wall") { if (!confirm("Remove “" + (wall.name || "this wall") + "”?")) return; state.walls.splice(wi, 1); }
+    else if (b.dataset.action === "copy-wall") { var copy = JSON.parse(JSON.stringify(wall)); copy.name = (wall.name || "Wall") + " (copy)"; state.walls.splice(wi + 1, 0, copy); }
+    else return;
+    render();
+  });
+  $("ss-add-wall").addEventListener("click", function () {
+    var used = state.walls.map(function (w) { return w.name; }), name = ["Left side", "Right side", "Back", "Front"].find(function (n) { return used.indexOf(n) < 0; }) || "Wall " + (state.walls.length + 1);
+    state.walls.push({ name: name, ld: "", width: "", height: "", openings: [{ label: "", w: "", h: "", qty: 1, counts: true, egress: false }] });
+    render();
+  });
+  $("ss-import").addEventListener("click", function () { var p = floorPlans()[+$("ss-import-plan").value]; if (!p) return; importWall(p, $("ss-import-side").value); render(); var cards = document.querySelectorAll("[data-wall-card]"); if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: "smooth", block: "start" }); });
+  $("ss-reset").addEventListener("click", function () { if (confirm("Clear every wall and start over? Your own tables are kept.")) { state = freshState(); render(); } });
+  $("ss-print").addEventListener("click", function () { window.print(); });
 
-  loadTables();
-  refreshTableLists();
-  if (tables[0]) { $("ss-tname").value = tables[0].name; $("ss-tdata").value = tables[0].csv; }
-  calc();
+  render();
+  show(location.hash === "#spatial-separation" ? "ss" : "main");
+  window.addEventListener("load", function () { setTimeout(refreshImportList, 0); });
+  $("ss-import-plan").addEventListener("focus", refreshImportList);
 })();
 </script>
+
 <!-- =====================================================================
   ROOF VENTILATION TAB  (BC Building Code Part 9, Section 9.19)
   ===================================================================== -->
-
-<style>
-  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid rgba(128,128,128,.45);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;position:sticky;top:0;z-index:50;background:Canvas}
-  #ss-tabs button{font:inherit;font-size:14px;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;color:inherit;cursor:pointer;opacity:.7}
-  #ss-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-color:rgba(128,128,128,.45);background:Canvas;margin-bottom:-1px;border-bottom:1px solid Canvas}
-  #ss-tabs button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-  #rv-panel{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:960px;margin:0 auto;padding:20px 16px 60px;line-height:1.45}
-  #rv-panel[hidden]{display:none}
-  #rv-panel h2{margin:0 0 4px;font-size:22px}
-  #rv-panel h3{margin:16px 0 8px;font-size:15px}
-  #rv-panel .rv-sub{margin:0 0 16px;opacity:.7;font-size:13px}
-  #rv-panel .rv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-  #rv-panel label{display:flex;flex-direction:column;gap:3px;font-size:13px}
-  #rv-panel input,#rv-panel select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:Field;color:FieldText;box-sizing:border-box;width:100%}
-  #rv-panel button.rv-btn{font:inherit;font-size:14px;padding:6px 12px;border:1px solid rgba(128,128,128,.55);border-radius:4px;background:ButtonFace;color:ButtonText;cursor:pointer}
-  #rv-panel .rv-card{margin-top:16px;border:1px solid rgba(128,128,128,.5);border-radius:6px;padding:12px 14px}
-  #rv-panel .rv-cardhead{display:flex;gap:8px;align-items:end;margin-bottom:8px}
-  #rv-panel .rv-cardhead label{flex:1}
-  #rv-panel .rv-vrow{display:grid;grid-template-columns:2fr 1fr 1fr 80px auto;gap:8px;margin-bottom:6px;align-items:end}
-  #rv-panel .rv-vrow.rv-head{font-size:12px;opacity:.7;margin-bottom:2px}
-  @media(max-width:600px){#rv-panel .rv-vrow{grid-template-columns:1fr 1fr 1fr 70px auto}#rv-panel .rv-vrow .rv-vn{grid-column:1/-1}}
-  #rv-panel .rv-result{margin-top:12px;border-left:4px solid rgba(128,128,128,.55);padding:6px 12px}
-  #rv-panel .rv-result.rv-ok{border-color:#2e8b57}
-  #rv-panel .rv-result.rv-bad{border-color:#c0392b}
-  #rv-panel .rv-verdict{font-size:16px;font-weight:700;margin:0 0 6px}
-  #rv-panel .rv-ok .rv-verdict{color:#2e8b57}
-  #rv-panel .rv-bad .rv-verdict{color:#c0392b}
-  #rv-panel table.rv-t{border-collapse:collapse;width:100%;font-size:14px}
-  #rv-panel table.rv-t td{padding:4px 6px;border-bottom:1px solid rgba(128,128,128,.25)}
-  #rv-panel table.rv-t td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-  #rv-panel ul.rv-notes{margin:8px 0 0;padding-left:18px;font-size:13px}
-  #rv-panel .rv-warn{color:#b9770e}
-  #rv-panel .rv-total{margin-top:20px;border:2px solid rgba(128,128,128,.55);border-radius:6px;padding:12px 16px}
-  #rv-panel .rv-small{font-size:12px;opacity:.75}
-</style>
-
-<div id="rv-panel" hidden>
-  <h2>Roof ventilation</h2>
-  <p class="rv-sub">Attic and roof space venting for Part 9 houses (BC Building Code, Section 9.19). A checking aid only. Confirm results against the current code.</p>
-
-  <div class="rv-grid">
-    <label>Units for lengths
-      <select id="rv-unit">
-        <option value="m">metres</option>
-        <option value="mm">millimetres</option>
-        <option value="ft">decimal feet</option>
-      </select>
-    </label>
-    <label>Vent net free area (NFA) entered as
-      <select id="rv-nfa">
-        <option value="cm2">cm² per unit</option>
-        <option value="in2">in² per unit</option>
-      </select>
-    </label>
+<div id="rv-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Code check</div>
+      <h2>Roof ventilation</h2>
+      <p class="lead">Attic and roof-space venting for Part 9 houses (BC Building Code, Section 9.19): how much vent area each roof needs, whether your vents are enough, and how many to add. A checking aid only: confirm results with the current code and the vent maker's label.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="rv-print" type="button">Print report</button><button class="btn" id="rv-reset" type="button">Start over</button></div>
   </div>
-  <p class="rv-small">Use the manufacturer's net free area (the open area after screens and louvres). For continuous vents, enter the NFA per metre or foot as the unit and the length as the quantity.</p>
 
-  <div id="rv-secs"></div>
-  <p><button type="button" class="rv-btn" id="rv-addsec">Add roof section</button></p>
+  <div class="card">
+    <h3>Settings</h3>
+    <div class="grid">
+      <label class="f">Units
+        <select id="rv-units"><option value="imperial">Feet, sq ft and in² (vent labels in North America)</option><option value="metric">Metres, m² and cm²</option></select></label>
+    </div>
+    <p class="hint">Vent area means net free area (NFA): the open area left after screens and louvres, printed on the vent or its box. The common vents below use typical values; replace them with your product's number.</p>
+  </div>
 
-  <div class="rv-total" id="rv-total" aria-live="polite"></div>
+  <div class="card no-print" id="rv-import-card">
+    <h3>Use the ceiling area from your floor plans</h3>
+    <div class="row"><select id="rv-import-plan" style="width:auto"></select><button class="btn" id="rv-import" type="button">Add a roof section with this ceiling area</button></div>
+    <p class="hint" id="rv-import-hint">Uses the finished area of the top floor (the ceiling under the roof). The garage is left out; add it as its own section if its ceiling is insulated.</p>
+  </div>
+
+  <div class="card" id="rv-summary"></div>
+  <div id="rv-sections"></div>
+  <p class="no-print"><button class="btn" id="rv-add-section" type="button">+ Add a roof section</button></p>
 </div>
 
 <script>
+/* =====================================================================
+   ROOF VENTILATION CHECKER
+   Required vent area = insulated ceiling area ÷ 300, or ÷ 150 when the roof slope is under 1 in 6 (2 in 12)
+   or the roof is built with roof joists (cathedral or flat, no attic). At least 25% of the required area must
+   be at the top of the space and 25% at the bottom (9.19.1.2). All maths is done in square centimetres.
+   ===================================================================== */
 (function () {
-  var MAIN_LABEL = "ArchPlan Studio";   // only used if the spatial separation block isn't present
-  var RV_LABEL = "Roof ventilation";
+  var TOOL_LABEL = "Roof ventilation", SAVE_KEY = "mcRoofVentV2";
   var $ = function (id) { return document.getElementById(id); };
-  var me = document.currentScript, panel = $("rv-panel");
+  var panel = $("rv-panel");
 
-  /* ---------- tabs ---------- */
-  var tabs = $("ss-tabs"), tRV = document.createElement("button");
-  tRV.type = "button"; tRV.textContent = RV_LABEL; tRV.setAttribute("role", "tab"); tRV.setAttribute("aria-selected", "false");
-
-  if (!tabs) {
-    // standalone: build tab bar and wrap the page
-    var main = document.createElement("div"); main.id = "ss-main";
-    Array.prototype.slice.call(document.body.childNodes).forEach(function (n) { if (n !== me && n !== panel) main.appendChild(n); });
-    tabs = document.createElement("div"); tabs.id = "ss-tabs"; tabs.setAttribute("role", "tablist");
-    var tM = document.createElement("button"); tM.type = "button"; tM.textContent = MAIN_LABEL; tM.setAttribute("role", "tab"); tM.setAttribute("aria-selected", "true");
-    tM.addEventListener("click", function () { main.hidden = false; panel.hidden = true; tM.setAttribute("aria-selected", "true"); tRV.setAttribute("aria-selected", "false"); });
-    tabs.appendChild(tM);
-    document.body.insertBefore(tabs, document.body.firstChild);
-    document.body.insertBefore(main, panel);
-  }
-  var others = Array.prototype.slice.call(tabs.querySelectorAll("button"));
-  tabs.appendChild(tRV);
-
-  function showRV() {
+  /* ---------- add a tab to the tab bar made by the spatial separation tool ---------- */
+  var tabs = $("ss-tabs"), tab = document.createElement("button");
+  tab.type = "button"; tab.textContent = TOOL_LABEL; tab.setAttribute("role", "tab"); tab.setAttribute("aria-selected", "false");
+  var otherTabs = Array.prototype.slice.call(tabs.querySelectorAll("button"));
+  tabs.appendChild(tab);
+  function showTool() {
     ["ss-main", "ss-panel"].forEach(function (id) { var el = $(id); if (el) el.hidden = true; });
     panel.hidden = false;
-    others.forEach(function (b) { b.setAttribute("aria-selected", "false"); });
-    tRV.setAttribute("aria-selected", "true");
+    otherTabs.forEach(function (b) { b.setAttribute("aria-selected", "false"); });
+    tab.setAttribute("aria-selected", "true");
     try { history.replaceState(null, "", "#roof-ventilation"); } catch (e) {}
+    refreshImportList();
     window.scrollTo(0, 0);
   }
-  function hideRV() { panel.hidden = true; tRV.setAttribute("aria-selected", "false"); }
-  tRV.addEventListener("click", showRV);
-  others.forEach(function (b) { b.addEventListener("click", hideRV); });
-  if (location.hash === "#roof-ventilation") showRV();
+  tab.addEventListener("click", showTool);
+  otherTabs.forEach(function (b) { b.addEventListener("click", function () { panel.hidden = true; tab.setAttribute("aria-selected", "false"); }); });
 
-  /* ---------- helpers ---------- */
-  var UNIT = { m: 1, mm: 0.001, ft: 0.3048 };
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function f(n, d) { return (+n).toFixed(d === undefined ? 1 : d); }
-  function val(el) { var v = parseFloat(el.value); return isFinite(v) ? v : 0; }
-  var secN = 0;
+  /* ---------- common vents (typical net free area; check the product label) ----------
+     perFoot = the area is per foot of length (continuous vents); otherwise per vent. */
+  var VENTS = [
+    { key: "box", name: "Box roof vent (louvre)", where: "top", perFoot: false, sqin: 50 },
+    { key: "ridge", name: "Ridge vent", where: "top", perFoot: true, sqin: 18 },
+    { key: "turbine", name: "Turbine vent, 12 in", where: "top", perFoot: false, sqin: 113 },
+    { key: "strip", name: "Continuous soffit vent strip", where: "bottom", perFoot: true, sqin: 9 },
+    { key: "panel", name: "Vented (perforated) soffit panel", where: "bottom", perFoot: true, sqin: 6 },
+    { key: "rect", name: "Rectangular soffit vent, 16 × 8 in", where: "bottom", perFoot: false, sqin: 56 },
+    { key: "gable", name: "Gable louvre, 12 × 18 in", where: "other", perFoot: false, sqin: 72 },
+    { key: "custom", name: "Other vent (enter its area)", where: "bottom", perFoot: false, sqin: 0 }
+  ];
+  var CM2_PER_SQIN = 6.4516, M_PER_FT = 0.3048, SQFT_PER_M2 = 10.7639;
+  var WHERE = { top: "Top", bottom: "Bottom", other: "Other" };   /* top = ridge or high, bottom = soffit or low, other = gable or middle */
 
-  /* ---------- sections ---------- */
-  function addVent(card, name, loc, nfa, qty) {
-    var r = document.createElement("div"); r.className = "rv-vrow";
-    r.innerHTML =
-      '<label class="rv-vn"><input type="text" class="rv-vname" placeholder="e.g. Continuous soffit vent" value="' + esc(name || "") + '"></label>' +
-      '<label><select class="rv-vloc"><option value="top">Top (ridge / high)</option><option value="bottom">Bottom (soffit / low)</option><option value="other">Other (gable, mid)</option></select></label>' +
-      '<label><input type="number" step="any" min="0" class="rv-vnfa" placeholder="NFA per unit" value="' + (nfa || "") + '"></label>' +
-      '<label><input type="number" step="any" min="0" class="rv-vqty" placeholder="Qty" value="' + (qty || "") + '"></label>' +
-      '<button type="button" class="rv-btn" aria-label="Remove vent">✕</button>';
-    r.querySelector(".rv-vloc").value = loc || "bottom";
-    r.querySelector("button").addEventListener("click", function () { r.remove(); calc(); });
-    card.querySelector(".rv-vents").appendChild(r);
+  /* ---------- small helpers ---------- */
+  function escapeText(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function num(v) { var n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isFinite(n) ? n : 0; }
+  function metric() { return state.units === "metric"; }
+  /* Vent area for people: in² (and cm²), or cm² (and in²). */
+  function showVent(cm2) { var sqin = cm2 / CM2_PER_SQIN; return metric() ? Math.round(cm2) + " cm² (" + Math.round(sqin) + " in²)" : Math.round(sqin) + " in² (" + Math.round(cm2) + " cm²)"; }
+  function showArea(m2) { return metric() ? m2.toFixed(1) + " m² (" + Math.round(m2 * SQFT_PER_M2) + " sq ft)" : Math.round(m2 * SQFT_PER_M2) + " sq ft (" + m2.toFixed(1) + " m²)"; }
+  function lengthUnit() { return metric() ? "m" : "ft"; }
+  function ventUnit() { return metric() ? "cm²" : "in²"; }
+
+  /* ---------- saved state ---------- */
+  function freshSection(name) {
+    return { name: name || "Main roof", roof: "attic", slope: "6", pieces: [{ a: "", b: "" }], area: "",
+      vents: [{ type: "ridge", where: "top", area: String(presetAreaFor("ridge", "imperial")), qty: "" }, { type: "strip", where: "bottom", area: String(presetAreaFor("strip", "imperial")), qty: "" }] };
   }
-  function addSection() {
-    secN++;
-    var c = document.createElement("div"); c.className = "rv-card";
-    c.innerHTML =
-      '<div class="rv-cardhead"><label>Roof section name<input type="text" class="rv-name" value="Roof section ' + secN + '"></label>' +
-      '<button type="button" class="rv-btn rv-del">Remove section</button></div>' +
-      '<div class="rv-grid">' +
-      '<label>Insulated ceiling width<input type="number" step="any" min="0" class="rv-w"></label>' +
-      '<label>Insulated ceiling length<input type="number" step="any" min="0" class="rv-l"></label>' +
-      '<label>Or area directly (units², overrides W × L)<input type="number" step="any" min="0" class="rv-a"></label>' +
-      '<label>Roof construction<select class="rv-frame"><option value="attic">Attic (ceiling joists, trusses or rafters with attic space)</option><option value="joist">Roof joists (flat or cathedral, no attic)</option></select></label>' +
-      '<label class="rv-slopewrap">Roof slope, rise per 12 run<input type="number" step="any" min="0" class="rv-slope" value="6"></label>' +
-      '</div>' +
-      '<h3>Vents provided</h3>' +
-      '<div class="rv-vrow rv-head"><span>Vent</span><span>Location</span><span>NFA per unit</span><span>Qty</span><span></span></div>' +
-      '<div class="rv-vents"></div>' +
-      '<button type="button" class="rv-btn rv-addv">Add vent</button>' +
-      '<div class="rv-result"></div>';
-    c.querySelector(".rv-del").addEventListener("click", function () { c.remove(); calc(); });
-    c.querySelector(".rv-addv").addEventListener("click", function () { addVent(c); });
-    $("rv-secs").appendChild(c);
-    addVent(c, "Ridge vent", "top");
-    addVent(c, "Soffit vent", "bottom");
-    calc();
-  }
-  $("rv-addsec").addEventListener("click", addSection);
+  function presetAreaFor(key, units) { var v = VENTS.find(function (x) { return x.key === key; }); if (!v || !v.sqin) return ""; return units === "metric" ? Math.round(v.sqin * CM2_PER_SQIN / (v.perFoot ? M_PER_FT : 1)) : v.sqin; }
+  function freshState() { return { units: "imperial", sections: [freshSection()] }; }
+  var state = freshState();
+  try { var saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.sections) state = Object.assign(freshState(), saved); } catch (e) {}
+  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
 
-  /* ---------- calculation ---------- */
-  var IN2 = 6.4516, FT2 = 10.7639;
-  function calc() {
-    var u = UNIT[$("rv-unit").value], nf = $("rv-nfa").value === "in2" ? IN2 : 1;
-    var cards = $("rv-secs").children, totReq = 0, totHave = 0, allOk = true, counted = 0, anyData = false;
-
-    Array.prototype.forEach.call(cards, function (c) {
-      c.querySelector(".rv-slopewrap").style.display = c.querySelector(".rv-frame").value === "attic" ? "" : "none";
-      var res = c.querySelector(".rv-result");
-      var A = val(c.querySelector(".rv-a")) * u * u || val(c.querySelector(".rv-w")) * u * val(c.querySelector(".rv-l")) * u;
-      if (!(A > 0)) { res.className = "rv-result"; res.innerHTML = '<p class="rv-verdict">Enter the insulated ceiling size to see the requirement.</p>'; allOk = false; return; }
-      anyData = true;
-
-      var frame = c.querySelector(".rv-frame").value, rise = val(c.querySelector(".rv-slope"));
-      var lowSlope = frame === "attic" && rise < 2;   // less than 1 in 6 = under 2 in 12
-      var div = (frame === "joist" || lowSlope) ? 150 : 300;
-      var why = frame === "joist" ? "roof constructed with roof joists" : lowSlope ? "roof slope less than 1 in 6" : "attic space, slope 1 in 6 or steeper";
-      var req = A * 10000 / div;                       // cm²
-
-      var by = { top: 0, bottom: 0, other: 0 }, lastBy = {};
-      Array.prototype.forEach.call(c.querySelectorAll(".rv-vents .rv-vrow"), function (r) {
-        var loc = r.querySelector(".rv-vloc").value, per = val(r.querySelector(".rv-vnfa")) * nf, q = val(r.querySelector(".rv-vqty"));
-        by[loc] += per * q;
-        if (per > 0) lastBy[loc] = { name: r.querySelector(".rv-vname").value.trim() || "vent", per: per };
-      });
-      var have = by.top + by.bottom + by.other;
-      var needTop = req * 0.25, needBot = req * 0.25;
-      var okTot = have >= req - 1e-9, okTop = by.top >= needTop - 1e-9, okBot = by.bottom >= needBot - 1e-9;
-      var ok = okTot && okTop && okBot;
-
-      totReq += req; totHave += have; counted++; if (!ok) allOk = false;
-
-      function cm(x) { return f(x, 0) + " cm² (" + f(x / IN2, 1) + " in²)"; }
-      function more(short, loc) {
-        var p = lastBy[loc]; if (!p || short <= 0) return "";
-        return " Add about " + f(Math.ceil(short / p.per * 10) / 10, 1) + " more units of “" + esc(p.name) + "”.";
-      }
-      var rows = [
-        ["Insulated ceiling area", f(A, 2) + " m² (" + f(A * FT2, 0) + " ft²)"],
-        ["Ratio required", "1/" + div + " (" + why + ")"],
-        ["Required vent area", cm(req)],
-        ["Provided vent area", cm(have)],
-        ["Top vents (min 25% of required)", cm(by.top) + " — need " + cm(needTop)],
-        ["Bottom vents (min 25% of required)", cm(by.bottom) + " — need " + cm(needBot)]
-      ];
-      var notes = [];
-      if (!okTot) notes.push('<span class="rv-warn">Short by ' + cm(req - have) + " in total.</span>");
-      if (!okTop) notes.push('<span class="rv-warn">Top vents short by ' + cm(needTop - by.top) + " of the 25% minimum.</span>" + more(needTop - by.top, "top"));
-      if (!okBot) notes.push('<span class="rv-warn">Bottom vents short by ' + cm(needBot - by.bottom) + " of the 25% minimum.</span>" + more(needBot - by.bottom, "bottom"));
-      if (!okTot && okTop && okBot) {
-        var p = lastBy.bottom || lastBy.top || lastBy.other;
-        if (p) notes.push("To close the total gap, add about " + f(Math.ceil((req - have) / p.per * 10) / 10, 1) + " more units of “" + esc(p.name) + "”.");
-      }
-      if (by.top + by.bottom === 0 && have > 0) notes.push('<span class="rv-warn">No vents are marked top or bottom. The code expects vents high and low so air flows through the space.</span>');
-      if (frame === "joist") notes.push("Roof joist spaces must be interconnected with purlins at least 38 × 38 mm on top of the joists, unless each joist space is vented separately (9.19.1.2).");
-      notes.push("A space must be left between the insulation and the roof sheathing, and insulation must not block airflow to the vents (9.19.1.1 and 9.19.1.3).");
-      notes.push("Attic or roof spaces of 3 m² or more need an access hatch. Check 9.19.2.1 for the other criteria.");
-      notes.push("Mansard and gambrel roofs follow 9.19.1.4.");
-
-      res.className = "rv-result " + (ok ? "rv-ok" : "rv-bad");
-      res.innerHTML = '<p class="rv-verdict">' + (ok ? "Complies" : "Does not comply yet") + "</p>" +
-        '<table class="rv-t">' + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
-        '<ul class="rv-notes">' + notes.map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
+  /* ---------- the code check for one roof section ---------- */
+  function checkSection(sec) {
+    var toM = metric() ? 1 : M_PER_FT;
+    var pieces = sec.pieces.reduce(function (s, p) { return s + num(p.a) * toM * num(p.b) * toM; }, 0);
+    var area = num(sec.area) > 0 ? num(sec.area) * (metric() ? 1 : 1 / SQFT_PER_M2) : pieces;      /* m² */
+    var out = { area: area, top: 0, bottom: 0, other: 0, firstTop: null, firstBottom: null };
+    sec.vents.forEach(function (v) {
+      var preset = VENTS.find(function (x) { return x.key === v.type; }) || VENTS[VENTS.length - 1];
+      var each = num(v.area) * (metric() ? 1 : CM2_PER_SQIN);                                        /* cm² per vent, or per ft / per m */
+      var total = each * num(v.qty);
+      out[v.where] += total;
+      if (each > 0 && v.where === "top" && !out.firstTop) out.firstTop = { name: preset.name, each: each, perFoot: preset.perFoot };
+      if (each > 0 && v.where === "bottom" && !out.firstBottom) out.firstBottom = { name: preset.name, each: each, perFoot: preset.perFoot };
     });
-
-    var t = $("rv-total");
-    if (!counted) { t.innerHTML = "Add the insulated ceiling size for a roof section to see the total."; return; }
-    t.innerHTML = "<strong>" + (allOk ? "All sections comply" : "At least one section needs attention") + "</strong>" +
-      '<table class="rv-t" style="margin-top:6px"><tr><td>Total required vent area</td><td>' + f(totReq, 0) + " cm² (" + f(totReq / IN2, 1) + " in²)</td></tr>" +
-      "<tr><td>Total provided</td><td>" + f(totHave, 0) + " cm² (" + f(totHave / IN2, 1) + " in²)</td></tr></table>" +
-      '<p class="rv-small" style="margin:8px 0 0">Each section is checked on its own, because vent area can only count toward the roof space it serves. The code also permits omitting venting where it can be shown to be unnecessary (9.19.1.1).</p>';
+    if (!(area > 0)) { out.waiting = true; return out; }
+    var slope = num(sec.slope), lowSlope = sec.roof === "attic" && slope < 2;
+    out.ratio = sec.roof === "joists" || lowSlope ? 150 : 300;
+    out.why = sec.roof === "joists" ? "roof built with roof joists (no attic)" : lowSlope ? "roof slope under 1 in 6 (2 in 12)" : "attic with a slope of 2 in 12 or steeper";
+    out.required = area * 10000 / out.ratio;
+    out.provided = out.top + out.bottom + out.other;
+    out.needTop = out.required * 0.25; out.needBottom = out.required * 0.25;
+    out.okTotal = out.provided >= out.required - 1e-6; out.okTop = out.top >= out.needTop - 1e-6; out.okBottom = out.bottom >= out.needBottom - 1e-6;
+    out.ok = out.okTotal && out.okTop && out.okBottom;
+    return out;
+  }
+  /* How many of a vent are needed to supply a given area. Continuous vents are counted in feet or metres. */
+  function howMany(cm2, vent) {
+    if (!vent || !(vent.each > 0)) return "";
+    var n = Math.ceil(cm2 / vent.each * (vent.perFoot ? 2 : 1)) / (vent.perFoot ? 2 : 1);
+    return vent.perFoot ? n + " " + (metric() ? "m" : "ft") + " of " + vent.name.toLowerCase() : n + " × " + vent.name.toLowerCase();
   }
 
-  $("rv-panel").addEventListener("input", calc);
-  $("rv-panel").addEventListener("change", calc);
-  addSection();
+  /* ---------- drawing: a roof cross-section with the air path and the numbers ---------- */
+  function diagram(sec, r) {
+    var joists = sec.roof === "joists", pitch = Math.max(0.5, Math.min(12, num(sec.slope) || 6)), W = 420, eave = 40, peak = joists ? 40 : Math.min(130, 18 + pitch * 10);
+    var x0 = 40, x1 = x0 + W, mid = (x0 + x1) / 2, base = 170, top = base - peak, svg = "";
+    var pct = function (v) { return r.required ? Math.round(v / r.required * 100) : 0; };
+    if (joists) {
+      svg += '<polygon points="' + x0 + "," + (base - 30) + " " + x1 + "," + (base - 46) + " " + x1 + "," + (base - 30) + " " + x0 + "," + (base - 14) + '" fill="#f0f0ee" stroke="#151515" stroke-width="1.5"/>';
+      svg += '<line x1="' + x0 + '" y1="' + base + '" x2="' + x1 + '" y2="' + base + '" stroke="#151515" stroke-width="2"/>';
+    } else {
+      svg += '<polygon points="' + (x0 - eave) + "," + (base + 8) + " " + mid + "," + top + " " + (x1 + eave) + "," + (base + 8) + '" fill="none" stroke="#151515" stroke-width="2.2"/>';
+      svg += '<line x1="' + x0 + '" y1="' + base + '" x2="' + x1 + '" y2="' + base + '" stroke="#151515" stroke-width="2"/>';
+      svg += '<rect x="' + x0 + '" y="' + (base - 16) + '" width="' + W + '" height="16" fill="#efefec" stroke="#9a9a9a" stroke-width="0.6"/>';
+      svg += '<text x="' + mid + '" y="' + (base - 5) + '" font-size="9" text-anchor="middle" fill="#666">INSULATION</text>';
+      svg += '<path d="M' + (x0 - 18) + "," + (base + 4) + " L" + (x0 + 30) + "," + (base - 26) + " L" + (mid - 30) + "," + (top + 26) + '" fill="none" stroke="#2f6fb5" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#rv-arrow)"/>';
+      svg += '<path d="M' + (x1 + 18) + "," + (base + 4) + " L" + (x1 - 30) + "," + (base - 26) + " L" + (mid + 30) + "," + (top + 26) + '" fill="none" stroke="#2f6fb5" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#rv-arrow)"/>';
+      svg += '<path d="M' + mid + "," + (top + 4) + " L" + mid + "," + (top - 22) + '" stroke="#2f6fb5" stroke-width="1.4" marker-end="url(#rv-arrow)"/>';
+      svg += '<text x="' + (mid + 8) + '" y="' + (top - 14) + '" font-size="10" fill="#151515">TOP VENTS · ' + pct(r.top) + "% of required</text>";
+      svg += '<text x="' + x0 + '" y="' + (base + 24) + '" font-size="10" fill="#151515">BOTTOM VENTS (SOFFITS) · ' + pct(r.bottom) + "% of required</text>";
+
+    }
+    var label = joists ? "ROOF JOISTS (NO ATTIC) · 1/" + r.ratio : "ATTIC · " + (num(sec.slope) || "?") + " IN 12 · 1/" + r.ratio;
+    svg += '<text x="' + x0 + '" y="16" font-size="10" font-weight="700" letter-spacing="0.6" fill="#151515">' + label + "</text>";
+    return '<svg viewBox="0 0 ' + (x1 + 70) + ' 205"><defs><marker id="rv-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fb5"/></marker></defs>' + svg + "</svg>";
+  }
+  function bars(r) {
+    var max = Math.max(r.required, r.provided, r.needTop * 2) * 1.08 || 1;
+    var row = function (label, have, need) {
+      return '<div class="gauge"><div class="labels" style="margin:0 0 3px"><span><b>' + label + "</b></span><span>" + showVent(have) + " of " + showVent(need) + " needed</span></div>" +
+        '<div class="bar"><div class="fill' + (have + 1e-6 < need ? " over" : "") + '" style="width:' + Math.min(100, have / max * 100).toFixed(1) + '%"></div><div class="mark" style="left:' + (need / max * 100).toFixed(1) + '%"></div></div></div>';
+    };
+    return row("Total", r.provided, r.required) + row("Top (at least 25%)", r.top, r.needTop) + row("Bottom (at least 25%)", r.bottom, r.needBottom);
+  }
+
+  /* ---------- page building ---------- */
+  function sectionCard(sec, i) {
+    var lu = lengthUnit(), vu = ventUnit();
+    var pieceRows = sec.pieces.map(function (p, j) {
+      return '<div class="row" style="margin-top:6px"><input style="width:110px" data-sec="' + i + '" data-piece="' + j + '" data-field="a" value="' + escapeText(p.a) + '" inputmode="decimal" placeholder="width ' + lu + '"> × ' +
+        '<input style="width:110px" data-sec="' + i + '" data-piece="' + j + '" data-field="b" value="' + escapeText(p.b) + '" inputmode="decimal" placeholder="length ' + lu + '">' +
+        (sec.pieces.length > 1 ? '<button class="btn x no-print" type="button" data-action="remove-piece" data-sec="' + i + '" data-piece="' + j + '" aria-label="Remove rectangle">✕</button>' : "") + "</div>";
+    }).join("");
+    var ventRows = sec.vents.map(function (v, j) {
+      var preset = VENTS.find(function (x) { return x.key === v.type; }) || VENTS[VENTS.length - 1];
+      return "<tr>" +
+        '<td class="wide"><select data-sec="' + i + '" data-vent="' + j + '" data-field="type">' + VENTS.map(function (x) { return '<option value="' + x.key + '"' + (x.key === v.type ? " selected" : "") + ">" + x.name + "</option>"; }).join("") + "</select></td>" +
+        '<td style="width:108px"><select data-sec="' + i + '" data-vent="' + j + '" data-field="where" title="Top = ridge or high on the roof. Bottom = soffit or low. Other = gable or middle.">' + Object.keys(WHERE).map(function (k) { return '<option value="' + k + '"' + (k === v.where ? " selected" : "") + ">" + WHERE[k] + "</option>"; }).join("") + "</select></td>" +
+        '<td style="width:110px"><input data-sec="' + i + '" data-vent="' + j + '" data-field="area" value="' + escapeText(v.area) + '" inputmode="decimal" placeholder="' + vu + '"><div class="hint" style="margin:2px 0 0">' + vu + (preset.perFoot ? " per " + lu : " each") + "</div></td>" +
+        '<td style="width:96px"><input data-sec="' + i + '" data-vent="' + j + '" data-field="qty" value="' + escapeText(v.qty) + '" inputmode="decimal" placeholder="' + (preset.perFoot ? lu + " long" : "how many") + '"></td>' +
+        '<td class="num"></td>' +
+        '<td><button class="btn x no-print" type="button" data-action="remove-vent" data-sec="' + i + '" data-vent="' + j + '" aria-label="Remove vent">✕</button></td></tr>';
+    }).join("");
+    return '<div class="card" data-sec-card="' + i + '">' +
+      '<div class="sec-head"><input data-sec="' + i + '" data-field="name" value="' + escapeText(sec.name) + '" aria-label="Roof section name"><span class="tag wait" id="rv-tag-' + i + '"></span>' +
+      '<button class="btn no-print" type="button" data-action="copy-sec" data-sec="' + i + '">Copy</button><button class="btn no-print" type="button" data-action="remove-sec" data-sec="' + i + '">Remove</button></div>' +
+      '<div class="split"><div>' +
+      '<div class="grid">' +
+      '<label class="f">Roof type<select data-sec="' + i + '" data-field="roof"><option value="attic"' + (sec.roof === "attic" ? " selected" : "") + '>Attic (trusses or rafters over a ceiling)</option><option value="joists"' + (sec.roof === "joists" ? " selected" : "") + ">Roof joists (cathedral or flat)</option></select></label>" +
+      (sec.roof === "attic" ? '<label class="f">Roof slope <small>rise per 12 of run</small><select data-sec="' + i + '" data-field="slope">' + ["1", "1.5", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12"].map(function (s) { return '<option value="' + s + '"' + (String(sec.slope) === s ? " selected" : "") + ">" + s + " in 12</option>"; }).join("") + "</select></label>" : "") +
+      "</div>" +
+      '<h4>Insulated ceiling area</h4><div class="hint" style="margin:0">Width × length of the ceiling under this roof. Add rectangles for L-shaped or stepped ceilings, or type the total area.</div>' + pieceRows +
+      '<div class="row no-print" style="margin-top:6px"><button class="btn" type="button" data-action="add-piece" data-sec="' + i + '">+ Add a rectangle</button>' +
+      '<label class="f" style="flex-direction:row;align-items:center;gap:6px">or total area <input style="width:110px" data-sec="' + i + '" data-field="area" value="' + escapeText(sec.area) + '" inputmode="decimal" placeholder="' + (metric() ? "m²" : "sq ft") + '"></label></div>' +
+      '<h4>Vents</h4><table class="list"><thead><tr><th>Vent</th><th>Where</th><th>Vent area</th><th>Amount</th><th class="num">Total</th><th></th></tr></thead><tbody>' + ventRows + "</tbody></table>" +
+      '<p class="no-print"><button class="btn" type="button" data-action="add-vent" data-sec="' + i + '">+ Add a vent</button></p>' +
+      '</div><div><div class="result" id="rv-result-' + i + '"></div><div class="sketch" id="rv-sketch-' + i + '" style="margin-top:10px"></div></div></div></div>';
+  }
+  function render() {
+    $("rv-units").value = state.units;
+    $("rv-sections").innerHTML = state.sections.map(sectionCard).join("");
+    recalc();
+  }
+  function recalc() {
+    var results = state.sections.map(checkSection), totalReq = 0, totalHave = 0, done = 0, allOk = true;
+    results.forEach(function (r, i) {
+      var sec = state.sections[i], box = $("rv-result-" + i), tag = $("rv-tag-" + i), card = document.querySelector('[data-sec-card="' + i + '"]');
+      if (!box) return;
+      sec.vents.forEach(function (v, j) { var cell = card.querySelectorAll("tbody tr")[j]; if (cell) { var t = num(v.area) * (metric() ? 1 : CM2_PER_SQIN) * num(v.qty); cell.querySelector("td.num").textContent = t ? showVent(t).split(" (")[0] : ""; } });
+      if (r.waiting) { box.className = "result"; box.innerHTML = '<p class="verdict">Enter the insulated ceiling size to see what this roof needs.</p>'; tag.className = "tag wait"; tag.textContent = "Incomplete"; $("rv-sketch-" + i).innerHTML = ""; allOk = false; return; }
+      done++; totalReq += r.required; totalHave += r.provided; if (!r.ok) allOk = false;
+      tag.className = "tag " + (r.ok ? "pass" : "fail"); tag.textContent = r.ok ? "Complies" : "Needs more venting";
+      var tips = [];
+      if (!r.okTop) tips.push('<span class="warn">Top vents short by ' + showVent(r.needTop - r.top) + ".</span>" + (r.firstTop ? " About " + howMany(r.needTop - r.top, r.firstTop) + " more would do it." : " Add a ridge or roof vent."));
+      if (!r.okBottom) tips.push('<span class="warn">Bottom vents short by ' + showVent(r.needBottom - r.bottom) + ".</span>" + (r.firstBottom ? " About " + howMany(r.needBottom - r.bottom, r.firstBottom) + " more would do it." : " Add soffit vents."));
+      if (!r.okTotal && r.okTop && r.okBottom) { var v = r.firstBottom || r.firstTop; tips.push('<span class="warn">Short by ' + showVent(r.required - r.provided) + " in total.</span>" + (v ? " About " + howMany(r.required - r.provided, v) + " more would do it." : "")); }
+      var topV = r.firstTop || { name: "Ridge vent", each: 18 * CM2_PER_SQIN / (metric() ? M_PER_FT : 1), perFoot: true }, botV = r.firstBottom || { name: "Continuous soffit vent strip", each: 9 * CM2_PER_SQIN / (metric() ? M_PER_FT : 1), perFoot: true };
+      tips.push("<b>Balanced layout</b> (half the area high, half low, so air flows from the soffits to the top): about " + howMany(r.required / 2, topV) + " and " + howMany(r.required / 2, botV) + ".");
+      if (r.top + r.bottom === 0 && r.other > 0) tips.push('<span class="warn">No vents are marked top or bottom. The code wants vents high and low on opposite sides so air can flow through.</span>');
+      var rules = [
+        "Spread vents evenly on opposite sides of the building (9.19.1.2.(3)).",
+        "Leave at least 63 mm (2½ in) of air space between the insulation and the roof sheathing; eave baffles need a 25 mm (1 in) air space and must rise 50 mm (2 in) above the insulation (9.19.1.3)."
+      ];
+      if (sec.roof === "joists") rules.push("Roof joist spaces must be connected by 38 × 38 mm (1½ × 1½ in) purlins on top of the joists, unless every joist space has its own vents (9.19.1.2.(4)).");
+      rules.push("Attic hatch: needed when the attic has 3 m² (32 sq ft) or more of open space, at least 1 m (3 ft 3 in) wide and 600 mm (2 ft) high. Size at least 550 × 900 mm (21⅝ × 35⅜ in), or 0.32 m² (3.4 sq ft) with no side under 500 mm (19⅝ in) when it serves one home (9.19.2.1).");
+      rules.push("Vents must meet CAN3-A93-M. The lower part of a mansard or gambrel roof need not be vented; the upper part must be (9.19.1.4).");
+      box.className = "result " + (r.ok ? "pass" : "fail");
+      box.innerHTML = '<p class="verdict">' + (r.ok ? "Complies" : "Needs more venting") + "</p>" +
+        '<table class="facts"><tr><td>Insulated ceiling</td><td>' + showArea(r.area) + "</td></tr><tr><td>Rule</td><td>1/" + r.ratio + " · " + r.why + "</td></tr><tr><td>Vent area needed</td><td>" + showVent(r.required) + "</td></tr><tr><td>Vent area provided</td><td>" + showVent(r.provided) + "</td></tr></table>" +
+        bars(r) + '<ul class="notes">' + tips.concat(rules).map(function (n) { return "<li>" + n + "</li>"; }).join("") + "</ul>";
+      $("rv-sketch-" + i).innerHTML = diagram(sec, r) + '<p class="hint" style="padding:0 12px 10px">Air comes in at the soffits, runs up through at least 2½ in (63 mm) of space above the insulation, and leaves at the top. Baffles at the eaves keep the insulation from blocking it.</p>';
+    });
+    $("rv-summary").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Summary</h3><span class="tag ' + (!done ? "wait" : allOk ? "pass" : "fail") + '">' + (!done ? "Waiting for ceiling sizes" : allOk ? "Every roof section complies" : "Some roof sections need more venting") + "</span></div>" +
+      '<table class="list" style="margin-top:8px"><thead><tr><th>Roof section</th><th class="num">Ceiling</th><th class="num">Needed</th><th class="num">Provided</th><th>Result</th></tr></thead><tbody>' +
+      results.map(function (r, i) {
+        return "<tr><td>" + escapeText(state.sections[i].name || "Roof") + '</td><td class="num">' + (r.waiting ? "–" : showArea(r.area).split(" (")[0]) + '</td><td class="num">' + (r.waiting ? "–" : showVent(r.required).split(" (")[0]) + '</td><td class="num">' + (r.waiting ? "–" : showVent(r.provided).split(" (")[0]) + "</td><td>" +
+          (r.waiting ? '<span class="tag wait">Incomplete</span>' : '<span class="tag ' + (r.ok ? "pass" : "fail") + '">' + (r.ok ? "Complies" : "Needs more") + "</span>") + "</td></tr>";
+      }).join("") + "</tbody></table>" +
+      (done > 1 ? '<p class="hint">Each roof section is checked on its own, because vents only count for the space they open into. Total needed ' + showVent(totalReq) + ", provided " + showVent(totalHave) + ".</p>" : "");
+    save();
+  }
+
+  /* ---------- ceiling area from the floor plan tool ---------- */
+  function floorPlans() { try { return typeof plans !== "undefined" && plans.length ? plans : []; } catch (e) { return []; } }
+  function refreshImportList() {
+    var list = floorPlans();
+    $("rv-import-plan").innerHTML = list.length ? list.map(function (p, i) { return '<option value="' + i + '">Option ' + p.letter + " · " + escapeText(p.desc) + "</option>"; }).join("") : '<option value="">No floor plans yet</option>';
+    $("rv-import").disabled = !list.length;
+    if (!list.length) $("rv-import-hint").textContent = "Generate plans in the ArchPlan Studio tab first, then come back here.";
+  }
+  $("rv-import").addEventListener("click", function () {
+    var p = floorPlans()[+$("rv-import-plan").value]; if (!p) return;
+    var sqft = p.metrics.upper || p.metrics.main, sec = freshSection("Roof over Option " + p.letter + (p.metrics.upper ? " (upper floor)" : ""));
+    sec.area = metric() ? (sqft / SQFT_PER_M2).toFixed(1) : String(Math.round(sqft));
+    sec.vents.forEach(function (v) { v.area = String(presetAreaFor(v.type, state.units)); });
+    state.sections.push(sec); render();
+    var cards = document.querySelectorAll("[data-sec-card]"); if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  /* ---------- events ---------- */
+  $("rv-units").addEventListener("change", function () {
+    var to = $("rv-units").value; if (to === state.units) return;
+    var len = to === "metric" ? M_PER_FT : 1 / M_PER_FT, area = to === "metric" ? 1 / SQFT_PER_M2 : SQFT_PER_M2;
+    var conv = function (v, k) { return v === "" || v == null ? "" : String(+(num(v) * k).toFixed(2)); };
+    state.sections.forEach(function (s) {
+      s.pieces.forEach(function (p) { p.a = conv(p.a, len); p.b = conv(p.b, len); });
+      s.area = conv(s.area, area);
+      s.vents.forEach(function (v) {
+        var preset = VENTS.find(function (x) { return x.key === v.type; }) || {};
+        var ventK = to === "metric" ? CM2_PER_SQIN / (preset.perFoot ? M_PER_FT : 1) : 1 / CM2_PER_SQIN * (preset.perFoot ? M_PER_FT : 1);
+        v.area = conv(v.area, ventK); if (preset.perFoot) v.qty = conv(v.qty, len);
+      });
+    });
+    state.units = to; render();
+  });
+  $("rv-sections").addEventListener("input", function (e) {
+    var t = e.target, si = t.dataset.sec, field = t.dataset.field; if (si == null || !field || t.tagName === "SELECT") return;
+    var sec = state.sections[+si], target = t.dataset.piece != null ? sec.pieces[+t.dataset.piece] : t.dataset.vent != null ? sec.vents[+t.dataset.vent] : sec;
+    target[field] = t.value; recalc();
+  });
+  $("rv-sections").addEventListener("change", function (e) {
+    var t = e.target, si = t.dataset.sec, field = t.dataset.field; if (si == null || !field || t.tagName !== "SELECT") return;
+    var sec = state.sections[+si];
+    if (t.dataset.vent != null) {
+      var v = sec.vents[+t.dataset.vent]; v[field] = t.value;
+      if (field === "type") { var preset = VENTS.find(function (x) { return x.key === t.value; }); v.where = preset.where; v.area = String(presetAreaFor(t.value, state.units)); }
+    } else sec[field] = t.value;
+    render();
+  });
+  $("rv-sections").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !b.dataset.action) return;
+    var si = +b.dataset.sec, sec = state.sections[si];
+    if (b.dataset.action === "add-piece") sec.pieces.push({ a: "", b: "" });
+    else if (b.dataset.action === "remove-piece") sec.pieces.splice(+b.dataset.piece, 1);
+    else if (b.dataset.action === "add-vent") sec.vents.push({ type: "rect", where: "bottom", area: String(presetAreaFor("rect", state.units)), qty: "" });
+    else if (b.dataset.action === "remove-vent") sec.vents.splice(+b.dataset.vent, 1);
+    else if (b.dataset.action === "remove-sec") { if (!confirm("Remove “" + (sec.name || "this roof section") + "”?")) return; state.sections.splice(si, 1); }
+    else if (b.dataset.action === "copy-sec") { var copy = JSON.parse(JSON.stringify(sec)); copy.name = (sec.name || "Roof") + " (copy)"; state.sections.splice(si + 1, 0, copy); }
+    else return;
+    render();
+  });
+  $("rv-add-section").addEventListener("click", function () { var s = freshSection("Roof section " + (state.sections.length + 1)); s.vents.forEach(function (v) { v.area = String(presetAreaFor(v.type, state.units)); }); state.sections.push(s); render(); });
+  $("rv-reset").addEventListener("click", function () { if (confirm("Clear every roof section and start over?")) { state = freshState(); render(); } });
+  $("rv-print").addEventListener("click", function () { window.print(); });
+
+  render();
+  if (location.hash === "#roof-ventilation") showTool();
+  window.addEventListener("load", function () { setTimeout(refreshImportList, 0); });
+  $("rv-import-plan").addEventListener("focus", refreshImportList);
 })();
 </script>
-<style>
-  /* dark theme for the added tabs */
-  #ss-tabs, #ss-panel, #rv-panel { color-scheme: dark; color: #e5e7eb; }
 
-  #ss-tabs { background: #161616; border-bottom-color: #2e2e2c; }
-  #ss-tabs button { color: #cbd5e1; opacity: 1; }
-  #ss-tabs button:hover { background: #222220; }
-  #ss-tabs button[aria-selected="true"] {
-    color: #fff; background: #262624;
-    border-color: #2e2e2c; border-bottom-color: #262624;
-    box-shadow: inset 0 2px 0 #f2f2f0;
-  }
-
-  #ss-panel, #rv-panel {
-    background: #161616; max-width: none;
-    padding-left: max(16px, calc((100% - 960px) / 2));
-    padding-right: max(16px, calc((100% - 960px) / 2));
-    min-height: calc(100vh - 44px);
-  }
-</style>
 </body>
 </html>
