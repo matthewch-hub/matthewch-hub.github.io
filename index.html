@@ -78,6 +78,8 @@ select,input[type=number],input[type=text]{padding:6px;background:var(--bg);bord
 .fold:not([open])>summary::after{content:"Expand"}
 .fold>summary:hover::after{border-color:var(--text);color:var(--text)}
 .fold[open]>summary{margin-bottom:10px}
+.tool-btn{display:inline-flex;align-items:center;gap:6px}
+.tool-btn svg{flex:none}
 .shape-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .shape-tools .floor-label{width:100%;margin:0}
 .shape-tools .hint{width:100%;margin:0}
@@ -270,6 +272,7 @@ const GOALS = [
 let useMetric = false, plans = [], seed = 1, program = null;
 let mainTab = 'options', optTab = 0, refineIdx = null;
 let editFloor = 0, selectedRoom = null, drag = null, editView = null, drawingCount = 0;
+let editMode = 'select', eraserSize = 1;     /* editor tool: select, pen (draw walls) or erase */
 
 const sum = (list, fn) => list.reduce((t, x) => t + fn(x), 0);
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -760,6 +763,29 @@ function applyShapes(f) {
   });
 }
 
+/* ---------------- walls drawn with the pen, and wall sections removed with the eraser ----------------
+   Each floor can hold f.lines (walls drawn by hand: x1, y1, x2, y2 in feet) and f.erase (eraser marks:
+   circles x, y, r). Wherever an eraser circle crosses a wall, that piece of wall is left out. */
+/* The pieces of a wall line that are left after erasing. Returns a list of [x1, y1, x2, y2]. */
+function eraseCut(x1, y1, x2, y2, circles) {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  if (!circles || !circles.length || len < 0.01) return [[x1, y1, x2, y2]];
+  const ux = (x2 - x1) / len, uy = (y2 - y1) / len, gone = [];
+  circles.forEach(c => {
+    const along = (c.x - x1) * ux + (c.y - y1) * uy, off = Math.abs((c.x - x1) * uy - (c.y - y1) * ux);
+    if (off >= c.r) return;
+    const half = Math.sqrt(c.r * c.r - off * off);
+    gone.push([along - half, along + half]);
+  });
+  gone.sort((a, b) => a[0] - b[0]);
+  const keep = []; let t = 0;
+  gone.forEach(g => { if (g[0] > t) keep.push([t, Math.min(g[0], len)]); t = Math.max(t, g[1]); });
+  if (t < len) keep.push([t, len]);
+  return keep.filter(k => k[1] - k[0] > 0.05).map(k => [x1 + ux * k[0], y1 + uy * k[0], x1 + ux * k[1], y1 + uy * k[1]]);
+}
+/* How much of a wall line the eraser has removed, in feet. */
+function erasedLength(x1, y1, x2, y2, circles) { return Math.hypot(x2 - x1, y2 - y1) - sum(eraseCut(x1, y1, x2, y2, circles), p => Math.hypot(p[2] - p[0], p[3] - p[1])); }
+
 /* ---------------- exterior walls ---------------- */
 function findExteriorWalls(rooms) {
   const eps = 0.08, walls = [];
@@ -848,7 +874,7 @@ function addDoor(list, rooms, ai, bi, sg, kind, dw) {
   d.kind = kind; d.a = ai; d.b = bi;
   list.push(d);
 }
-function placeDoors(rooms, o, rootKey) {
+function placeDoors(rooms, o, rootKey, erase) {
   const list = [], miss = [], seen = {};
   const key = (a, b) => Math.min(a, b) + '-' + Math.max(a, b);
   const small = x => x.t === 'wet' || x.t === 'clo' || x.k === 'pantry' || x.k === 'storage' || x.k === 'mechS';
@@ -901,6 +927,13 @@ function placeDoors(rooms, o, rootKey) {
     if (bi <= ai || seen[key(ai, bi)] || sameRoom(a, b) || !isOpenConnection(o, a, b)) return;
     const sg = sharedWall(a, b);
     if (sg && sg.s1 - sg.s0 >= 3) { seen[key(ai, bi)] = 1; addDoor(list, rooms, ai, bi, sg, 'opening', Math.min(8, sg.s1 - sg.s0 - 0.8)); }
+  }));
+  /* a wall erased by 1½ ft or more becomes an opening between the two rooms (nothing is drawn in it) */
+  if (erase && erase.length) rooms.forEach((a, ai) => rooms.forEach((b, bi) => {
+    if (bi <= ai || seen[key(ai, bi)] || sameRoom(a, b)) return;
+    const sg = sharedWall(a, b); if (!sg) return;
+    const p = sg.ax === 'v' ? [sg.L, sg.s0, sg.L, sg.s1] : [sg.s0, sg.L, sg.s1, sg.L];
+    if (erasedLength(p[0], p[1], p[2], p[3], erase) >= 1.5) { seen[key(ai, bi)] = 1; const d = { x1: p[0], y1: p[1], x2: p[2], y2: p[3], nx: 0, ny: 0, kind: 'gap', a: ai, b: bi }; list.push(d); }
   }));
   /* every room must be reachable from the entry (or the stairs); link stragglers to a reachable neighbour */
   let root = rooms.findIndex(r => r.k === rootKey); if (root < 0) root = 0;
@@ -1097,7 +1130,7 @@ function analyze(plan) {
   plan.floors.forEach(f => {
     f.ext = findExteriorWalls(f.rooms);
     applyShapes(f);
-    const res = placeDoors(f.rooms, o, f.kind === 'main' ? 'foyer' : 'stairs');
+    const res = placeDoors(f.rooms, o, f.kind === 'main' ? 'foyer' : 'stairs', f.erase);
     f.doors = res.list; plan.miss = plan.miss.concat(res.miss);
     if (f.kind === 'main') placeExteriorDoors(f, o);
     f.cls = f.rooms.map((r, ri) => placeReachInCloset(f, r, ri, plan));
@@ -1181,7 +1214,7 @@ function analyze(plan) {
   if (seedR != null) {
     comp[seedR] = 1;
     let go = true;
-    while (go) { go = false; mf.doors.forEach(d => { if ((d.kind === 'opening' || d.kind === 'join') && d.b > -1 && OPEN_PLAN_ROOMS[mf.rooms[d.a].k] && OPEN_PLAN_ROOMS[mf.rooms[d.b].k] && comp[d.a] !== comp[d.b]) { comp[d.a] = comp[d.b] = 1; go = true; } }); }
+    while (go) { go = false; mf.doors.forEach(d => { if ((d.kind === 'opening' || d.kind === 'join' || d.kind === 'gap') && d.b > -1 && OPEN_PLAN_ROOMS[mf.rooms[d.a].k] && OPEN_PLAN_ROOMS[mf.rooms[d.b].k] && comp[d.a] !== comp[d.b]) { comp[d.a] = comp[d.b] = 1; go = true; } }); }
   }
   const cr = Object.keys(comp).map(i => mf.rooms[i]);
   M.openArea = areaOf(cr);
@@ -1303,7 +1336,7 @@ function generateAllOptions(s) {
 
 /* ---------------- history for the editor ---------------- */
 const roomForSaving = r => { const c = Object.assign({}, r); delete c.bad; delete c.why; return c; };
-function planSnapshot(plan) { return JSON.stringify(plan.floors.map(f => f.rooms.map(roomForSaving))); }
+function planSnapshot(plan) { return JSON.stringify(plan.floors.map(f => ({ rooms: f.rooms.map(roomForSaving), lines: f.lines || [], erase: f.erase || [] }))); }
 function saveToHistory(plan) {
   const sn = planSnapshot(plan);
   if (plan.hist[plan.hi] === sn) return;
@@ -1311,7 +1344,7 @@ function saveToHistory(plan) {
 }
 function restoreFromHistory(plan, i) {
   const data = JSON.parse(plan.hist[i]);
-  plan.floors.forEach((f, k) => { f.rooms = data[k]; });
+  plan.floors.forEach((f, k) => { const d = data[k]; if (Array.isArray(d)) { f.rooms = d; f.lines = []; f.erase = []; } else { f.rooms = d.rooms; f.lines = d.lines; f.erase = d.erase; } });
   plan.hi = i; analyze(plan);
 }
 const overlaps = (a, b) => a.x < b.x + b.w - 0.01 && b.x < a.x + a.w - 0.01 && a.y < b.y + b.h - 0.01 && b.y < a.y + a.h - 0.01;
@@ -1620,7 +1653,7 @@ function doorDrawing(d, X, Y, s) {
 /* A door's size in inches, width × height, as written on a door tag. Interior and entry doors are
    80 in (6 ft 8 in) tall; overhead garage doors are 84 in (7 ft). Plain openings get no tag. */
 function doorSize(d) {
-  if (d.kind === 'opening' || d.kind === 'join') return '';
+  if (d.kind === 'opening' || d.kind === 'join' || d.kind === 'gap') return '';
   const wide = Math.round(Math.hypot(d.x2 - d.x1, d.y2 - d.y1) * 12 / 2) * 2;
   return wide + '×' + (d.kind === 'garage' ? 84 : 80);
 }
@@ -1647,7 +1680,7 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   /* 1. floor areas (white; the selected room is tinted while editing) */
   const picked = edit && sel != null && f.rooms[sel] ? roomGroup(f.rooms, f.rooms[sel]) : [];
   f.rooms.forEach((r, i) => {
-    const fill = picked.indexOf(r) > -1 ? '#eaf1fb' : '#fff', cls = edit ? 'class="ed-room" data-i="' + i + '" style="cursor:move" ' : '';
+    const fill = picked.indexOf(r) > -1 ? '#eaf1fb' : '#fff', cls = edit ? 'class="ed-room" data-i="' + i + '" style="cursor:' + (editMode === 'select' ? 'move' : 'crosshair') + '" ' : '';
     h += '<polygon ' + cls + 'points="' + roomOutline(r).map(p => f1(X(p[0])) + ',' + f1(Y(p[1]))).join(' ') + '" fill="' + fill + '" stroke="none"/>';
     if (r.bayShape) h += '<polygon ' + cls + 'points="' + r.bayShape.map(p => f1(X(p[0])) + ',' + f1(Y(p[1]))).join(' ') + '" fill="' + fill + '" stroke="none"/>';
     if (r.t === 'unf') h += R(r, 'fill="url(#hx' + id + ')" pointer-events="none"');
@@ -1676,17 +1709,21 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   });
   /* 4. walls: open-plan rooms are only divided by a thin dashed room separation line; every other
         shared edge is an interior wall; edges facing outside are the thick exterior walls */
-  const iw = Math.max(1.6, INT_WALL * s).toFixed(1), ew = Math.max(2.6, EXT_WALL * s).toFixed(1);
+  const iw = Math.max(1.6, INT_WALL * s).toFixed(1), ew = Math.max(2.6, EXT_WALL * s).toFixed(1), cuts = f.erase || [];
+  const wall = (x1, y1, x2, y2, color, width, extra) => eraseCut(x1, y1, x2, y2, cuts).forEach(p => { h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), color, width, extra); });
   f.rooms.forEach((a, ai) => f.rooms.forEach((b, bi) => {
     if (bi <= ai || sameRoom(a, b)) return;
     const sg = sharedWall(a, b); if (!sg) return;
     const p = sg.ax === 'v' ? [sg.L, sg.s0, sg.L, sg.s1] : [sg.s0, sg.L, sg.s1, sg.L];
-    if (o.open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), LINE_COLOURS.light, 0.6, ' stroke-dasharray="5 3"');
-    else h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), LINE_COLOURS.inner, iw, ' stroke-linecap="square"');
+    if (o.open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) wall(p[0], p[1], p[2], p[3], LINE_COLOURS.light, 0.6, ' stroke-dasharray="5 3"');
+    else wall(p[0], p[1], p[2], p[3], LINE_COLOURS.inner, iw, ' stroke-linecap="square"');
   }));
-  f.ext.forEach(w => { h += line(X(w.x1), Y(w.y1), X(w.x2), Y(w.y2), LINE_COLOURS.wall, ew, ' stroke-linecap="square"'); });
+  (f.lines || []).forEach(l => wall(l.x1, l.y1, l.x2, l.y2, LINE_COLOURS.inner, iw, ' stroke-linecap="square"'));
+  f.ext.forEach(w => wall(w.x1, w.y1, w.x2, w.y2, LINE_COLOURS.wall, ew, ' stroke-linecap="square"'));
+  const erased = (x, y) => cuts.some(c => Math.hypot(c.x - x, c.y - y) < c.r);
   /* 5. windows: a cut in the wall with two wall-face lines and a glass line, tagged width × height in inches */
   if (o.showWin) f.windows.forEach(w => {
+    if (erased((w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2)) return;
     const ax = X(w.x1), ay = Y(w.y1), bx = X(w.x2), by = Y(w.y2), half = +ew / 2, len = Math.hypot(bx - ax, by - ay);
     const ux = (bx - ax) / len, uy = (by - ay) / len, px = -uy, py = ux;          /* along the wall, and across it */
     h += line(ax, ay, bx, by, '#fff', (+ew + 0.6).toFixed(1));
@@ -1698,7 +1735,7 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   });
   /* 6. doors, each tagged width × height in inches like the windows. The tag sits on the side the door
         does not swing into (outside, for exterior doors), so it stays clear of the swing arc. */
-  f.doors.forEach(d => { if (d.kind !== 'join') h += doorDrawing(d, X, Y, s); });
+  f.doors.forEach(d => { if (d.kind !== 'join' && d.kind !== 'gap' && !erased((d.x1 + d.x2) / 2, (d.y1 + d.y2) / 2)) h += doorDrawing(d, X, Y, s); });
   if (o.showDoorTags !== false) f.doors.forEach(d => {
     const size = doorSize(d); if (!size) return;
     const vert = isClose(d.x1, d.x2), mx = (X(d.x1) + X(d.x2)) / 2 - d.nx * (+ew / 2 + 7), my = (Y(d.y1) + Y(d.y2)) / 2 - d.ny * (+ew / 2 + 7);
@@ -1752,6 +1789,12 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
     h += '<text x="' + f1(rx - 14) + '" y="' + f1(ty + 23) + '" font-size="6.5" font-weight="700" letter-spacing="0.5" text-anchor="middle" fill="' + LINE_COLOURS.text + '">FRONT</text>';
   }
   h += '</g>';
+  /* pen preview with its length, and the eraser circle */
+  if (edit && drag && drag.mode === 'pen') {
+    h += line(X(drag.x1), Y(drag.y1), X(drag.x2), Y(drag.y2), '#2f6fb5', Math.max(2, INT_WALL * s).toFixed(1), ' stroke-dasharray="6 3" stroke-linecap="round"');
+    h += '<text x="' + f1(X(drag.x2) + 8) + '" y="' + f1(Y(drag.y2) - 8) + '" font-size="10" font-weight="700" fill="#2f6fb5" paint-order="stroke" stroke="#fff" stroke-width="3">' + formatLength(Math.hypot(drag.x2 - drag.x1, drag.y2 - drag.y1)) + '</text>';
+  }
+  if (edit && editMode === 'erase' && editHover) h += '<circle cx="' + f1(X(editHover.x)) + '" cy="' + f1(Y(editHover.y)) + '" r="' + f1(eraserSize * s) + '" fill="rgba(179,38,30,0.08)" stroke="#b3261e" stroke-width="1" stroke-dasharray="3 2" pointer-events="none"/>';
   if (edit && sel != null && f.rooms[sel]) {
     const r = f.rooms[sel], pts = [['nw', r.x, r.y, 'nwse'], ['ne', r.x + r.w, r.y, 'nesw'], ['se', r.x + r.w, r.y + r.h, 'nwse'], ['sw', r.x, r.y + r.h, 'nesw']];
     picked.forEach(m => { h += R(m, 'fill="none" stroke="#2f6fb5" stroke-width="' + (m === r ? 1.8 : 1) + '"' + (m === r ? '' : ' stroke-dasharray="4 3"') + ' pointer-events="none"'); });
@@ -1813,6 +1856,11 @@ function refineHtml(plan) {
   if (selectedRoom != null && !f.rooms[selectedRoom]) selectedRoom = null;
   editView = drawingScale(plan.vb);
   let h = '<div class="sheet"><div class="head"><div><div class="goal">Option ' + plan.letter + ' · ' + GOALS.find(x => x.id === plan.goal).n + '</div><h2>Refine</h2><div class="sub">' + plan.desc + ' · ' + formatArea(plan.metrics.finished) + ' finished · ' + formatMoney(plan.metrics.cost) + '</div></div></div>';
+  const icon = { select: '<path d="M5 3l14 8-6 1.6L10 19z"/>', pen: '<path d="M4 20l1.2-4.6L16.6 4a2 2 0 012.8 2.8L8 18.2z"/><path d="M14.5 6.1l3.4 3.4"/>', erase: '<path d="M8 20h12"/><path d="M4.6 14.6l9.2-9.2a2 2 0 012.8 0l3 3a2 2 0 010 2.8L12 18.8H8.8z"/><path d="M9.4 9.8l5.8 5.8"/>' };
+  const toolBtn = (mode, label, key) => '<button class="btn tool-btn' + (editMode === mode ? ' active' : '') + '" data-mode="' + mode + '" type="button" title="' + label + ' (' + key + ')" aria-pressed="' + (editMode === mode) + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + icon[mode] + '</svg>' + label + '</button>';
+  h += '<div class="bar">' + toolBtn('select', 'Select', 'V') + toolBtn('pen', 'Draw wall', 'P') + toolBtn('erase', 'Eraser', 'E')
+    + (editMode === 'erase' ? '<label>Eraser size <select id="edEraser" style="width:auto">' + optionsHtml([[0.5, 'Small (1 ft)'], [1, 'Medium (2 ft)'], [1.5, 'Large (3 ft)']], eraserSize) + '</select></label>' : '')
+    + ((f.lines && f.lines.length) || (f.erase && f.erase.length) ? '<button class="btn" id="edClearDrawn" type="button">Clear drawn walls and erasing</button>' : '') + '</div>';
   h += '<div class="bar"><button class="btn" id="edUndo" type="button"' + (plan.hi <= 0 ? ' disabled' : '') + '>↩ Undo</button><button class="btn" id="edRedo" type="button"' + (plan.hi >= plan.hist.length - 1 ? ' disabled' : '') + '>↪ Redo</button>'
     + '<button class="btn" id="edRotate" type="button"' + (selectedRoom == null ? ' disabled' : '') + '>Rotate (R)</button><button class="btn" id="edDelete" type="button"' + (selectedRoom == null ? ' disabled' : '') + '>Delete</button>'
     + '<button class="btn" id="edReset" type="button">Reset</button><button class="btn" id="edSvgSave" type="button">Download SVG</button>'
@@ -1828,7 +1876,9 @@ function refineHtml(plan) {
     + '<label><input type="checkbox" id="rfWin"' + (o.showWin ? ' checked' : '') + '> Windows</label>'
     + '<label><input type="checkbox" id="rfDoorTags"' + (o.showDoorTags !== false ? ' checked' : '') + '> Door tags</label></div>';
   if (plan.floors.length > 1) h += '<div class="tabs">' + plan.floors.map((fl, i) => '<button class="btn' + (i === editFloor ? ' active' : '') + '" data-floor="' + i + '" type="button">' + fl.label + '</button>').join('') + '</div>';
-  h += '<div class="hint">Click a room to select it. Drag to move, drag a blue corner to resize, or type exact values below. Doors, closets, windows and furniture update after every change.</div>';
+  h += '<div class="hint">' + (editMode === 'pen' ? 'Draw wall: press and drag to draw a straight wall. It snaps to the grid, to wall corners and to 45° and 90° angles. Undo removes the last one.'
+    : editMode === 'erase' ? 'Eraser: hold the mouse button and drag over a wall to remove that section, for example to open a doorway or take out a whole wall. An opening of 1½ ft or more connects the rooms on each side.'
+    : 'Click a room to select it. Drag to move, drag a blue corner to resize, or type exact values below. Doors, closets, windows and furniture update after every change.') + '</div>';
   h += floorDrawing(f, plan, plan.vb, true, selectedRoom);
   const misalign = plan.floors.length > 1 && (() => { const ss = plan.floors.map(fl => fl.rooms.find(r => r.k === 'stairs')).filter(Boolean); return ss.some(x => Math.abs(x.x - ss[0].x) > 0.1 || Math.abs(x.y - ss[0].y) > 0.1); })();
   h += '<div style="margin-top:10px">' + (plan.failed.length ? plan.failed.map(n => '<span class="chip">' + escapeText(n) + '</span>').join('') : '<span class="chip ok">All rooms meet the standards</span>')
@@ -1958,6 +2008,8 @@ function onEditorClick(e) {
   const b = e.target.closest('button'); if (!b) return;
   const f = plan.floors[editFloor];
   if (b.dataset.floor !== undefined) { editFloor = +b.dataset.floor; selectedRoom = null; render(); return; }
+  if (b.dataset.mode) { editMode = b.dataset.mode; drag = null; editHover = null; if (editMode !== 'select') selectedRoom = null; render(); return; }
+  if (b.id === 'edClearDrawn') { if (confirm('Remove every wall you drew and every eraser mark on this floor?')) { f.lines = []; f.erase = []; saveEdit(plan); } return; }
   if (b.id === 'edUndo' && plan.hi > 0) { restoreFromHistory(plan, plan.hi - 1); selectedRoom = null; render(); }
   else if (b.id === 'edRedo' && plan.hi < plan.hist.length - 1) { restoreFromHistory(plan, plan.hi + 1); selectedRoom = null; render(); }
   else if (b.id === 'edRotate' && selectedRoom != null) { const r = f.rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
@@ -1983,6 +2035,7 @@ function onEditorChange(e) {
   else if (id === 'rfShowCl') o.showCloset = e.target.checked;
   else if (id === 'rfFurn') o.showFurn = e.target.checked;
   else if (id === 'rfWin') o.showWin = e.target.checked;
+  else if (id === 'edEraser') { eraserSize = +v; render(); return; }
   else if (id === 'rfDoorTags') o.showDoorTags = e.target.checked;
   else if (id === 'addRoom') {
     if (!v) return;
@@ -2006,9 +2059,34 @@ function onEditorChange(e) {
   saveEdit(plan);
 }
 
+/* Pen snapping: the point snaps to a nearby wall corner (within 1 ft), otherwise to the grid. */
+function snapPoint(plan, f, p) {
+  let best = null;
+  f.rooms.forEach(r => [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.h], [r.x + r.w, r.y + r.h]].forEach(c => { const d = Math.hypot(c[0] - p.x, c[1] - p.y); if (d < 1 && (!best || d < best.d)) best = { x: c[0], y: c[1], d: d }; }));
+  (f.lines || []).forEach(l => [[l.x1, l.y1], [l.x2, l.y2]].forEach(c => { const d = Math.hypot(c[0] - p.x, c[1] - p.y); if (d < 1 && (!best || d < best.d)) best = { x: c[0], y: c[1], d: d }; }));
+  if (best) return { x: best.x, y: best.y };
+  const q = plan.opts.snap; return { x: Math.round(p.x / q) * q, y: Math.round(p.y / q) * q };
+}
+/* Keeps a drawn wall straight: the end point is turned to the nearest 0°, 45° or 90° direction. */
+function straighten(plan, f, a, p) {
+  const dx = p.x - a.x, dy = p.y - a.y, len = Math.hypot(dx, dy); if (len < 0.01) return { x: a.x, y: a.y };
+  const ang = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4), q = plan.opts.snap;
+  let L = Math.round(len * Math.abs(Math.cos(Math.atan2(dy, dx) - ang)) / q) * q;
+  const end = { x: a.x + Math.cos(ang) * L, y: a.y + Math.sin(ang) * L }, near = snapPoint(plan, f, end);
+  if (Math.hypot(near.x - end.x, near.y - end.y) < 1 && Math.abs(Math.atan2(near.y - a.y, near.x - a.x) - ang) < 0.02) return near;
+  return { x: Math.round(end.x * 1000) / 1000, y: Math.round(end.y * 1000) / 1000 };
+}
+let editHover = null;
 function onPointerDown(e) {
   if (mainTab !== 'refine' || refineIdx == null || !e.target.closest || !e.target.closest('#edSvg')) return;
   const plan = plans[refineIdx], rooms = plan.floors[editFloor].rooms, pt = pointerInFeet(e); if (!pt) return;
+  if (editMode === 'pen' || editMode === 'erase') {
+    const f = plan.floors[editFloor];
+    if (editMode === 'pen') { const a = snapPoint(plan, f, pt); drag = { mode: 'pen', x1: a.x, y1: a.y, x2: a.x, y2: a.y, moved: false }; }
+    else { f.erase = f.erase || []; f.erase.push({ x: pt.x, y: pt.y, r: eraserSize }); drag = { mode: 'erase', last: pt, moved: true }; editHover = pt; }
+    try { $('mount').setPointerCapture(e.pointerId); } catch (_) { }
+    e.preventDefault(); render(); return;
+  }
   const handle = e.target.closest('.ed-handle'), roomEl = e.target.closest('.ed-room');
   if (handle && selectedRoom != null && rooms[selectedRoom]) { const r = rooms[selectedRoom]; drag = { mode: 'handle', h: handle.dataset.h, i: selectedRoom, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
   else if (roomEl) {
@@ -2021,8 +2099,24 @@ function onPointerDown(e) {
   e.preventDefault(); render();
 }
 function onPointerMove(e) {
+  if (editMode === 'erase' && mainTab === 'refine' && refineIdx != null && !drag) {
+    const inside = e.target.closest && e.target.closest('#edSvg'), pt = inside ? pointerInFeet(e) : null;
+    if ((pt && (!editHover || Math.hypot(pt.x - editHover.x, pt.y - editHover.y) > 0.3)) || (!pt && editHover)) { editHover = pt; render(); }
+    return;
+  }
   if (!drag) return;
   const plan = plans[refineIdx]; if (!plan) { drag = null; return; }
+  if (drag.mode === 'pen' || drag.mode === 'erase') {
+    const f = plan.floors[editFloor], pt = pointerInFeet(e); if (!pt) return;
+    if (drag.mode === 'pen') { const b = straighten(plan, f, { x: drag.x1, y: drag.y1 }, pt); drag.x2 = b.x; drag.y2 = b.y; drag.moved = true; }
+    else if (Math.hypot(pt.x - drag.last.x, pt.y - drag.last.y) > eraserSize / 3) {
+      /* fill in circles between the last mark and this one, so a fast drag leaves no gaps */
+      const steps = Math.ceil(Math.hypot(pt.x - drag.last.x, pt.y - drag.last.y) / (eraserSize / 3));
+      for (let k = 1; k <= steps; k++) f.erase.push({ x: drag.last.x + (pt.x - drag.last.x) * k / steps, y: drag.last.y + (pt.y - drag.last.y) * k / steps, r: eraserSize });
+      drag.last = pt; editHover = pt;
+    }
+    render(); return;
+  }
   const r = plan.floors[editFloor].rooms[drag.i], pt = pointerInFeet(e); if (!r || !pt) return;
   const dx = pt.x - drag.sx, dy = pt.y - drag.sy, vb = plan.vb, q = plan.opts.snap, sn = v => Math.round(v / q) * q;
   if (!drag.moved && Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25) return;
@@ -2046,6 +2140,12 @@ function onPointerMove(e) {
 }
 function onPointerUp(e) {
   if (!drag) return;
+  if (drag.mode === 'pen') {
+    const plan = plans[refineIdx], f = plan && plan.floors[editFloor], d = drag;
+    if (f && Math.hypot(d.x2 - d.x1, d.y2 - d.y1) >= 1) { f.lines = f.lines || []; f.lines.push({ x1: d.x1, y1: d.y1, x2: d.x2, y2: d.y2 }); }
+    drag = null; try { $('mount').releasePointerCapture(e.pointerId); } catch (_) { }
+    if (plan) saveEdit(plan); return;
+  }
   const moved = drag.moved; drag = null;
   try { $('mount').releasePointerCapture(e.pointerId); } catch (_) { }
   if (moved && plans[refineIdx]) saveEdit(plans[refineIdx]);
@@ -2054,6 +2154,7 @@ function onKey(e) {
   if (mainTab !== 'refine' || refineIdx == null) return;
   const tag = (e.target && e.target.tagName) || ''; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
   const plan = plans[refineIdx], k = (e.key || '').toLowerCase();
+  if (!e.ctrlKey && !e.metaKey && (k === 'v' || k === 'p' || k === 'e' || k === 'escape')) { editMode = k === 'p' ? 'pen' : k === 'e' ? 'erase' : 'select'; drag = null; editHover = null; render(); return; }
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey ? plan.hi < plan.hist.length - 1 : plan.hi > 0) { restoreFromHistory(plan, plan.hi + (e.shiftKey ? 1 : -1)); selectedRoom = null; render(); } }
   else if (k === 'r' && selectedRoom != null && !e.ctrlKey && !e.metaKey) { const r = plan.floors[editFloor].rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
   else if ((k === 'delete' || k === 'backspace') && selectedRoom != null) { e.preventDefault(); deleteRoom(plan.floors[editFloor], selectedRoom); selectedRoom = null; saveEdit(plan); }
@@ -2096,7 +2197,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   They use the same colours as the rest of the site, so they follow light and dark mode.
   ===================================================================== -->
 <style>
-  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;position:sticky;top:0;z-index:50;background:#161616;border-bottom:1px solid #2e2e2c;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  #ss-tabs{display:flex;gap:4px;padding:8px 12px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;position:sticky;top:0;z-index:50;background:#161616;border-bottom:1px solid #2e2e2c;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   #ss-tabs button{font:inherit;font-size:13px;letter-spacing:.02em;padding:8px 16px;border:1px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;background:transparent;color:#cfcfcb;cursor:pointer}
   #ss-tabs button:hover{background:#222220}
   #ss-tabs button[aria-selected="true"]{color:#fff;font-weight:600;background:#262624;border-color:#2e2e2c;box-shadow:inset 0 2px 0 #f2f2f0}
@@ -2161,6 +2262,11 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   .tool .quick select{width:auto}
   .tool .big{font-size:22px;font-weight:700}
   .tool details.fold>summary h3{margin:0}
+  .tool .card{min-width:0;overflow-x:auto}
+  .tool select{max-width:100%}
+  .tool .split>*{min-width:0}
+  .tool ul.notes a{color:inherit;text-decoration-thickness:1px;text-underline-offset:2px}
+  .tool ul.notes a:hover{color:var(--sub)}
   .tool textarea{min-height:130px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   .tool pre{font-size:12px;color:var(--sub);margin:4px 0 10px}
   @media print{
@@ -2251,31 +2357,37 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   var $ = function (id) { return document.getElementById(id); };
   var me = document.currentScript, panel = $("ss-panel");
 
-  /* ---------- tabs: wrap the floor plan tool and add a tab bar ---------- */
+  /* ---------- tabs: wrap the floor plan tool and set up the tab bar every tool uses ----------
+     MCTabs keeps one list of tabs. Each tool adds itself with MCTabs.add(label, key, panel, address, onShow);
+     MCTabs.show(key) shows that tool and hides all the others. */
   var main = document.createElement("div");
   main.id = "ss-main";
   Array.prototype.slice.call(document.body.childNodes).forEach(function (n) { if (n !== me && n !== panel) main.appendChild(n); });
   var tabs = document.createElement("div");
   tabs.id = "ss-tabs"; tabs.setAttribute("role", "tablist");
-  function makeTab(label, key) {
-    var b = document.createElement("button");
-    b.type = "button"; b.textContent = label; b.setAttribute("role", "tab"); b.dataset.key = key;
-    b.addEventListener("click", function () { show(key); });
-    return b;
-  }
-  var tabMain = makeTab(MAIN_LABEL, "main"), tabTool = makeTab(TOOL_LABEL, "ss");
-  tabs.appendChild(tabMain); tabs.appendChild(tabTool);
   document.body.insertBefore(tabs, document.body.firstChild);
   document.body.insertBefore(main, panel);
-  function show(key) {
-    var isTool = key === "ss";
-    main.hidden = isTool; panel.hidden = !isTool;
-    tabMain.setAttribute("aria-selected", String(!isTool)); tabTool.setAttribute("aria-selected", String(isTool));
-    /* remember the open tab in the address; leave other tabs' addresses (like #roof-ventilation) alone */
-    try { if (isTool) history.replaceState(null, "", "#spatial-separation"); else if (location.hash === "#spatial-separation") history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
-    if (isTool) refreshImportList();
-    window.scrollTo(0, 0);
-  }
+  window.MCTabs = {
+    list: [],
+    add: function (label, key, element, address, onShow) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = label; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", "false");
+      b.addEventListener("click", function () { MCTabs.show(key); });
+      tabs.appendChild(b);
+      this.list.push({ key: key, element: element, address: address, onShow: onShow, button: b });
+    },
+    show: function (key) {
+      var picked = null;
+      this.list.forEach(function (t) { var on = t.key === key; t.element.hidden = !on; t.button.setAttribute("aria-selected", String(on)); if (on) picked = t; });
+      try { history.replaceState(null, "", picked && picked.address ? picked.address : location.pathname + location.search); } catch (e) {}
+      if (picked && picked.onShow) picked.onShow();
+      window.scrollTo(0, 0);
+    },
+    /* opens the tab named in the page address (for example ...#roof-ventilation), once every tool has loaded */
+    showFromAddress: function () { var t = this.list.find(function (x) { return x.address && x.address === location.hash; }); this.show(t ? t.key : "main"); }
+  };
+  MCTabs.add(MAIN_LABEL, "main", main, "", null);
+  MCTabs.add(TOOL_LABEL, "ss", panel, "#spatial-separation", function () { refreshImportList(); });
 
   /* ---------- the code table built in: BC Building Code Table 9.10.15.4 (houses) ----------
      Rows: largest exposing face area (m²). Columns: limiting distance (m). Values: % of the face that may be glazed.
@@ -2655,7 +2767,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   $("ss-print").addEventListener("click", function () { window.print(); });
 
   render();
-  show(location.hash === "#spatial-separation" ? "ss" : "main");
   window.addEventListener("load", function () { setTimeout(refreshImportList, 0); });
   $("ss-import-plan").addEventListener("focus", refreshImportList);
 })();
@@ -2706,22 +2817,8 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   var $ = function (id) { return document.getElementById(id); };
   var panel = $("rv-panel");
 
-  /* ---------- add a tab to the tab bar made by the spatial separation tool ---------- */
-  var tabs = $("ss-tabs"), tab = document.createElement("button");
-  tab.type = "button"; tab.textContent = TOOL_LABEL; tab.setAttribute("role", "tab"); tab.setAttribute("aria-selected", "false");
-  var otherTabs = Array.prototype.slice.call(tabs.querySelectorAll("button"));
-  tabs.appendChild(tab);
-  function showTool() {
-    ["ss-main", "ss-panel"].forEach(function (id) { var el = $(id); if (el) el.hidden = true; });
-    panel.hidden = false;
-    otherTabs.forEach(function (b) { b.setAttribute("aria-selected", "false"); });
-    tab.setAttribute("aria-selected", "true");
-    try { history.replaceState(null, "", "#roof-ventilation"); } catch (e) {}
-    refreshImportList();
-    window.scrollTo(0, 0);
-  }
-  tab.addEventListener("click", showTool);
-  otherTabs.forEach(function (b) { b.addEventListener("click", function () { panel.hidden = true; tab.setAttribute("aria-selected", "false"); }); });
+  /* ---------- add this tool to the shared tab bar ---------- */
+  MCTabs.add(TOOL_LABEL, "rv", panel, "#roof-ventilation", function () { refreshImportList(); });
 
   /* ---------- common vents (typical net free area; check the product label) ----------
      perFoot = the area is per foot of length (continuous vents); otherwise per vent. */
@@ -2965,11 +3062,1082 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   $("rv-print").addEventListener("click", function () { window.print(); });
 
   render();
-  if (location.hash === "#roof-ventilation") showTool();
   window.addEventListener("load", function () { setTimeout(refreshImportList, 0); });
   $("rv-import-plan").addEventListener("focus", refreshImportList);
 })();
 </script>
 
+<!-- =====================================================================
+  STAIR DESIGNER TAB  (BC Building Code Part 9 Section 9.8, Part 3 Section 3.4)
+  ===================================================================== -->
+<div id="st-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Design tool</div>
+      <h2>Stair designer</h2>
+      <p class="lead">Enter the floor-to-floor height and the stair works itself out: number of risers, rise and run, total run, headroom opening and landings, checked against Part 9 or Part 3 of the BC Building Code. A design aid only: confirm with the current code.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="st-print" type="button">Print</button></div>
+  </div>
+  <div class="card">
+    <div class="grid">
+      <label class="f">Code and stair type
+        <select id="st-code">
+          <option value="p9private">Part 9: stair inside a home (one dwelling unit)</option>
+          <option value="p9public">Part 9: public or exit stair (shared, other buildings)</option>
+          <option value="p3exit">Part 3: exit stair (larger buildings)</option>
+        </select></label>
+      <label class="f">Units <select id="st-units"><option value="imperial">Feet and inches</option><option value="metric">Millimetres</option></select></label>
+      <label class="f">Floor-to-floor height <small>finished floor to finished floor</small><input id="st-height" value="10'1&quot;"></label>
+      <label class="f">Stair shape
+        <select id="st-shape"><option value="straight">Straight</option><option value="l">L-shaped (landing at the turn)</option><option value="u">U-shaped (switchback)</option></select></label>
+      <label class="f">Clear width <input id="st-width" value="3'0&quot;"></label>
+      <label class="f">Floor thickness above <small>joists + subfloor + ceiling, for headroom</small><input id="st-floor" value="1'0&quot;"></label>
+      <label class="f">Aim for
+        <select id="st-aim"><option value="comfort">Comfortable (about 7 in rise, 11 in run)</option><option value="short">Shortest stair (steepest allowed)</option><option value="easy">Easiest to climb (low rise)</option></select></label>
+      <label class="f" id="st-storeys-wrap">Part 3 stair serves <select id="st-storeys"><option value="small">Up to 2 storeys above (or 1 below) the exit level</option><option value="big">More storeys than that</option></select></label>
+    </div>
+  </div>
+  <div class="split">
+    <div class="card" style="margin-top:14px"><div id="st-result"></div></div>
+    <div>
+      <div class="card sketch" style="padding:0"><div id="st-elevation"></div></div>
+      <div class="card sketch" style="padding:0"><div id="st-plan"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   STAIR DESIGNER
+   Everything is worked out in millimetres. The rules come from BC Building Code 2018:
+   Part 9 Tables 9.8.4.1 and 9.8.4.2 (rise and run), 9.8.2.1 (width), 9.8.2.2 (headroom),
+   9.8.3.3 (flight height), 9.8.6.3 (landings), 9.8.7 (handrails), 9.8.8.3 (guards);
+   Part 3 Articles 3.4.3.2, 3.4.3.4, 3.4.6.3, 3.4.6.4, 3.4.6.5, 3.4.6.6 and 3.4.6.8.
+   ===================================================================== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  MCTabs.add("Stair designer", "st", $("st-panel"), "#stairs", null);
+
+  var RULES = {
+    p9private: { name: "Part 9, stair inside one home", riseMin: 125, riseMax: 200, runMin: 255, runMax: 355, width: 860, headroom: 1950, flight: 3700, rail: [865, 1070], guard: 900, minRisers: 1,
+      railNote: "Handrail on at least one side (9.8.7.1). Not needed for 2 risers or fewer inside.", widthRef: "9.8.2.1.(4)", headRef: "9.8.2.2.(3)" },
+    p9public: { name: "Part 9, public or exit stair", riseMin: 125, riseMax: 180, runMin: 280, runMax: Infinity, width: 900, headroom: 2050, flight: 3700, rail: [865, 1070], guard: 1070, minRisers: 3,
+      railNote: "Handrail on one side under 1100 mm wide, both sides at 1100 mm or wider (Table 9.8.7.1).", widthRef: "9.8.2.1.(1)", headRef: "9.8.2.2.(2)" },
+    p3exit: { name: "Part 3, exit stair", riseMin: 125, riseMax: 180, runMin: 280, runMax: Infinity, width: 900, headroom: 2050, flight: 3700, rail: [865, 1070], guard: 1070, minRisers: 3,
+      railNote: "One handrail under 1100 mm wide; a handrail on each side at 1100 mm or wider (3.4.6.5). At least one continuous, extending 300 mm past the top and bottom.", widthRef: "Table 3.4.3.2.-A", headRef: "3.4.3.4" }
+  };
+
+  /* Reads a length: 10'1", 10' 1, 121", 3070 mm, 3.07 m, or a plain number (inches or mm by the unit setting). */
+  function readMm(text) {
+    var t = String(text || "").trim().toLowerCase(), m;
+    if (!t) return NaN;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*mm$/))) return +m[1];
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*m$/))) return +m[1] * 1000;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft)\s*-?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|in)?)?$/))) return (+m[1] * 12 + (m[2] ? +m[2] : 0)) * 25.4;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)\s*(?:"|in)$/))) return +m[1] * 25.4;
+    if (/^\d+(?:\.\d+)?$/.test(t)) return $("st-units").value === "metric" ? +t : +t * 25.4;
+    return NaN;
+  }
+  /* Shows a length in the chosen units: 7 1/4" style (to the nearest 1/16 in), or millimetres. */
+  function show(mm) {
+    if (!isFinite(mm)) return "–";
+    if ($("st-units").value === "metric") return Math.round(mm) + " mm";
+    var sixteenths = Math.round(mm / 25.4 * 16), ft = Math.floor(sixteenths / 192), rest = sixteenths - ft * 192, inch = Math.floor(rest / 16), frac = rest - inch * 16, g = 16;
+    while (frac && frac % 2 === 0 && g > 2) { frac /= 2; g /= 2; }
+    var inches = (inch || !frac ? inch : "") + (frac ? (inch ? " " : "") + frac + "/" + g : "") + '"';
+    return (ft ? ft + "' " : "") + inches + (ft ? "" : " (" + Math.round(mm) + " mm)");
+  }
+  function both(mm) { return $("st-units").value === "metric" ? Math.round(mm) + " mm" : show(mm).replace(/ \(\d+ mm\)$/, "") + " (" + Math.round(mm) + " mm)"; }
+
+  /* Picks the number of risers and the run for the chosen aim, within the code limits. */
+  function design(H, rule, aim) {
+    var nMin = Math.max(rule.minRisers, Math.ceil(H / rule.riseMax - 1e-9)), nMax = Math.floor(H / rule.riseMin + 1e-9);
+    if (nMin > nMax) return null;
+    var target = aim === "short" ? rule.riseMax : aim === "easy" ? 165 : 178, best = null;
+    for (var n = nMin; n <= nMax; n++) { var r = H / n, score = aim === "short" ? n : Math.abs(r - target); if (!best || score < best.score) best = { n: n, rise: r, score: score }; }
+    /* run: comfort rule 2 × rise + run ≈ 630 mm (about 25 in), kept inside the code limits */
+    var run = aim === "short" ? rule.runMin : Math.round(Math.min(rule.runMax, Math.max(rule.runMin, 630 - 2 * best.rise)));
+    if (aim === "comfort") run = Math.max(run, 279);
+    return { risers: best.n, rise: best.rise, run: Math.min(rule.runMax, Math.max(rule.runMin, run)) };
+  }
+
+  function calc() {
+    var rule = RULES[$("st-code").value], H = readMm($("st-height").value), W = readMm($("st-width").value), floor = readMm($("st-floor").value) || 0, shape = $("st-shape").value;
+    $("st-storeys-wrap").hidden = $("st-code").value !== "p3exit";
+    var minWidth = rule.width;
+    if ($("st-code").value === "p3exit" && $("st-storeys").value === "big") minWidth = 1100;
+    var out = $("st-result");
+    if (!(H > 0) || !(W > 0)) { out.innerHTML = '<p class="verdict">Enter the floor-to-floor height and the stair width.</p>'; $("st-elevation").innerHTML = ""; $("st-plan").innerHTML = ""; return; }
+    var d = design(H, rule, $("st-aim").value);
+    if (!d) { out.innerHTML = '<p class="verdict warn">That height cannot be split into risers within the limits.</p>'; return; }
+    /* flights: a landing is needed at the turn of an L or U stair, and in any flight taller than 3.7 m */
+    var flights = shape === "straight" ? Math.max(1, Math.ceil(H / rule.flight - 1e-9)) : Math.max(2, Math.ceil(H / rule.flight - 1e-9));
+    var perFlight = [], left = d.risers;
+    for (var i = 0; i < flights; i++) { var k = Math.ceil(left / (flights - i)); perFlight.push(k); left -= k; }
+    var treads = perFlight.map(function (k) { return k - 1; });
+    var landing = Math.max(W, 860), landingLen = shape === "u" ? Math.max(W, 860) : shape === "l" ? Math.max(W, 860) : Math.min(W, 1100);
+    if (shape === "straight" && flights > 1) landingLen = Math.max(landingLen, Math.min(W, 1100));
+    var runs = treads.map(function (t) { return t * d.run; });
+    var totalRun = shape === "straight" ? runs.reduce(function (a, b) { return a + b; }, 0) + (flights - 1) * landingLen : null;
+    var footprint = shape === "straight" ? [W, totalRun] : shape === "l" ? [runs[0] + landing, (runs[1] || 0) + landing] : [2 * W + 50, Math.max.apply(null, runs) + landing];
+    var angle = Math.atan(d.rise / d.run) * 180 / Math.PI, twoRT = 2 * d.rise + d.run;
+    /* opening length in the floor above so people keep full headroom on the way up a straight first flight */
+    var opening = Math.min(runs[runs.length - 1] + 300, (rule.headroom + floor) / d.rise * d.run);
+    var checks = [
+      [d.rise >= rule.riseMin - 0.01 && d.rise <= rule.riseMax + 0.01, "Rise " + both(d.rise) + " (allowed " + rule.riseMin + "–" + rule.riseMax + " mm)"],
+      [d.run >= rule.runMin && d.run <= rule.runMax, "Run " + both(d.run) + " (allowed " + rule.runMin + (isFinite(rule.runMax) ? "–" + rule.runMax : " mm or more") + (isFinite(rule.runMax) ? " mm" : "") + ")"],
+      [W >= minWidth - 0.5, "Width " + both(W) + " (minimum " + minWidth + " mm, " + rule.widthRef + ")"],
+      [Math.max.apply(null, perFlight) * d.rise <= rule.flight + 0.5, "Tallest flight " + both(Math.max.apply(null, perFlight) * d.rise) + " (maximum 3.7 m between floors or landings)"],
+      [perFlight.every(function (k) { return k >= rule.minRisers; }), "Risers per flight: " + perFlight.join(" + ") + (rule.minRisers > 1 ? " (at least " + rule.minRisers + " per interior flight)" : "")]
+    ];
+    var ok = checks.every(function (c) { return c[0]; });
+    var facts = [
+      ["Risers", d.risers + " at " + both(d.rise)],
+      ["Treads", treads.reduce(function (a, b) { return a + b; }, 0) + " at " + both(d.run) + " run (tread depth up to run + 25 mm)"],
+      ["Flights", perFlight.length + (perFlight.length > 1 ? " (" + perFlight.map(function (k) { return k + " risers"; }).join(", ") + ")" : "")],
+      [shape === "straight" ? "Total run" : "Footprint", shape === "straight" ? both(totalRun) : both(footprint[0]) + " × " + both(footprint[1])],
+      ["Landing", (flights > 1 ? both(landingLen) + " long × " + both(W) + " wide; " : "") + "top and bottom landings at least " + both(Math.min(W, 1100)) + " long"],
+      ["Angle", angle.toFixed(1) + "° · comfort check 2 × rise + run = " + Math.round(twoRT) + " mm (best 600–650)"],
+      ["Headroom", "at least " + both(rule.headroom) + " (" + rule.headRef + ")"],
+      ["Stairwell opening above", "about " + both(opening) + " long over the top flight, for full headroom"],
+      ["Stringer length", perFlight.map(function (k) { return both(Math.hypot(k * d.rise, (k - 1) * d.run)); }).join(" + ")],
+      ["Handrail height", rule.rail[0] + "–" + rule.rail[1] + " mm (" + show(rule.rail[0]).replace(/ \(.*/, "") + "–" + show(rule.rail[1]).replace(/ \(.*/, "") + ")"],
+      ["Guard height", "at least " + rule.guard + " mm where the side drops more than 600 mm"]
+    ];
+    out.innerHTML = '<p class="verdict" style="color:' + (ok ? "#3a8f5c" : "var(--bad)") + '">' + (ok ? "Meets " : "Check: does not meet ") + rule.name + "</p>" +
+      '<ul class="notes" style="color:var(--text)">' + checks.map(function (c) { return '<li class="' + (c[0] ? "" : "warn") + '">' + (c[0] ? "✓ " : "✗ ") + c[1] + "</li>"; }).join("") + "</ul>" +
+      '<table class="facts">' + facts.map(function (f) { return "<tr><td>" + f[0] + "</td><td>" + f[1] + "</td></tr>"; }).join("") + "</table>" +
+      '<ul class="notes"><li>' + rule.railNote + "</li><li>Keep risers within 5 mm of each other (10 mm across a flight) and runs the same way. Treads may slope no more than 1 in 50.</li>" +
+      (shape !== "straight" ? "<li>Landings must be at least as wide and as long as the stair. Winders (Part 9 homes only) must turn 30° or 45° each, at most 90° per set.</li>" : "") +
+      "<li>Set the actual rise by measuring the finished floors on site, then divide by " + d.risers + ".</li></ul>";
+    drawElevation(d, perFlight[0], rule, floor, opening, perFlight.length);
+    drawPlan(shape, W, d, treads, runs, landing, landingLen, flights);
+  }
+
+  /* Side view of the first flight: treads, the nosing line, the headroom line and the floor above. */
+  function drawElevation(d, risers, rule, floor, opening, flightCount) {
+    var run = (risers - 1) * d.run, rise = risers * d.rise, scale = Math.min(520 / (run + 600), 320 / (rise + 200)), x0 = 40, y0 = 30 + rise * scale;
+    var X = function (mm) { return (x0 + mm * scale).toFixed(1); }, Y = function (mm) { return (y0 - mm * scale).toFixed(1); }, svg = "";
+    var pts = [[0, 0]];
+    for (var i = 0; i < risers; i++) { pts.push([i * d.run, (i + 1) * d.rise]); if (i < risers - 1) pts.push([(i + 1) * d.run, (i + 1) * d.rise]); }
+    pts.push([run + 300, rise]);
+    svg += '<polyline points="' + pts.map(function (p) { return X(p[0]) + "," + Y(p[1]); }).join(" ") + '" fill="none" stroke="#151515" stroke-width="1.8"/>';
+    svg += '<line x1="' + X(-200) + '" y1="' + Y(0) + '" x2="' + X(0) + '" y2="' + Y(0) + '" stroke="#151515" stroke-width="1.8"/>';
+    svg += '<line x1="' + X(0) + '" y1="' + Y(d.rise) + '" x2="' + X(run) + '" y2="' + Y(rise) + '" stroke="#9a9a9a" stroke-width="0.8" stroke-dasharray="4 3"/>';
+    var fx = Math.max(0, run - opening);
+    if (flightCount > 1) {
+      /* more than one flight: this view ends at the landing; the opening and headroom are shown in the results */
+      svg += '<text x="' + X(run + 150) + '" y="' + (+Y(rise) - 6) + '" font-size="10" fill="#666" text-anchor="middle">landing</text>';
+    } else {
+    /* headroom line: parallel to the nosing line, ending where it meets the underside of the floor above */
+    if (fx > 0) svg += '<line x1="' + X(0) + '" y1="' + Y(d.rise + rule.headroom) + '" x2="' + X(fx) + '" y2="' + Y(d.rise + fx * (rise - d.rise) / run + rule.headroom) + '" stroke="#2f6fb5" stroke-width="1" stroke-dasharray="5 3"/>';
+    /* the floor above: it covers the stair up to where the opening starts; its top is the upper floor */
+    svg += '<rect x="' + X(-200) + '" y="' + Y(rise) + '" width="' + ((fx + 200) * scale).toFixed(1) + '" height="' + (floor * scale).toFixed(1) + '" fill="#e6e6e3" stroke="#151515" stroke-width="1"/>';
+    svg += '<text x="' + X(Math.max(0, fx) / 2) + '" y="' + (+Y(d.rise + rule.headroom) + 14) + '" font-size="10" fill="#2f6fb5" text-anchor="middle">headroom ' + rule.headroom + " mm</text>";
+    svg += '<text x="' + X(fx + opening / 2) + '" y="' + (+Y(rise) - 6) + '" font-size="10" fill="#151515" text-anchor="middle">opening ≈ ' + show(opening).replace(/ \(.*/, "") + "</text>";
+    }
+    svg += '<text x="' + X(0) + '" y="' + (+Y(0) + 16) + '" font-size="10" fill="#444">' + risers + " risers × " + show(d.rise).replace(/ \(.*/, "") + " · " + (risers - 1) + " treads × " + show(d.run).replace(/ \(.*/, "") + "</text>";
+    $("st-elevation").innerHTML = '<div class="eyebrow" style="padding:10px 12px 0">Side view, first flight</div><svg viewBox="0 0 600 ' + (y0 + 30).toFixed(0) + '">' + svg + "</svg>";
+  }
+
+  /* Plan view: flights with tread lines, landings and an UP arrow. */
+  function drawPlan(shape, W, d, treads, runs, landing, landingLen, flights) {
+    var pieces = [], svg = "";
+    function flight(x, y, w, h, dir, n) { pieces.push({ x: x, y: y, w: w, h: h, dir: dir, n: n }); }
+    if (shape === "straight") { var y = 0; treads.forEach(function (t, i) { flight(0, y, W, runs[i], "down", t); y += runs[i]; if (i < treads.length - 1) { pieces.push({ x: 0, y: y, w: W, h: landingLen, landing: true }); y += landingLen; } }); }
+    else if (shape === "l") { flight(0, landing, W, runs[0], "up", treads[0]); pieces.push({ x: 0, y: 0, w: W, h: landing, landing: true }); flight(W, 0, runs[1] || 0, W, "right", treads[1] || 0); }
+    else { flight(0, landing, W, runs[0], "up", treads[0]); pieces.push({ x: 0, y: 0, w: 2 * W + 50, h: landing, landing: true }); flight(W + 50, landing, W, runs[1] || 0, "down", treads[1] || 0); }
+    var maxX = Math.max.apply(null, pieces.map(function (p) { return p.x + p.w; })), maxY = Math.max.apply(null, pieces.map(function (p) { return p.y + p.h; }));
+    var scale = Math.min(420 / maxX, 300 / maxY), viewW = Math.max(480, 60 + maxX * scale), x0 = (viewW - maxX * scale) / 2, y0 = 20, X = function (v) { return (x0 + v * scale).toFixed(1); }, Y = function (v) { return (y0 + v * scale).toFixed(1); };
+    pieces.forEach(function (p) {
+      svg += '<rect x="' + X(p.x) + '" y="' + Y(p.y) + '" width="' + (p.w * scale).toFixed(1) + '" height="' + (p.h * scale).toFixed(1) + '" fill="' + (p.landing ? "#f0f0ee" : "#fff") + '" stroke="#151515" stroke-width="1.4"/>';
+      if (p.landing) { svg += '<text x="' + X(p.x + p.w / 2) + '" y="' + Y(p.y + p.h / 2) + '" font-size="9" text-anchor="middle" dominant-baseline="central" fill="#666">LANDING</text>'; return; }
+      for (var i = 1; i < p.n + 1; i++) {
+        if (p.dir === "right") { var lx = p.x + i * d.run; if (lx < p.x + p.w) svg += '<line x1="' + X(lx) + '" y1="' + Y(p.y) + '" x2="' + X(lx) + '" y2="' + Y(p.y + p.h) + '" stroke="#555" stroke-width="0.7"/>'; }
+        else { var ly = p.dir === "up" ? p.y + p.h - i * d.run : p.y + i * d.run; if (ly > p.y && ly < p.y + p.h) svg += '<line x1="' + X(p.x) + '" y1="' + Y(ly) + '" x2="' + X(p.x + p.w) + '" y2="' + Y(ly) + '" stroke="#555" stroke-width="0.7"/>'; }
+      }
+    });
+    var f0 = pieces[pieces[0].landing ? 1 : 0], ax = f0.x + f0.w / 2;
+    svg += '<text x="' + X(ax) + '" y="' + Y(f0.dir === "up" ? f0.y + f0.h - 150 : f0.y + 250) + '" font-size="10" font-weight="700" text-anchor="middle" fill="#2f6fb5">UP</text>';
+    svg += '<text x="' + (viewW / 2).toFixed(0) + '" y="' + (+Y(maxY) + 16) + '" font-size="10" text-anchor="middle" fill="#444">' + show(maxX).replace(/ \(.*/, "") + " × " + show(maxY).replace(/ \(.*/, "") + " overall</text>";
+    $("st-plan").innerHTML = '<div class="eyebrow" style="padding:10px 12px 0">Plan view</div><svg viewBox="0 0 ' + viewW.toFixed(0) + " " + (y0 + maxY * scale + 30).toFixed(0) + '">' + svg + "</svg>";
+  }
+
+  ["st-code", "st-units", "st-height", "st-shape", "st-width", "st-floor", "st-aim", "st-storeys"].forEach(function (id) { $(id).addEventListener("input", calc); $(id).addEventListener("change", calc); });
+  $("st-units").addEventListener("change", function () {
+    /* convert the typed lengths to the new units */
+    ["st-height", "st-width", "st-floor"].forEach(function (id) {
+      var mm = readMm($(id).value.replace(/^(\d+(?:\.\d+)?)$/, $("st-units").value === "metric" ? "$1\"" : "$1mm")); if (!isFinite(mm)) return;
+      $(id).value = $("st-units").value === "metric" ? Math.round(mm) + " mm" : show(mm).replace(/ \(.*/, "");
+    });
+    calc();
+  });
+  $("st-print").addEventListener("click", function () { window.print(); });
+  calc();
+})();
+</script>
+
+<!-- =====================================================================
+  MATERIAL TAKEOFF TAB  (rough quantities from a floor plan option)
+  ===================================================================== -->
+<div id="mt-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Estimating</div>
+      <h2>Material takeoff</h2>
+      <p class="lead">Rough material quantities measured from a floor plan option, including any walls you drew or erased in the editor. Good for early budgets and supplier quotes; a contractor's takeoff from final drawings will differ.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="mt-csv" type="button">Download spreadsheet (CSV)</button><button class="btn" id="mt-print" type="button">Print</button></div>
+  </div>
+  <div class="card">
+    <h3>Plan and assumptions</h3>
+    <div class="grid">
+      <label class="f">Floor plan <select id="mt-plan"></select></label>
+      <label class="f">Main floor ceiling height <select id="mt-h-main"><option value="8">8 ft</option><option value="9" selected>9 ft</option><option value="10">10 ft</option></select></label>
+      <label class="f">Upper floor ceiling height <select id="mt-h-upper"><option value="8" selected>8 ft</option><option value="9">9 ft</option></select></label>
+      <label class="f">Basement ceiling height <select id="mt-h-base"><option value="8" selected>8 ft</option><option value="9">9 ft</option></select></label>
+      <label class="f">Wall framing <select id="mt-studs"><option value="16" selected>Studs at 16 in centres</option><option value="24">Studs at 24 in centres</option></select></label>
+      <label class="f">Bedroom flooring <select id="mt-bedfloor"><option value="carpet">Carpet</option><option value="plank" selected>Vinyl plank / hardwood</option></select></label>
+      <label class="f">Drywall sheets <select id="mt-sheet"><option value="32">4 × 8 ft</option><option value="48" selected>4 × 12 ft</option></select></label>
+      <label class="f">Roof pitch <select id="mt-pitch"><option value="4">4 in 12</option><option value="6" selected>6 in 12</option><option value="8">8 in 12</option><option value="10">10 in 12</option><option value="12">12 in 12</option></select></label>
+      <label class="f">Roof overhang <select id="mt-overhang"><option value="1">12 in</option><option value="1.5" selected>18 in</option><option value="2">24 in</option></select></label>
+      <label class="f">Foundation (no basement) <select id="mt-found"><option value="crawl" selected>Crawlspace (4 ft walls)</option><option value="slab">Slab on grade</option></select></label>
+      <label class="f">Waste allowance <select id="mt-waste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option></select></label>
+    </div>
+  </div>
+  <div class="card" id="mt-summary"></div>
+  <div class="card" id="mt-table"></div>
+</div>
+
+<script>
+/* =====================================================================
+   MATERIAL TAKEOFF
+   Measures the plan in feet: floor areas by finish, wall lengths (interior walls once, exterior walls around
+   the outside), windows and doors, then turns them into quantities with simple trade rules of thumb.
+   Uses the floor plan program's own helpers: sharedWall, sameRoom, eraseCut, roomArea, OPEN_PLAN_ROOMS.
+   ===================================================================== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  MCTabs.add("Material takeoff", "mt", $("mt-panel"), "#takeoff", refreshPlans);
+  var rows = [];
+
+  function floorPlans() { try { return typeof plans !== "undefined" && plans.length ? plans : []; } catch (e) { return []; } }
+  function refreshPlans() {
+    var list = floorPlans(), keep = $("mt-plan").value;
+    $("mt-plan").innerHTML = list.length ? list.map(function (p, i) { return '<option value="' + i + '">Option ' + p.letter + " · " + p.desc + "</option>"; }).join("") : '<option value="">No floor plans yet</option>';
+    if (keep && list[+keep]) $("mt-plan").value = keep;
+    calc();
+  }
+  var fmt = function (n, d) { return (+n).toLocaleString(undefined, { maximumFractionDigits: d == null ? 0 : d }); };
+  var up = function (n) { return Math.ceil(n - 1e-9); };
+
+  /* Lengths of walls on one floor, in feet, after erasing. */
+  function measureWalls(f, plan) {
+    var cuts = f.erase || [], interior = 0, garageWall = 0, open = plan.opts.open;
+    var length = function (x1, y1, x2, y2) { return eraseCut(x1, y1, x2, y2, cuts).reduce(function (s, p) { return s + Math.hypot(p[2] - p[0], p[3] - p[1]); }, 0); };
+    f.rooms.forEach(function (a, ai) { f.rooms.forEach(function (b, bi) {
+      if (bi <= ai || sameRoom(a, b)) return;
+      var sg = sharedWall(a, b); if (!sg) return;
+      if (open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) return;
+      var p = sg.ax === "v" ? [sg.L, sg.s0, sg.L, sg.s1] : [sg.s0, sg.L, sg.s1, sg.L], len = length(p[0], p[1], p[2], p[3]);
+      if (a.k === "garage" || b.k === "garage") garageWall += len; else interior += len;
+    }); });
+    (f.lines || []).forEach(function (l) { interior += length(l.x1, l.y1, l.x2, l.y2); });
+    var houseExt = 0, garageExt = 0;
+    f.ext.forEach(function (w) { var len = length(w.x1, w.y1, w.x2, w.y2); if (w.r.k === "garage") garageExt += len; else houseExt += len; });
+    return { interior: interior, garageWall: garageWall, houseExt: houseExt, garageExt: garageExt };
+  }
+
+  function calc() {
+    var plan = floorPlans()[+$("mt-plan").value];
+    if (!plan) { $("mt-summary").innerHTML = '<p class="verdict">Generate plans in the ArchPlan Studio tab first, then pick one here.</p>'; $("mt-table").innerHTML = ""; return; }
+    var waste = 1 + +$("mt-waste").value / 100, spacing = +$("mt-studs").value, sheet = +$("mt-sheet").value, pitch = +$("mt-pitch").value, overhang = +$("mt-overhang").value;
+    var heights = { main: +$("mt-h-main").value, upper: +$("mt-h-upper").value, base: +$("mt-h-base").value };
+    var area = { tile: 0, plank: 0, carpet: 0, concrete: 0 }, base = 0, wallBoard = 0, ceiling = 0, extWallArea = 0, extWallLen = 0, intWallLen = 0, garageExtLen = 0, garageWallLen = 0;
+    var winArea = 0, winCount = 0, schedule = {}, intDoors = 0, extDoors = 0, patio = 0, garageDoors = 0, garageDoorArea = 0, finishedArea = 0;
+    var TILE = { bath: 1, bath3: 1, ensuite: 1, powder: 1, laundry: 1, mud: 1, foyer: 1 }, BARE = { garage: 1, unf: 1, mech: 1, mechS: 1, storage: 1, stairs: 1 };
+    plan.floors.forEach(function (f) {
+      var h = heights[f.kind], w = measureWalls(f, plan);
+      f.rooms.forEach(function (r) {
+        var a = roomArea(r);
+        if (BARE[r.k]) { if (r.k !== "stairs") area.concrete += f.kind === "upper" ? 0 : a; return; }
+        finishedArea += a;
+        if (TILE[r.k]) area.tile += a; else if (r.t === "sleep" && $("mt-bedfloor").value === "carpet") area.carpet += a; else area.plank += a;
+        ceiling += a;
+        base += r.partOf ? 0 : 2 * (r.w + r.h);
+      });
+      var winHere = 0;
+      f.windows.forEach(function (x) { winHere += x.wi * x.hi / 144; winCount++; var k = x.wi + " × " + x.hi; schedule[k] = (schedule[k] || 0) + 1; });
+      f.doors.forEach(function (d) {
+        if (d.kind === "swing") intDoors++; else if (d.kind === "entry") extDoors++; else if (d.kind === "patio") patio++;
+        else if (d.kind === "garage") { garageDoors++; garageDoorArea += Math.hypot(d.x2 - d.x1, d.y2 - d.y1) * 7; }
+      });
+      winArea += winHere;
+      intWallLen += w.interior; garageWallLen += w.garageWall;
+      if (f.kind !== "base") { extWallLen += w.houseExt; extWallArea += w.houseExt * (h + 1); garageExtLen += w.garageExt; }
+      /* drywall: both faces of interior walls, the inside face of exterior walls, the house side of the garage wall */
+      wallBoard += (2 * w.interior + w.houseExt + w.garageWall) * h;
+    });
+    var doorOpenings = (intDoors * 2 * 2.67 * 6.67) + (extDoors + patio * 2) * 3 * 6.67;
+    var wallBoardNet = Math.max(0, wallBoard - winArea - doorOpenings), board = (wallBoardNet + ceiling) * waste;
+    var mainFloor = plan.floors.find(function (f) { return f.kind === "main"; }), hasBase = plan.floors.some(function (f) { return f.kind === "base"; });
+    var footprint = mainFloor.rooms.reduce(function (s, r) { return s + roomArea(r); }, 0), perimeter = measureWalls(mainFloor, plan).houseExt + measureWalls(mainFloor, plan).garageExt;
+    var roofPlan = footprint + perimeter * overhang, slopeFactor = Math.sqrt(1 + Math.pow(pitch / 12, 2)), roof = roofPlan * slopeFactor;
+    var garageWallArea = garageExtLen * 9 - garageDoorArea;
+    var siding = Math.max(0, extWallArea - winArea - (extDoors + patio * 2) * 3 * 6.67) + Math.max(0, garageWallArea);
+    var studsPerFt = 12 / spacing;
+    var topFloor = plan.floors.find(function (f) { return f.kind === "upper"; }) || mainFloor;
+    var attic = topFloor.rooms.filter(function (r) { return r.k !== "garage"; }).reduce(function (s, r) { return s + roomArea(r); }, 0);
+    var foundPerim = perimeter, foundWallH = hasBase ? 8 : $("mt-found").value === "crawl" ? 4 : 1.5;
+    var concreteYd = (foundPerim * 2 * 0.67 + foundPerim * foundWallH * 0.67 + (hasBase ? footprint * 0.33 : 0) + (mainFloor.rooms.filter(function (r) { return r.k === "garage"; }).reduce(function (s, r) { return s + roomArea(r); }, 0) + ($("mt-found").value === "slab" && !hasBase ? footprint : 0)) * 0.33) / 27;
+
+    rows = [
+      ["Flooring", "Tile (baths, laundry, mudroom, foyer)", up(area.tile * waste), "sq ft", "includes " + $("mt-waste").value + "% waste"],
+      ["Flooring", "Vinyl plank / hardwood", up(area.plank * waste), "sq ft", "living spaces, halls, closets" + ($("mt-bedfloor").value === "carpet" ? "" : ", bedrooms")],
+      ["Flooring", "Carpet", up(area.carpet * waste), "sq ft", area.carpet ? "bedrooms" : "none chosen"],
+      ["Trim", "Baseboard", up(base * waste), "lin ft", "room perimeters, doors not taken off"],
+      ["Trim", "Door casing", up((intDoors * 2 + extDoors + patio) * 17 * waste), "lin ft", "about 17 ft per door side"],
+      ["Trim", "Window casing", up(Object.keys(schedule).reduce(function (s, k) { var p = k.split(" × "); return s + schedule[k] * 2 * (+p[0] + +p[1]) / 12; }, 0) * waste), "lin ft", "around every window"],
+      ["Drywall", "Wall and ceiling board", up(board / sheet), "sheets", (sheet === 48 ? "4 × 12" : "4 × 8") + " ft, " + fmt(wallBoardNet) + " sq ft walls + " + fmt(ceiling) + " sq ft ceilings"],
+      ["Drywall", "Joint tape", up(board / 1000 * 1.0), "rolls (500 ft)", "rule of thumb: 1 roll per 1,000 sq ft of board"],
+      ["Drywall", "Joint compound", up(board / 500), "boxes (4.5 gal)", "rule of thumb: 1 box per 500 sq ft of board"],
+      ["Paint", "Primer", up((wallBoardNet + ceiling) / 350), "gallons", "one coat, 350 sq ft per gallon"],
+      ["Paint", "Finish paint", up((wallBoardNet + ceiling) * 2 / 350), "gallons", "two coats"],
+      ["Framing", "Exterior wall studs (2×6)", up((extWallLen * studsPerFt + winCount * 3 + (extDoors + patio) * 3 + garageExtLen * studsPerFt) * 1.1), "studs", "at " + spacing + " in, plus kings, jacks and corners"],
+      ["Framing", "Interior wall studs (2×4)", up(((intWallLen + garageWallLen) * studsPerFt + intDoors * 3) * 1.15), "studs", "at " + spacing + " in, plus door framing and corners"],
+      ["Framing", "Wall plates (bottom + double top)", up((extWallLen + garageExtLen + intWallLen + garageWallLen) * 3 * waste / 16), "16 ft lengths", fmt(extWallLen + garageExtLen + intWallLen + garageWallLen) + " lin ft of wall"],
+      ["Framing", "Headers", winCount + extDoors + patio + garageDoors, "openings", "size each header for its span and load"],
+      ["Exterior", "Wall sheathing (7/16 in OSB)", up((extWallArea + Math.max(0, garageExtLen * 9)) * waste / 32), "sheets 4 × 8", fmt(extWallArea + garageExtLen * 9) + " sq ft of exterior wall"],
+      ["Exterior", "Sheathing membrane (house wrap)", up((extWallArea + garageExtLen * 9) * waste / 900), "rolls (9 × 100 ft)", ""],
+      ["Exterior", "Siding", up(siding * waste / 100), "squares (100 sq ft)", fmt(siding) + " sq ft after windows and doors"],
+      ["Insulation", "Exterior wall batts", up(Math.max(0, extWallArea - winArea) * waste), "sq ft", "R-20 / R-22 / R-24 to suit the energy design"],
+      ["Insulation", "Attic insulation", up(attic * waste), "sq ft", "blown to R-40 or more (see the R-value tab)"],
+      ["Roofing", "Roof area", up(roof), "sq ft", pitch + " in 12 pitch, " + (overhang * 12) + " in overhang"],
+      ["Roofing", "Shingles", up(roof * waste / 100 * 3), "bundles", fmt(roof * waste / 100, 1) + " squares, 3 bundles per square"],
+      ["Roofing", "Roof sheathing", up(roof * waste / 32), "sheets 4 × 8", ""],
+      ["Roofing", "Underlayment", up(roof * waste / 1000), "rolls (10 squares)", "synthetic underlayment"],
+      ["Roofing", "Drip edge", up((perimeter + 8 * overhang) * waste / 10), "10 ft lengths", "around the eaves and rakes"],
+      ["Concrete", "Footings, foundation walls and slabs", fmt(concreteYd * waste, 1), "cubic yards", (hasBase ? "8 ft basement walls" : $("mt-found").value === "crawl" ? "4 ft crawlspace walls" : "slab on grade") + ", 8 in walls, 24 × 8 in footings, 4 in slabs"],
+      ["Windows", "Windows", winCount, "units", Object.keys(schedule).sort().map(function (k) { return schedule[k] + " × " + k + " in"; }).join(", ")],
+      ["Doors", "Interior doors", intDoors, "units", "30–36 in × 80 in"],
+      ["Doors", "Exterior doors", extDoors + patio, "units", extDoors + " entry, " + patio + " patio slider"],
+      ["Doors", "Garage doors", garageDoors, "units", ""]
+    ].filter(function (r) { return r[2] !== 0 && r[2] !== "0"; });
+    $("mt-summary").innerHTML = '<div class="grid"><div><div class="eyebrow">Finished floor</div><div class="big">' + fmt(finishedArea) + ' sq ft</div></div><div><div class="eyebrow">Exterior wall</div><div class="big">' + fmt(extWallLen + garageExtLen) + ' lin ft</div></div><div><div class="eyebrow">Interior wall</div><div class="big">' + fmt(intWallLen + garageWallLen) + ' lin ft</div></div><div><div class="eyebrow">Roof</div><div class="big">' + fmt(roof / 100, 1) + " squares</div></div></div>" +
+      '<p class="hint">Option ' + plan.letter + " · " + plan.desc + ". Includes walls drawn with the pen and leaves out wall sections removed with the eraser.</p>";
+    var group = "";
+    $("mt-table").innerHTML = '<table class="list"><thead><tr><th>Item</th><th class="num">Quantity</th><th>Unit</th><th>Notes</th></tr></thead><tbody>' +
+      rows.map(function (r) { var head = r[0] !== group ? '<tr><td colspan="4" style="padding-top:12px"><span class="eyebrow">' + r[0] + "</span></td></tr>" : ""; group = r[0]; return head + "<tr><td>" + r[1] + '</td><td class="num"><b>' + (typeof r[2] === "number" ? fmt(r[2]) : r[2]) + "</b></td><td>" + r[3] + '</td><td style="color:var(--sub)">' + r[4] + "</td></tr>"; }).join("") + "</tbody></table>";
+  }
+
+  ["mt-plan", "mt-h-main", "mt-h-upper", "mt-h-base", "mt-studs", "mt-bedfloor", "mt-sheet", "mt-pitch", "mt-overhang", "mt-found", "mt-waste"].forEach(function (id) { $(id).addEventListener("change", calc); });
+  $("mt-csv").addEventListener("click", function () {
+    if (!rows.length) return;
+    var csv = "Group,Item,Quantity,Unit,Notes\n" + rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(","); }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "material-takeoff.csv"; document.body.appendChild(a); a.click(); a.remove();
+  });
+  $("mt-print").addEventListener("click", function () { window.print(); });
+  window.addEventListener("load", function () { setTimeout(refreshPlans, 0); });
+})();
+</script>
+
+<!-- =====================================================================
+  R-VALUE CALCULATOR TAB  (effective thermal resistance of walls, roofs, floors and foundations)
+  ===================================================================== -->
+<div id="rs-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Energy</div>
+      <h2>R-value calculator</h2>
+      <p class="lead">Pick a pre-checked assembly or build your own layer by layer. The calculator works out the <b>effective</b> R-value the way BC Building Code Section 9.36 does (studs and joists lower the value of the insulation between them) and checks it against the minimum for your climate zone.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="rs-print" type="button">Print</button></div>
+  </div>
+
+  <div class="card">
+    <h3>Where and what</h3>
+    <div class="grid">
+      <label class="f">Building
+        <select id="rs-building">
+          <option value="house" selected>House, with or without a suite</option>
+          <option value="other">Other Part 9 building</option>
+        </select>
+      </label>
+      <label class="f">Climate zone
+        <select id="rs-zone">
+          <option value="0" selected>Zone 4 · under 3000 degree-days (Abbotsford, Vancouver, Victoria)</option>
+          <option value="1">Zone 5 · 3000–3999 (Kamloops, Kelowna, Penticton)</option>
+          <option value="2">Zone 6 · 4000–4999 (Cranbrook, Prince George, Revelstoke)</option>
+          <option value="3">Zone 7A · 5000–5999 (Smithers, Dawson Creek)</option>
+          <option value="4">Zone 7B · 6000–6999 (Fort Nelson)</option>
+          <option value="5">Zone 8 · 7000 or more</option>
+        </select>
+      </label>
+      <label class="f" id="rs-hrv-wrap" hidden>Heat-recovery ventilator
+        <select id="rs-hrv"><option value="no">No HRV</option><option value="yes">With an HRV</option></select>
+      </label>
+      <label class="f">Own minimum <small>optional: overrides the code table</small>
+        <input id="rs-custom" placeholder="e.g. R-22 or RSI 3.85">
+      </label>
+      <label class="f">Units
+        <select id="rs-units"><option value="imperial" selected>Inches and R-values</option><option value="metric">Millimetres and RSI</option></select>
+      </label>
+    </div>
+    <p class="hint">Check your zone in the BC Building Code climate data (Table C-2) for your town. Minimums are from the BC house tables (9.36.2.6.-C and 9.36.2.8.-C, added in 2023 and the basis of the 2024 code). The 2024 code is free at <a href="https://www.bccodes.ca/" target="_blank" rel="noopener">bccodes.ca</a>; if your city or Step Code report sets a different number, type it in “Own minimum”. Many houses instead show compliance with energy modelling under the BC Energy Step Code, so confirm the path with your building department.</p>
+  </div>
+
+  <div class="card">
+    <h3>Assembly</h3>
+    <div class="grid">
+      <label class="f">Pre-checked assemblies <select id="rs-pick"></select></label>
+      <label class="f">What this assembly is <select id="rs-type"></select></label>
+    </div>
+    <p class="hint" id="rs-note"></p>
+  </div>
+
+  <div class="split">
+    <div class="card" style="margin-top:0">
+      <h3>Layers, outside to inside</h3>
+      <table class="list" id="rs-layers"></table>
+      <div class="quick">
+        <span class="hint" style="margin:0">Add a layer:</span>
+        <select id="rs-add"></select>
+      </div>
+      <p class="hint">Air films, membranes and the framed layer are counted the way the code counts them. Thicknesses can be changed for boards, blown insulation and concrete.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card sketch" style="padding:0;margin-top:0"><div id="rs-drawing"></div></div>
+      <div class="card" style="margin-top:0"><div id="rs-result"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   R-VALUE CALCULATOR
+   How the effective value is worked out (BCBC 9.36.2.4 and its appendix):
+     - every continuous layer (siding, sheathing, rigid insulation, drywall, air films) adds its RSI;
+     - the framed layer (studs, joists or truss chords with insulation between) is worked out as two paths
+       side by side: through the wood and through the insulation, weighted by how much of the area is wood:
+         effective RSI = 1 / ( wood share / wood RSI  +  insulation share / insulation RSI )
+     - the total is the sum. R-value = RSI × 5.678.
+   Material values are typical values from BCBC Table A-9.36.2.4.(1)-D and manufacturers' data.
+   ===================================================================== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  MCTabs.add("R-value calculator", "rs", $("rs-panel"), "#r-value", null);
+  var SAVE_KEY = "mcRValueV1", R_PER_RSI = 5.678, WOOD_RSI_PER_MM = 0.0085;
+
+  /* ---------- required minimums (effective RSI) for Zones 4, 5, 6, 7A, 7B, 8 ---------- */
+  var HOUSE = {   /* BCBC Tables 9.36.2.6.-C and 9.36.2.8.-C, for houses */
+    attic: [8.67, 8.67, 10.43, 10.43, 10.43, 10.43], cathedral: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], flat: [5.28, 5.28, 5.28, 5.72, 5.72, 5.72],
+    wall: [3.08, 3.69, 3.69, 3.69, 3.96, 3.96], floor: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], found: [3.46, 3.97, 3.97, 3.97, 3.97, 3.97],
+    slabBelow: [2.98, 2.98, 2.98, 2.98, 2.98, 2.98], slabAbove: [3.46, 3.46, 3.46, 3.46, 3.46, 3.46], slabHeated: [3.46, 3.46, 3.46, 3.97, 3.97, 3.97], slabFooting: [3.46, 3.46, 3.46, 3.97, 3.97, 3.97]
+  };
+  var OTHER_NO_HRV = {   /* Tables 9.36.2.6.-A and 9.36.2.8.-A */
+    attic: [6.91, 8.67, 8.67, 10.43, 10.43, 10.43], cathedral: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], flat: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02],
+    wall: [2.78, 3.08, 3.08, 3.08, 3.85, 3.85], floor: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], found: [1.99, 2.98, 2.98, 3.46, 3.46, 3.97],
+    slabBelow: [0, 0, 0, 0, 0, 0], slabAbove: [1.96, 1.96, 1.96, 1.96, 1.96, 1.96], slabHeated: [2.32, 2.32, 2.32, 2.84, 2.84, 2.84], slabFooting: [1.96, 1.96, 1.96, 3.72, 3.72, 4.59]
+  };
+  var OTHER_HRV = {      /* Tables 9.36.2.6.-B and 9.36.2.8.-B */
+    attic: [6.91, 6.91, 8.67, 8.67, 10.43, 10.43], cathedral: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], flat: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02],
+    wall: [2.78, 2.97, 2.97, 2.97, 3.08, 3.08], floor: [4.67, 4.67, 4.67, 5.02, 5.02, 5.02], found: [1.99, 2.98, 2.98, 2.98, 2.98, 2.98],
+    slabBelow: [0, 0, 0, 0, 0, 0], slabAbove: [1.96, 1.96, 1.96, 1.96, 1.96, 1.96], slabHeated: [2.32, 2.32, 2.32, 2.84, 2.84, 2.84], slabFooting: [1.96, 1.96, 1.96, 2.84, 2.84, 3.72]
+  };
+  var ZONE_NAMES = ["4", "5", "6", "7A", "7B", "8"];
+
+  /* ---------- assembly types ---------- */
+  var TYPES = {
+    wall:        { n: "Exterior wall above grade", frame: 23, frame24: 20, insideUp: false },
+    attic:       { n: "Ceiling below an attic", frame: 13, frame24: 10, insideUp: false },
+    cathedral:   { n: "Cathedral ceiling or sloped roof", frame: 13, frame24: 10, insideUp: false },
+    flat:        { n: "Flat roof", frame: 13, frame24: 10, insideUp: false },
+    floor:       { n: "Floor over an unheated space or outside", frame: 13, frame24: 10, insideUp: true },
+    found:       { n: "Foundation wall (below grade)", frame: 23, frame24: 20, insideUp: false },
+    slabAbove:   { n: "Unheated slab above the frost line", frame: 13, frame24: 10, insideUp: true },
+    slabBelow:   { n: "Unheated slab below the frost line", frame: 13, frame24: 10, insideUp: true },
+    slabHeated:  { n: "Heated slab (in-floor heat)", frame: 13, frame24: 10, insideUp: true },
+    slabFooting: { n: "Slab on grade with integral footing", frame: 13, frame24: 10, insideUp: true }
+  };
+
+  /* ---------- materials ----------
+     rsi = fixed value for the layer; per = RSI per mm (thickness can change); t = thickness in mm;
+     look = how it is drawn in the section; ins = counts as insulation (for the nominal value) */
+  var MAT = {
+    filmOut:   { n: "Outside air film", rsi: 0.03, t: 0, look: "none" },
+    filmWall:  { n: "Inside air film (wall)", rsi: 0.12, t: 0, look: "none" },
+    filmCeil:  { n: "Inside air film (ceiling)", rsi: 0.11, t: 0, look: "none" },
+    filmFloor: { n: "Inside air film (floor)", rsi: 0.16, t: 0, look: "none" },
+    vented:    { n: "Vented attic or roof space (not counted)", rsi: 0, t: 60, look: "vent" },
+    shingles:  { n: "Asphalt shingles + underlayment", rsi: 0.08, t: 8, look: "shingle" },
+    membrane:  { n: "Roofing membrane", rsi: 0, t: 0, look: "line" },
+    vinyl:     { n: "Vinyl siding", rsi: 0.11, t: 12, look: "siding" },
+    woodSide:  { n: "Wood lap siding", rsi: 0.14, t: 19, look: "siding" },
+    fibre:     { n: "Fibre cement siding", rsi: 0.03, t: 8, look: "siding" },
+    stucco:    { n: "Stucco, 3/4 in", rsi: 0.02, t: 19, look: "stucco" },
+    brick:     { n: "Brick veneer, 3 1/2 in", rsi: 0.07, t: 90, look: "brick" },
+    rain:      { n: "Rainscreen air space (3/4 in strapping)", rsi: 0.15, t: 19, look: "air" },
+    air25:     { n: "Air space behind brick (1 in)", rsi: 0.15, t: 25, look: "air" },
+    wrap:      { n: "Sheathing membrane (house wrap)", rsi: 0, t: 0, look: "line" },
+    osb:       { n: "OSB sheathing, 7/16 in", rsi: 0.11, t: 11, look: "wood" },
+    ply:       { n: "Plywood sheathing, 1/2 in", rsi: 0.11, t: 12.5, look: "wood" },
+    subfloor:  { n: "Plywood subfloor, 5/8 in", rsi: 0.14, t: 16, look: "wood" },
+    xps:       { n: "Extruded polystyrene (XPS) board", per: 0.0347, t: 51, look: "board", ins: 1 },
+    eps:       { n: "Expanded polystyrene (EPS Type 2) board", per: 0.0277, t: 51, look: "board", ins: 1 },
+    mwb:       { n: "Mineral wool board", per: 0.0291, t: 38, look: "board", ins: 1 },
+    pir:       { n: "Polyisocyanurate board", per: 0.0390, t: 51, look: "board", ins: 1 },
+    spf:       { n: "Closed-cell spray foam", per: 0.0400, t: 51, look: "foam", ins: 1 },
+    cell:      { n: "Blown cellulose", per: 0.0250, t: 250, look: "blown", ins: 1 },
+    bfg:       { n: "Blown fibreglass", per: 0.0194, t: 300, look: "blown", ins: 1 },
+    batt40:    { n: "Batt, R-40 (attic)", rsi: 7.04, t: 254, look: "batt", ins: 1 },
+    concrete:  { n: "Concrete", per: 0.0004, t: 203, look: "concrete" },
+    wood:      { n: "Solid wood / lumber", per: WOOD_RSI_PER_MM, t: 38, look: "wood" },
+    poly:      { n: "Polyethylene vapour barrier", rsi: 0, t: 0, look: "line" },
+    damp:      { n: "Dampproofing", rsi: 0, t: 0, look: "line" },
+    gyp:       { n: "Gypsum board, 1/2 in", rsi: 0.08, t: 12.7, look: "gyp" },
+    gyp58:     { n: "Gypsum board, 5/8 in", rsi: 0.10, t: 15.9, look: "gyp" },
+    frame:     { n: "Framed layer (studs, joists or truss chords with insulation)", look: "frame" }
+  };
+  /* what can go between the framing */
+  var FILL = {
+    b12: { n: "R-12 batt", rsi: 2.11, t: 89, look: "batt" }, b14: { n: "R-14 batt", rsi: 2.46, t: 89, look: "batt" },
+    b20: { n: "R-20 batt", rsi: 3.52, t: 140, look: "batt" }, b22: { n: "R-22 batt", rsi: 3.87, t: 140, look: "batt" },
+    b24: { n: "R-24 batt", rsi: 4.23, t: 140, look: "batt" }, b28: { n: "R-28 batt", rsi: 4.93, t: 184, look: "batt" },
+    b31: { n: "R-31 batt", rsi: 5.46, t: 241, look: "batt" },
+    cell: { n: "Blown cellulose, fills the depth", per: 0.025, look: "blown" }, bfg: { n: "Blown fibreglass, fills the depth", per: 0.0194, look: "blown" },
+    spf: { n: "Closed-cell spray foam, fills the depth", per: 0.04, look: "foam" }, air: { n: "Nothing (air space)", rsi: 0.17, look: "air" }
+  };
+  var LUMBER = [[64, "2×3"], [89, "2×4"], [140, "2×6"], [184, "2×8"], [235, "2×10"], [286, "2×12"]];
+
+  /* ---------- the pre-checked assembly library (all checked against Zone 4 houses) ---------- */
+  var F = function (stud, spacing, fill) { return { m: "frame", stud: stud, spacing: spacing, fill: fill }; };
+  var L = function (m, t) { return t == null ? { m: m } : { m: m, t: t }; };
+  var LIBRARY = [
+    { id: "W1", type: "wall", n: "2×6 at 16 in, R-22 batts, vinyl siding on rainscreen", note: "The everyday Lower Mainland wall.",
+      layers: [L("filmOut"), L("vinyl"), L("rain"), L("wrap"), L("osb"), F(140, 16, "b22"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "W2", type: "wall", n: "2×6 at 24 in, R-24 batts, fibre cement on rainscreen", note: "Wider stud spacing means less wood and a better effective value. Check stud size for the loads.",
+      layers: [L("filmOut"), L("fibre"), L("rain"), L("wrap"), L("osb"), F(140, 24, "b24"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "W3", type: "wall", n: "2×6 at 16 in, R-22 batts + 1 1/2 in mineral wool outside", note: "Exterior insulation covers the studs; good for higher Step Code targets.",
+      layers: [L("filmOut"), L("fibre"), L("rain"), L("mwb", 38), L("wrap"), L("osb"), F(140, 16, "b22"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "W4", type: "wall", n: "2×4 at 16 in, R-14 batts + 1 1/2 in XPS outside", note: "For additions matching an existing 2×4 wall. Check the vapour-barrier location with the XPS.",
+      layers: [L("filmOut"), L("vinyl"), L("rain"), L("xps", 38), L("wrap"), L("osb"), F(89, 16, "b14"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "W5", type: "wall", n: "2×6 at 16 in, R-24 batts, stucco on rainscreen", note: "",
+      layers: [L("filmOut"), L("stucco"), L("rain"), L("wrap"), L("osb"), F(140, 16, "b24"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "W6", type: "wall", n: "2×6 at 16 in, R-22 batts, brick veneer", note: "Brick needs a 1 in air space and ties back to the framing.",
+      layers: [L("filmOut"), L("brick"), L("air25"), L("wrap"), L("osb"), F(140, 16, "b22"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "C1", type: "attic", n: "Trusses at 24 in, blown cellulose to about R-52", note: "11 in of cellulose above the bottom chords. Keep 2 1/2 in of vent space at the eaves (baffles).",
+      layers: [L("filmOut"), L("vented"), L("cell", 280), F(89, 24, "cell"), L("poly"), L("gyp"), L("filmCeil")] },
+    { id: "C2", type: "attic", n: "Trusses at 24 in, blown fibreglass to about R-52", note: "15 in of blown fibreglass above the bottom chords. Raised-heel trusses keep full depth at the walls.",
+      layers: [L("filmOut"), L("vented"), L("bfg", 380), F(89, 24, "bfg"), L("poly"), L("gyp"), L("filmCeil")] },
+    { id: "R1", type: "cathedral", n: "2×12 rafters at 16 in, R-31 batts, vented", note: "Leaves about 1 1/2 in above the batt for venting each rafter space.",
+      layers: [L("filmOut"), L("vented"), F(286, 16, "b31"), L("poly"), L("gyp"), L("filmCeil")] },
+    { id: "R2", type: "flat", n: "Flat roof: 6 in polyiso above the deck, 2×10 joists", note: "Warm roof: all insulation above the deck keeps the joists warm and dry.",
+      layers: [L("filmOut"), L("membrane"), L("pir", 152), L("ply"), F(235, 16, "air"), L("gyp"), L("filmCeil")] },
+    { id: "F1", type: "floor", n: "2×12 joists at 16 in, R-31 batts, over a garage or outside", note: "Floors over a garage also need an air-tight, gas-proof ceiling below.",
+      layers: [L("filmOut"), L("ply"), F(286, 16, "b31"), L("subfloor"), L("filmFloor")] },
+    { id: "B1", type: "found", n: "8 in concrete, 2 in XPS, 2×4 wall at 24 in with R-14 batts", note: "The XPS against the concrete keeps the framing warm and dry.",
+      layers: [L("damp"), L("concrete", 203), L("xps", 51), F(89, 24, "b14"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "B2", type: "found", n: "8 in concrete, 1 in XPS, 2×6 wall at 24 in with R-22 batts", note: "",
+      layers: [L("damp"), L("concrete", 203), L("xps", 25), F(140, 24, "b22"), L("poly"), L("gyp"), L("filmWall")] },
+    { id: "B3", type: "found", n: "Insulated concrete forms (ICF), 2 1/2 in EPS each side", note: "Check the ICF maker's listed value; some are higher.",
+      layers: [L("eps", 64), L("concrete", 152), L("eps", 64), L("gyp"), L("filmWall")] },
+    { id: "S1", type: "slabAbove", n: "4 in concrete slab on 4 in XPS", note: "Insulation under the whole slab. Use XPS rated for the load.",
+      layers: [L("xps", 102), L("poly"), L("concrete", 102), L("filmFloor")] },
+    { id: "S2", type: "slabHeated", n: "Heated slab: 4 in concrete with in-floor heat on 4 in XPS", note: "Insulate the slab edge too (9.36.2.8).",
+      layers: [L("xps", 102), L("poly"), L("concrete", 102), L("filmFloor")] }
+  ];
+
+  /* ---------- state ---------- */
+  var state = { building: "house", zone: 0, hrv: "no", units: "imperial", pick: "W1", type: "wall", layers: null, pct: {} };
+  try { var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); if (saved && saved.layers) state = Object.assign(state, saved); } catch (e) {}
+  if (!state.layers) loadAssembly("W1");
+  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+  function loadAssembly(id) {
+    var a = LIBRARY.find(function (x) { return x.id === id; }); if (!a) return;
+    state.pick = id; state.type = a.type; state.layers = JSON.parse(JSON.stringify(a.layers)); state.pct = {};
+  }
+
+  /* ---------- helpers ---------- */
+  var r2 = function (n) { return (Math.round(n * 100) / 100).toFixed(2); };
+  var rValue = function (rsi) { return (rsi * R_PER_RSI).toFixed(1); };
+  var both = function (rsi) { return state.units === "metric" ? "RSI " + r2(rsi) + " (R-" + rValue(rsi) + ")" : "R-" + rValue(rsi) + " (RSI " + r2(rsi) + ")"; };
+  function inches(mm) {
+    var eighths = Math.round(mm / 25.4 * 8), whole = Math.floor(eighths / 8), rest = eighths % 8;
+    if (!rest) return whole + " in";
+    var f = rest % 4 === 0 ? rest / 4 + "/2" : rest % 2 === 0 ? rest / 2 + "/4" : rest + "/8";
+    return (whole ? whole + " " : "") + f + " in";
+  }
+  var showT = function (mm) { return state.units === "metric" ? Math.round(mm) + " mm" : inches(mm); };
+  function readT(text) {
+    var s = String(text).trim().toLowerCase(), n = parseFloat(s);
+    if (!isFinite(n)) return NaN;
+    var frac = s.match(/(\d+)\s+(\d+)\/(\d+)/) || s.match(/^(\d+)\/(\d+)/);
+    if (frac && frac.length === 4) n = +frac[1] + frac[2] / frac[3]; else if (frac && frac.length === 3) n = frac[1] / frac[2];
+    if (/mm/.test(s)) return n; if (/cm/.test(s)) return n * 10; if (/in|"/.test(s)) return n * 25.4;
+    return state.units === "metric" ? n : n * 25.4;
+  }
+  function framePct(layer) {
+    var key = state.layers.indexOf(layer);
+    if (state.pct[key] != null) return state.pct[key];
+    var t = TYPES[state.type]; return layer.spacing === 24 ? t.frame24 : t.frame;
+  }
+  function cavityRsi(layer) { var f = FILL[layer.fill]; return f.per ? f.per * layer.stud : f.rsi; }
+  function layerThickness(layer) {
+    var m = MAT[layer.m]; if (layer.m === "frame") return layer.stud;
+    return layer.t != null ? layer.t : m.t;
+  }
+  function layerRsi(layer) {
+    var m = MAT[layer.m];
+    if (layer.m === "frame") {
+      var share = framePct(layer) / 100, wood = layer.stud * WOOD_RSI_PER_MM, cav = cavityRsi(layer);
+      return 1 / (share / wood + (1 - share) / cav);
+    }
+    return m.per ? m.per * layerThickness(layer) : m.rsi;
+  }
+  function customTarget() {
+    var s = String(state.custom || "").trim().toLowerCase(), n = parseFloat(s.replace(/^[a-z\- ]+/, ""));
+    if (!isFinite(n) || n <= 0) return null;
+    return /rsi/.test(s) || (!/r/.test(s) && state.units === "metric") ? n : n / R_PER_RSI;
+  }
+  function target() {
+    if (customTarget()) return customTarget();
+    var table = state.building === "house" ? HOUSE : state.hrv === "yes" ? OTHER_HRV : OTHER_NO_HRV;
+    return table[state.type][state.zone];
+  }
+  function tableName() {
+    if (customTarget()) return "your own minimum";
+    var below = /^(found|slab)/.test(state.type);
+    if (state.building === "house") return below ? "Table 9.36.2.8.-C" : "Table 9.36.2.6.-C";
+    return (below ? "Table 9.36.2.8.-" : "Table 9.36.2.6.-") + (state.hrv === "yes" ? "B" : "A");
+  }
+  function totals() {
+    var total = 0, nominal = 0;
+    state.layers.forEach(function (l) {
+      total += layerRsi(l);
+      if (l.m === "frame") { if (FILL[l.fill].look !== "air") nominal += cavityRsi(l); }
+      else if (MAT[l.m].ins) nominal += layerRsi(l);
+    });
+    return { total: total, nominal: nominal };
+  }
+
+  /* ---------- the controls ---------- */
+  var GROUPS = [["wall", "Exterior walls"], ["attic", "Attic ceilings"], ["cathedral", "Cathedral and flat roofs"], ["floor", "Floors over unheated space"], ["found", "Foundation walls"], ["slab", "Slabs"]];
+  function fillPick() {
+    var html = "";
+    GROUPS.forEach(function (g) {
+      var items = LIBRARY.filter(function (a) { return g[0] === "cathedral" ? a.type === "cathedral" || a.type === "flat" : g[0] === "slab" ? /^slab/.test(a.type) : a.type === g[0]; });
+      html += '<optgroup label="' + g[1] + '">' + items.map(function (a) { return '<option value="' + a.id + '">' + a.id + " · " + a.n + "</option>"; }).join("") + "</optgroup>";
+    });
+    html += '<option value="custom">My own assembly (edited)</option>';
+    $("rs-pick").innerHTML = html;
+    $("rs-type").innerHTML = Object.keys(TYPES).map(function (k) { return '<option value="' + k + '">' + TYPES[k].n + "</option>"; }).join("");
+    $("rs-add").innerHTML = '<option value="">Choose…</option>' + Object.keys(MAT).map(function (k) { return '<option value="' + k + '">' + MAT[k].n + "</option>"; }).join("");
+  }
+
+  function drawLayers() {
+    var rows = state.layers.map(function (l, i) {
+      var m = MAT[l.m], rsi = layerRsi(l), thick = "", extra = "";
+      if (l.m === "frame") {
+        extra = '<div class="row" style="margin-top:6px">' +
+          '<select data-i="' + i + '" data-f="stud" style="width:auto">' + LUMBER.map(function (s) { return '<option value="' + s[0] + '"' + (s[0] === l.stud ? " selected" : "") + ">" + s[1] + "</option>"; }).join("") + "</select>" +
+          '<select data-i="' + i + '" data-f="spacing" style="width:auto"><option value="16"' + (l.spacing === 16 ? " selected" : "") + '>at 16 in</option><option value="24"' + (l.spacing === 24 ? " selected" : "") + ">at 24 in</option></select>" +
+          '<select data-i="' + i + '" data-f="fill" style="width:auto">' + Object.keys(FILL).map(function (k) { return '<option value="' + k + '"' + (k === l.fill ? " selected" : "") + ">" + FILL[k].n + "</option>"; }).join("") + "</select>" +
+          '<label class="row" style="gap:4px;font-size:12px;color:var(--sub)">wood <input data-i="' + i + '" data-f="pct" value="' + framePct(l) + '" style="width:52px">%</label></div>';
+        var fill = FILL[l.fill];
+        if (fill.t && fill.t > l.stud + 5) extra += '<div class="hint warn">This batt is thicker than the framing; squashed batts lose value. Use deeper framing or a thinner batt.</div>';
+        thick = showT(l.stud);
+      } else if (m.per) {
+        thick = '<input data-i="' + i + '" data-f="t" value="' + showT(layerThickness(l)) + '" style="width:90px">';
+      } else thick = m.t ? '<span style="color:var(--sub)">' + showT(m.t) + "</span>" : "";
+      return "<tr><td>" + (i + 1) + "</td><td><b>" + m.n + "</b>" + extra + "</td><td>" + thick + '</td><td class="num">' + (rsi === 0 ? '<span style="color:var(--sub)">none</span>' : state.units === "metric" ? "RSI " + r2(rsi) : "R-" + rValue(rsi)) + "</td>" +
+        '<td class="num" style="padding:2px"><button class="btn x" style="padding:2px 6px" type="button" data-i="' + i + '" data-move="-1" title="Move out">↑</button><button class="btn x" style="padding:2px 6px" type="button" data-i="' + i + '" data-move="1" title="Move in">↓</button><button class="btn x" style="padding:2px 6px" type="button" data-i="' + i + '" data-del="1" title="Remove">×</button></td></tr>';
+    });
+    $("rs-layers").innerHTML = "<thead><tr><th>#</th><th>Layer</th><th>Thickness</th><th class=\"num\">Value</th><th></th></tr></thead><tbody>" + rows.join("") + "</tbody>";
+  }
+
+  function drawResult() {
+    var t = totals(), need = target(), pass = t.total >= need - 0.005, a = LIBRARY.find(function (x) { return x.id === state.pick; });
+    var zone = ZONE_NAMES[state.zone], margin = t.total - need, html;
+    if (need === 0) {
+      html = '<div class="result pass"><p class="verdict">No minimum for this assembly in Zone ' + zone + "</p><p class=\"hint\">" + tableName() + " lets an unheated slab below the frost line stay uninsulated for this building type. Effective value: " + both(t.total) + ".</p></div>";
+    } else {
+      html = '<div class="result ' + (pass ? "pass" : "fail") + '"><p class="verdict">' + (pass ? "Meets" : "Does not meet") + (customTarget() ? " your minimum" : " the Zone " + zone + " minimum") + "</p>" +
+        '<div class="big">' + both(t.total) + ' <span style="font-size:13px;font-weight:400;color:var(--sub)">effective</span></div>' +
+        '<div class="gauge"><div class="bar"><div class="fill' + (pass ? "" : " over") + '" style="width:' + Math.min(100, t.total / (Math.max(t.total, need) * 1.15) * 100).toFixed(1) + '%"></div><div class="mark" style="left:' + (need / (Math.max(t.total, need) * 1.15) * 100).toFixed(1) + '%"></div></div>' +
+        '<div class="labels"><span>0</span><span>minimum ' + both(need) + "</span></div></div>" +
+        '<table class="facts"><tr><td>Required (' + tableName() + ")</td><td>" + both(need) + "</td></tr>" +
+        "<tr><td>" + (pass ? "Spare" : "Short by") + "</td><td>" + both(Math.abs(margin)) + "</td></tr>" +
+        "<tr><td>Insulation alone (the label value)</td><td>" + both(t.nominal) + "</td></tr>" +
+        "<tr><td>Lost to framing and gaps</td><td>" + Math.max(0, Math.round((1 - (t.total - otherLayers()) / Math.max(t.nominal, 0.01)) * 100)) + "% of the insulation</td></tr></table>";
+      if (!pass) html += '<ul class="notes"><li><b>To fix it:</b> ' + fixIdea() + "</li></ul>";
+      html += "</div>";
+    }
+    var framed = state.layers.filter(function (l) { return l.m === "frame"; })[0];
+    if (framed) {
+      var wood = framed.stud * WOOD_RSI_PER_MM, cav = cavityRsi(framed);
+      html += '<ul class="notes"><li><b>Framed layer:</b> through the wood ' + both(wood) + ", through the insulation " + both(cav) + ", wood is " + framePct(framed) + "% of the area, so the layer works out to " + both(layerRsi(framed)) + ".</li></ul>";
+    }
+    if (a && state.pick !== "custom" && a.note) html += '<ul class="notes"><li>' + a.note + "</li></ul>";
+    html += '<ul class="notes"><li>Values are typical design values (BCBC Table A-9.36.2.4.(1)-D and manufacturers). Use the listed value for the exact product on your drawings.</li></ul>';
+    $("rs-result").innerHTML = html;
+  }
+  function otherLayers() { return state.layers.reduce(function (s, l) { return s + (l.m !== "frame" && !MAT[l.m].ins ? layerRsi(l) : 0); }, 0); }
+  function fixIdea() {
+    var ty = state.type;
+    if (ty === "wall") return "add rigid insulation outside the sheathing (1 in of mineral wool adds about R-4), move studs to 24 in, or use a higher batt.";
+    if (ty === "attic") return "blow in more insulation above the ceiling; every extra inch of cellulose adds about R-3.6.";
+    if (ty === "found") return "add rigid insulation between the concrete and the framing, or use deeper framing with a higher batt.";
+    if (/^slab/.test(ty)) return "use thicker rigid insulation under the slab (each inch of XPS adds R-5).";
+    return "add rigid insulation over or under the framing, or use deeper framing with a higher batt.";
+  }
+
+  /* ---------- the section drawing ----------
+     Layers are stacked from outside (top) to inside (bottom); floors and slabs are flipped so the room is on top.
+     Thin layers are drawn a few pixels thick so they can still be seen; membranes are a single dashed line. */
+  function drawSection() {
+    var list = state.layers.map(function (l, i) { return { l: l, i: i, m: MAT[l.m], t: layerThickness(l) }; }).filter(function (x) { return x.m.look !== "none"; });
+    if (TYPES[state.type].insideUp) list.reverse();
+    var totalT = list.reduce(function (s, x) { return s + x.t; }, 0) || 1, k = 300 / totalT;
+    var X0 = 20, W = 210, y = 34, svg = "", defs = "", labels = [];
+    var framed = state.layers.find(function (l) { return l.m === "frame"; });
+    var spacingMm = framed ? framed.spacing * 25.4 : 406, kx = W / (2.4 * spacingMm);
+    defs += '<pattern id="rs-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#555" stroke-width="0.8"/></pattern>' +
+      '<pattern id="rs-cross" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V7M0 0H7" stroke="#666" stroke-width="0.7" fill="none"/></pattern>' +
+      '<pattern id="rs-conc" width="18" height="16" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="0.9" fill="#555"/><circle cx="12" cy="10" r="0.7" fill="#555"/><circle cx="7" cy="13" r="0.6" fill="#555"/><path d="M13 2l3 1.5-2.5 2z" fill="none" stroke="#555" stroke-width="0.6"/><path d="M2 9l2.5 1-2 2z" fill="none" stroke="#555" stroke-width="0.6"/></pattern>' +
+      '<pattern id="rs-blown" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.8" fill="#777"/><circle cx="6.5" cy="4" r="0.6" fill="#777"/><circle cx="3.5" cy="7" r="0.7" fill="#777"/><circle cx="8" cy="8" r="0.5" fill="#777"/></pattern>' +
+      '<pattern id="rs-foam" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.4" fill="none" stroke="#777" stroke-width="0.6"/></pattern>' +
+      '<pattern id="rs-gyp" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#eeeeec"/><circle cx="3" cy="3" r="0.5" fill="#999"/><circle cx="8" cy="7" r="0.5" fill="#999"/></pattern>' +
+      '<pattern id="rs-siding" width="12" height="6" patternUnits="userSpaceOnUse"><rect width="12" height="6" fill="#e2e2df"/><line x1="0" y1="5.5" x2="12" y2="5.5" stroke="#777" stroke-width="0.6"/></pattern>' +
+      '<pattern id="rs-brick" width="20" height="10" patternUnits="userSpaceOnUse"><rect width="20" height="10" fill="#dcdcd8"/><path d="M0 0H20M0 5H20M5 0V5M15 5V10" stroke="#777" stroke-width="0.6"/></pattern>' +
+      '<pattern id="rs-stucco" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#e6e6e3"/><circle cx="2" cy="2" r="0.6" fill="#888"/><circle cx="5" cy="4.5" r="0.4" fill="#888"/></pattern>' +
+      '<pattern id="rs-shingle" width="16" height="6" patternUnits="userSpaceOnUse"><rect width="16" height="6" fill="#d0d0cc"/><path d="M0 3H16M8 0V3M0 3V6" stroke="#666" stroke-width="0.6"/></pattern>';
+    /* batt symbol: a run of loops sized to the layer height */
+    function battPath(x1, x2, top, h) {
+      /* a smooth wave touching the top and bottom of the layer: the usual drawing symbol for batts */
+      var q = Math.max(3, Math.min(h, 60) * 0.22), lo = top + h - 1, hi = top + 1, x = x1 - q, d = "M" + x.toFixed(1) + " " + lo.toFixed(1), up = true;
+      while (x < x2 + q) {
+        var a = up ? lo : hi, b = up ? hi : lo;
+        d += " C" + (x + q).toFixed(1) + " " + a.toFixed(1) + " " + (x + q).toFixed(1) + " " + b.toFixed(1) + " " + (x + 2 * q).toFixed(1) + " " + b.toFixed(1);
+        x += 2 * q; up = !up;
+      }
+      return '<path d="' + d + '" fill="none" stroke="#666" stroke-width="0.8"/>';
+    }
+    function fillFor(look, x1, x2, top, h, clip) {
+      var w = x2 - x1, r = '<rect x="' + x1.toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" ';
+      if (look === "batt") return r + 'fill="#fff"/><g clip-path="url(#' + clip + ')">' + battPath(x1, x2, top, h) + "</g>";
+      var fills = { board: "url(#rs-cross)", blown: "url(#rs-blown)", foam: "url(#rs-foam)", wood: "url(#rs-hatch)", concrete: "url(#rs-conc)", gyp: "url(#rs-gyp)", siding: "url(#rs-siding)", brick: "url(#rs-brick)", stucco: "url(#rs-stucco)", shingle: "url(#rs-shingle)", air: "#fff", vent: "#fff" };
+      return r + 'fill="' + (fills[look] || "#fff") + '"/>' + (look === "board" ? r + 'fill="#fff" fill-opacity="0.35"/>' : "");
+    }
+    list.forEach(function (x, n) {
+      var look = x.m.look, h = x.t ? Math.max(5, x.t * k) : 0, clip = "rs-clip" + n;
+      if (look === "line") {
+        svg += '<line x1="' + X0 + '" y1="' + y.toFixed(1) + '" x2="' + (X0 + W) + '" y2="' + y.toFixed(1) + '" stroke="#151515" stroke-width="1" stroke-dasharray="6 3"/>';
+        labels.push({ y: y, name: x.m.n, rsi: layerRsi(x.l) });
+        return;
+      }
+      defs += '<clipPath id="' + clip + '"><rect x="' + X0 + '" y="' + y.toFixed(1) + '" width="' + W + '" height="' + h.toFixed(1) + '"/></clipPath>';
+      if (look === "frame") {
+        var fl = FILL[x.l.fill], studW = Math.max(4, 38 * kx);
+        svg += fillFor(fl.look, X0, X0 + W, y, h, clip);
+        for (var c = spacingMm * 0.3; c * kx < W; c += spacingMm) {
+          var sx = X0 + c * kx - studW / 2;
+          svg += '<rect x="' + sx.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + studW.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="#fff" stroke="#151515" stroke-width="1"/>' +
+            '<path d="M' + sx.toFixed(1) + " " + y.toFixed(1) + "L" + (sx + studW).toFixed(1) + " " + (y + h).toFixed(1) + "M" + (sx + studW).toFixed(1) + " " + y.toFixed(1) + "L" + sx.toFixed(1) + " " + (y + h).toFixed(1) + '" stroke="#555" stroke-width="0.6"/>';
+        }
+        svg += '<rect x="' + X0 + '" y="' + y.toFixed(1) + '" width="' + W + '" height="' + h.toFixed(1) + '" fill="none" stroke="#151515" stroke-width="1.2"/>';
+        var lumber = (LUMBER.find(function (s) { return s[0] === x.l.stud; }) || [0, ""])[1];
+        labels.push({ y: y + h / 2, name: lumber + " at " + x.l.spacing + " in with " + fl.n.replace(/, fills the depth/, ""), rsi: layerRsi(x.l) });
+      } else {
+        svg += fillFor(look, X0, X0 + W, y, h, clip) + '<rect x="' + X0 + '" y="' + y.toFixed(1) + '" width="' + W + '" height="' + h.toFixed(1) + '" fill="none" stroke="#151515" stroke-width="' + (look === "air" || look === "vent" ? 0.6 : 1) + '"/>';
+        if (look === "vent" && h > 14) svg += '<text x="' + (X0 + W / 2) + '" y="' + (y + h / 2 + 3).toFixed(1) + '" font-size="9" text-anchor="middle" fill="#888">vented space</text>';
+        labels.push({ y: y + h / 2, name: x.m.n + (x.m.per ? ", " + showT(x.t) : ""), rsi: layerRsi(x.l) });
+      }
+      y += h;
+    });
+    var bottom = y, insideUp = TYPES[state.type].insideUp;
+    /* spread the labels so none overlap, then draw leaders */
+    var gap = 15, minY = 30;
+    labels.forEach(function (lb, n) { lb.ly = Math.max(lb.y, n ? labels[n - 1].ly + gap : minY); });
+    var over = labels.length ? labels[labels.length - 1].ly - Math.max(bottom, minY + gap * (labels.length - 1)) : 0;
+    if (over > 0) for (var n = labels.length - 1; n >= 0; n--) { labels[n].ly -= over; if (n && labels[n - 1].ly > labels[n].ly - gap) over = labels[n - 1].ly - (labels[n].ly - gap); else break; }
+    labels.forEach(function (lb) {
+      svg += '<path d="M' + (X0 + W - 6) + " " + lb.y.toFixed(1) + "L" + (X0 + W + 18) + " " + lb.y.toFixed(1) + "L" + (X0 + W + 30) + " " + lb.ly.toFixed(1) + "H" + (X0 + W + 36) + '" fill="none" stroke="#151515" stroke-width="0.6"/><circle cx="' + (X0 + W - 6) + '" cy="' + lb.y.toFixed(1) + '" r="1.6" fill="#151515"/>';
+      svg += '<text x="' + (X0 + W + 40) + '" y="' + (lb.ly + 3.5).toFixed(1) + '" font-size="10.5" fill="#151515">' + lb.name + ' <tspan fill="#777">' + (lb.rsi === 0 ? "" : state.units === "metric" ? "RSI " + r2(lb.rsi) : "R-" + rValue(lb.rsi)) + "</tspan></text>";
+    });
+    var tags = insideUp ? ["INSIDE", "OUTSIDE / GROUND"] : ["OUTSIDE", "INSIDE"];
+    svg = '<rect width="560" height="' + (bottom + 50).toFixed(0) + '" fill="#fff"/>' +
+      '<text x="' + X0 + '" y="24" font-size="10" font-weight="700" letter-spacing="2" fill="#151515">' + tags[0] + "</text>" + svg +
+      '<text x="' + X0 + '" y="' + (bottom + 18).toFixed(0) + '" font-size="10" font-weight="700" letter-spacing="2" fill="#151515">' + tags[1] + "</text>" +
+      '<text x="' + X0 + '" y="' + (bottom + 36).toFixed(0) + '" font-size="9.5" fill="#777">' + (state.type === "wall" || state.type === "found" ? "Section through the wall seen from above, not to scale" : "Section, not to scale") + "</text>";
+    var lastLabel = labels.length ? labels[labels.length - 1].ly : 0;
+    $("rs-drawing").innerHTML = '<div class="eyebrow" style="padding:10px 12px 0">Assembly section · ' + (state.pick === "custom" ? "my own" : state.pick) + '</div><svg viewBox="0 0 560 ' + (Math.max(bottom, lastLabel) + 50).toFixed(0) + '" font-family="inherit"><defs>' + defs + "</defs>" + svg + "</svg>";
+  }
+
+  function render() {
+    $("rs-building").value = state.building; $("rs-zone").value = state.zone; $("rs-hrv").value = state.hrv; $("rs-units").value = state.units;
+    $("rs-pick").value = state.pick; $("rs-type").value = state.type;
+    $("rs-hrv-wrap").hidden = state.building === "house";
+    var a = LIBRARY.find(function (x) { return x.id === state.pick; });
+    $("rs-note").textContent = a ? a.n + ". Change any layer below; the dropdown then shows “My own assembly”." : "Your own assembly. Pick a pre-checked one above to start again.";
+    drawLayers(); drawSection(); drawResult(); save();
+  }
+  function edited() { state.pick = "custom"; }
+
+  /* ---------- events ---------- */
+  fillPick();
+  $("rs-building").addEventListener("change", function () { state.building = this.value; render(); });
+  $("rs-zone").addEventListener("change", function () { state.zone = +this.value; render(); });
+  $("rs-hrv").addEventListener("change", function () { state.hrv = this.value; render(); });
+  $("rs-units").addEventListener("change", function () { state.units = this.value; render(); });
+  $("rs-custom").addEventListener("change", function () { state.custom = this.value; render(); });
+  $("rs-custom").value = state.custom || "";
+  $("rs-pick").addEventListener("change", function () { if (this.value !== "custom") loadAssembly(this.value); render(); });
+  $("rs-type").addEventListener("change", function () { state.type = this.value; state.pct = {}; edited(); render(); });
+  $("rs-add").addEventListener("change", function () {
+    var k = this.value; if (!k) return;
+    var layer = k === "frame" ? F(140, 16, "b22") : MAT[k].per ? L(k, MAT[k].t) : L(k);
+    /* new layers go just inside the outermost finish: before the last two layers (drywall and inside film) */
+    state.layers.splice(Math.max(0, state.layers.length - 2), 0, layer); this.value = ""; edited(); render();
+  });
+  $("rs-layers").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    var i = +b.dataset.i;
+    if (b.dataset.del) { state.layers.splice(i, 1); state.pct = {}; }
+    else { var j = i + +b.dataset.move; if (j < 0 || j >= state.layers.length) return; var t = state.layers[i]; state.layers[i] = state.layers[j]; state.layers[j] = t; state.pct = {}; }
+    edited(); render();
+  });
+  $("rs-layers").addEventListener("change", function (e) {
+    var el = e.target, i = +el.dataset.i, l = state.layers[i]; if (!l || !el.dataset.f) return;
+    var f = el.dataset.f;
+    if (f === "t") { var mm = readT(el.value); if (isFinite(mm) && mm >= 0) l.t = mm; }
+    else if (f === "stud" || f === "spacing") { l[f] = +el.value; if (f === "spacing") delete state.pct[i]; }
+    else if (f === "fill") l.fill = el.value;
+    else if (f === "pct") { var p = parseFloat(el.value); if (isFinite(p) && p >= 0 && p < 100) state.pct[i] = p; }
+    edited(); render();
+  });
+  $("rs-print").addEventListener("click", function () { window.print(); });
+  render();
+})();
+</script>
+
+<!-- =====================================================================
+  PROPERTY LOOKUP TAB  (an address in, every link you need for the project out)
+  ===================================================================== -->
+<div id="pl-panel" class="tool" hidden>
+  <div class="tool-head">
+    <div>
+      <div class="eyebrow">MC Designs · Research</div>
+      <h2>Property lookup</h2>
+      <p class="lead">Type a BC address. The tool finds the municipality and lays out the links you need for the project: building code, the city's zoning bylaw, permits and maps, title and assessment, farmland, flood, seismic and radon, and utilities.</p>
+    </div>
+    <div class="row no-print"><button class="btn" id="pl-print" type="button">Print</button></div>
+  </div>
+  <div class="card">
+    <h3>Address</h3>
+    <form id="pl-form" class="row" autocomplete="off">
+      <input id="pl-address" placeholder="e.g. 32315 South Fraser Way, Abbotsford" style="flex:1;min-width:240px">
+      <button class="btn" type="submit">Look up</button>
+    </form>
+    <div id="pl-matches" class="hint"></div>
+    <div class="grid" style="margin-top:10px">
+      <label class="f">Municipality <small>found from the address, or pick it yourself</small><select id="pl-city"></select></label>
+      <label class="f">Project <select id="pl-project">
+        <option value="house" selected>New house</option>
+        <option value="suite">Secondary suite or garden suite</option>
+        <option value="addition">Addition or renovation</option>
+        <option value="multi">Small multi-unit (duplex to fourplex)</option>
+      </select></label>
+    </div>
+  </div>
+  <div id="pl-out"></div>
+</div>
+
+<script>
+/* =====================================================================
+   PROPERTY LOOKUP
+   1. The address goes to the free BC Address Geocoder (geocoder.api.gov.bc.ca, run by the Province).
+      It returns the full address, the municipality and the map location.
+   2. The municipality picks the city's website. Pages inside city websites move often, so the city links are
+      searches limited to the city's own website: they keep working when the city reorganizes its pages.
+   3. Provincial links (codes, title, assessment, farmland and so on) go straight to the official sites.
+   ===================================================================== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  MCTabs.add("Property lookup", "pl", $("pl-panel"), "#property", null);
+  var SAVE_KEY = "mcPropertyV1";
+
+  /* municipality: [name, website, climate zone index for the R-value tab (0 = Zone 4 … 5 = Zone 8) or null if not sure] */
+  var CITIES = [
+    ["Abbotsford", "abbotsford.ca", 0], ["Burnaby", "burnaby.ca", 0], ["Chilliwack", "chilliwack.com", 0], ["Coquitlam", "coquitlam.ca", 0],
+    ["Delta", "delta.ca", 0], ["Harrison Hot Springs", "harrisonhotsprings.ca", null], ["Hope", "hope.ca", null], ["Kent", "kentbc.ca", null],
+    ["Langley (City)", "langleycity.ca", 0], ["Langley (Township)", "tol.ca", 0], ["Maple Ridge", "mapleridge.ca", 0], ["Mission", "mission.ca", 0],
+    ["New Westminster", "newwestcity.ca", 0], ["North Vancouver (City)", "cnv.org", 0], ["North Vancouver (District)", "dnv.org", 0],
+    ["Pitt Meadows", "pittmeadows.ca", 0], ["Port Coquitlam", "portcoquitlam.ca", 0], ["Port Moody", "portmoody.ca", 0], ["Richmond", "richmond.ca", 0],
+    ["Surrey", "surrey.ca", 0], ["Vancouver", "vancouver.ca", 0], ["West Vancouver", "westvancouver.ca", 0], ["White Rock", "whiterockcity.ca", 0],
+    ["Squamish", "squamish.ca", 0], ["Whistler", "whistler.ca", 2], ["Sechelt", "sechelt.ca", 0], ["Gibsons", "gibsons.ca", 0],
+    ["Victoria", "victoria.ca", 0], ["Saanich", "saanich.ca", 0], ["Esquimalt", "esquimalt.ca", 0], ["Oak Bay", "oakbay.ca", 0],
+    ["Langford", "langford.ca", 0], ["Colwood", "colwood.ca", 0], ["Sooke", "sooke.ca", 0], ["Central Saanich", "centralsaanich.ca", 0], ["Sidney", "sidney.ca", 0],
+    ["Duncan", "duncan.ca", 0], ["North Cowichan", "northcowichan.ca", 0], ["Nanaimo", "nanaimo.ca", 0], ["Parksville", "parksville.ca", 0],
+    ["Qualicum Beach", "qualicumbeach.com", 0], ["Courtenay", "courtenay.ca", null], ["Comox", "comox.ca", null], ["Campbell River", "campbellriver.ca", null],
+    ["Powell River", "powellriver.ca", null], ["Kelowna", "kelowna.ca", 1], ["West Kelowna", "westkelownacity.ca", 1], ["Lake Country", "lakecountry.bc.ca", 1],
+    ["Vernon", "vernon.ca", 1], ["Penticton", "penticton.ca", 1], ["Summerland", "summerland.ca", 1], ["Kamloops", "kamloops.ca", 1],
+    ["Salmon Arm", "salmonarm.ca", null], ["Nelson", "nelson.ca", 1], ["Cranbrook", "cranbrook.ca", 2], ["Prince George", "princegeorge.ca", 2],
+    ["Terrace", "terrace.ca", 2], ["Fort St. John", "fortstjohn.ca", 3]
+  ];
+  var REGIONAL = [["Fraser Valley Regional District", "fvrd.ca"], ["Metro Vancouver", "metrovancouver.org"], ["Capital Regional District", "crd.ca"],
+    ["Regional District of Nanaimo", "rdn.bc.ca"], ["Regional District of Central Okanagan", "rdco.com"], ["Thompson-Nicola Regional District", "tnrd.ca"]];
+
+  var found = null, state = { address: "", city: "", project: "house" };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(SAVE_KEY) || "{}")); } catch (e) {}
+  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  $("pl-city").innerHTML = '<option value="">Choose a municipality…</option>' + CITIES.map(function (c) { return '<option>' + c[0] + "</option>"; }).join("") +
+    '<optgroup label="Rural areas (regional districts)">' + REGIONAL.map(function (r) { return "<option>" + r[0] + "</option>"; }).join("") + "</optgroup>";
+
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var google = function (q) { return "https://www.google.com/search?q=" + encodeURIComponent(q); };
+  var siteSearch = function (domain, words) { return google("site:" + domain + " " + words); };
+  function link(href, title, note) { return '<li><a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(title) + "</a>" + (note ? ' <span style="color:var(--sub)">· ' + esc(note) + "</span>" : "") + "</li>"; }
+  function group(title, items) { return '<div class="card"><h3>' + esc(title) + '</h3><ul class="notes" style="font-size:14px;color:var(--text)">' + items.join("") + "</ul></div>"; }
+
+  /* match the geocoder's locality to our list ("North Vancouver" and "Langley" are two municipalities each) */
+  function matchCity(locality) {
+    if (!locality) return "";
+    var exact = CITIES.find(function (c) { return c[0].toLowerCase() === locality.toLowerCase(); });
+    if (exact) return exact[0];
+    var partial = CITIES.find(function (c) { return c[0].toLowerCase().indexOf(locality.toLowerCase() + " (") === 0; });
+    return partial ? partial[0] : "";
+  }
+
+  function render() {
+    var cityName = $("pl-city").value, city = CITIES.find(function (c) { return c[0] === cityName; }) || REGIONAL.find(function (r) { return r[0] === cityName; });
+    var project = $("pl-project").value, place = found ? found.locality : cityName.replace(/ \(.*\)/, "");
+    state.city = cityName; state.project = project; save();
+    if (!city && !found) { $("pl-out").innerHTML = ""; return; }
+    var html = "";
+
+    /* --- this property --- */
+    if (found) {
+      var ll = found.lat.toFixed(6) + "," + found.lon.toFixed(6);
+      html += '<div class="card"><h3>This property</h3><div class="big" style="font-size:18px">' + esc(found.address) + "</div>" +
+        '<p class="hint">Location ' + found.lat.toFixed(5) + ", " + found.lon.toFixed(5) + (found.precision ? " · matched to the " + esc(found.precision.toLowerCase().replace(/_/g, " ")) : "") + (found.score < 90 ? ' · <span class="warn">not an exact match, check the address</span>' : "") + "</p>" +
+        '<ul class="notes" style="font-size:14px;color:var(--text)">' +
+        link("https://www.google.com/maps/search/?api=1&query=" + ll, "Google Maps", "satellite view shows trees, slopes and neighbours") +
+        link("https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + ll, "Street View", "the street frontage, driveway and services") +
+        link("https://maps.gov.bc.ca/ess/hm/imap4m/", "iMapBC", "Province's map: parcels, streams, hazard layers") +
+        "</ul></div>";
+    }
+
+    /* --- the city --- */
+    if (city) {
+      var d = city[1], n = city[0];
+      var cityItems = [
+        link("https://www." + d, n + " website", d),
+        link(siteSearch(d, "zoning bylaw"), "Zoning bylaw", "setbacks, height, lot coverage, parking"),
+        link(siteSearch(d, "zoning map property"), "Zoning map and property information", "find this lot's zone"),
+        link(siteSearch(d, "official community plan"), "Official Community Plan (OCP)", "land use designation and growth policy"),
+        link(siteSearch(d, "development permit area guidelines"), "Development permit areas", "form and character, hazards, streams"),
+        link(siteSearch(d, "building permit application requirements"), "Building permit requirements and forms"),
+        link(siteSearch(d, "building permit fees development cost charges"), "Permit fees and development cost charges"),
+        link(siteSearch(d, "tree bylaw permit"), "Tree protection bylaw"),
+        link(siteSearch(d, "subdivision development servicing bylaw"), "Servicing and subdivision bylaw", "driveways, water, sewer, storm")
+      ];
+      if (project === "suite" || project === "multi") cityItems.splice(4, 0, link(siteSearch(d, "small-scale multi-unit housing secondary suite"), "Suites and small-scale multi-unit housing", "BC's 2024 housing rules allow more units on most lots"));
+      if (project === "addition") cityItems.splice(4, 0, link(siteSearch(d, "renovation addition building permit"), "Renovation and addition permits"));
+      html += group(n + " · city rules", cityItems);
+    } else if (found) {
+      html += group(place + " · local rules", [
+        '<li>This address is outside the municipalities in the list, so it is probably in a rural area run by a regional district. Pick the regional district above, or search:</li>',
+        link(google(place + " BC zoning bylaw"), "Zoning bylaw for " + place),
+        link(google(place + " BC building permit"), "Building permits for " + place),
+        link(google(place + " BC official community plan"), "Official Community Plan for " + place)
+      ]);
+    }
+
+    /* --- codes --- */
+    var zone = city && city[2] != null ? city[2] : null, ZN = ["4", "5", "6", "7A", "7B", "8"];
+    html += group("Building code and energy", [
+      link("https://www.bccodes.ca/", "BC Building Code 2024", "free to read online; Part 9 covers houses"),
+      link("https://www2.gov.bc.ca/gov/content/industry/construction-industry/building-codes-standards/bc-codes", "BC codes: bulletins, interpretations and changes"),
+      link("https://energystepcode.ca/", "BC Energy Step Code", "check which step " + (city ? city[0] : "the city") + " requires"),
+      link(google((city ? city[0] : place) + " BC energy step code zero carbon step code requirement"), "Step Code and Zero Carbon Step Code level for this city"),
+      link("https://www.technicalsafetybc.ca/", "Technical Safety BC", "gas and electrical permits"),
+      link("https://www.bchousing.org/licensing-consumer-services", "BC Housing licensing and home warranty", "licensed builder or owner-builder authorization for a new home")
+    ].concat(zone != null ? ['<li>Climate zone: <b>Zone ' + ZN[zone] + "</b> (BCBC Table C-2). " + '<button class="btn x" type="button" id="pl-zone" data-zone="' + zone + '">Use in the R-value calculator</button></li>'] :
+      ['<li>Climate zone: look up ' + esc(city ? city[0] : place || "the town") + " in BCBC Table C-2 (degree-days decide the zone).</li>"]));
+
+    /* --- title, land and hazards --- */
+    var where = found ? found.address : place;
+    html += group("Title, land and hazards", [
+      link("https://www.bcassessment.ca/", "BC Assessment", "lot size, year built, assessed value; search the address"),
+      link("https://ltsa.ca/", "Land Title and Survey Authority (LTSA)", "title search for covenants, easements and rights-of-way"),
+      link("https://www.alc.gov.bc.ca/", "Agricultural Land Reserve (ALC)", "farmland rules limit house size and siting"),
+      link(google(place + " BC floodplain map"), "Floodplain mapping", "flood construction level may set the lowest floor"),
+      link(google("site:gov.bc.ca riparian areas protection regulation"), "Streams and riparian setbacks", "applies near creeks, ditches and wetlands"),
+      link(google("NRCan seismic hazard values calculator " + (found ? found.lat.toFixed(3) + " " + found.lon.toFixed(3) : place)), "Seismic hazard values (NRCan)", found ? "enter " + found.lat.toFixed(3) + ", " + found.lon.toFixed(3) : ""),
+      link(google(place + " BC radon"), "Radon", "BC Building Code requires a radon rough-in in new homes"),
+      link(google(where + " geotechnical slope hazard"), "Slope and soil hazards", "steep or fill sites may need a geotechnical report")
+    ]);
+
+    /* --- utilities --- */
+    html += group("Utilities and services", [
+      link("https://www.bc1c.ca/", "BC One Call", "locate buried lines before digging"),
+      link("https://www.bchydro.com/", "BC Hydro", "new service connection or upgrade"),
+      link("https://www.fortisbc.com/", "FortisBC", "natural gas connection"),
+      link(city ? siteSearch(city[1], "water sewer connection") : google(place + " water sewer connection"), "Water and sewer connections", "or well and septic in rural areas")
+    ]);
+
+    /* --- what goes in the permit package --- */
+    var pack = ["Site survey or plot plan with setbacks, lot coverage and building height", "Architectural drawings: floor plans, elevations, sections, roof plan", "Energy Step Code report (energy advisor) or the 9.36 prescriptive checklist"];
+    if (project === "house" || project === "multi") pack.push("Structural design for beams, lintels and any engineered items; truss layout", "Spatial separation and window area check for walls near property lines", "Home warranty proof or owner-builder authorization (BC Housing)");
+    if (project === "suite") pack.push("Fire separation between units, smoke and CO alarms interconnected", "Separate entrance and egress windows for suite bedrooms", "Parking and the city's suite registration");
+    if (project === "addition") pack.push("Existing building drawings and photos", "Structural review of where the addition connects", "Asbestos survey for older buildings before demolition (WorkSafeBC)");
+    if (project === "multi") pack.push("Fire separations, sound separations and sprinkler questions for the number of units", "Servicing review (water, sewer, storm capacity)");
+    pack.push("Stormwater, driveway and tree plans if the city asks for them");
+    html += '<div class="card"><h3>Usually needed for the permit</h3><ul class="notes" style="font-size:14px;color:var(--text)">' + pack.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") +
+      '</ul><p class="hint">Every city sets its own list. Confirm with the building department before you submit.</p></div>';
+    $("pl-out").innerHTML = html;
+    var zb = $("pl-zone"); if (zb) zb.addEventListener("click", function () { var z = $("rs-zone"); if (z) { z.value = zb.dataset.zone; z.dispatchEvent(new Event("change")); MCTabs.show("rs"); } });
+  }
+
+  /* ---------- look up the address with the BC Address Geocoder ---------- */
+  function lookup(text) {
+    state.address = text; save();
+    $("pl-matches").textContent = "Looking up…";
+    var url = "https://geocoder.api.gov.bc.ca/addresses.json?outputSRS=4326&maxResults=5&addressString=" + encodeURIComponent(text);
+    fetch(url).then(function (r) { if (!r.ok) throw new Error("status " + r.status); return r.json(); }).then(function (data) {
+      var list = (data.features || []).filter(function (f) { return f.properties && f.properties.score > 50 && f.properties.localityName; });
+      if (!list.length) { found = null; $("pl-matches").innerHTML = '<span class="warn">No BC address found.</span> Check the spelling, or pick the municipality below.'; render(); return; }
+      function use(f) {
+        var p = f.properties;
+        found = { address: p.fullAddress, locality: p.localityName, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], score: p.score, precision: p.matchPrecision };
+        var c = matchCity(p.localityName); $("pl-city").value = c || "";
+        render();
+      }
+      use(list[0]);
+      if (list.length > 1 && list[0].properties.score < 95) {
+        $("pl-matches").innerHTML = "Did you mean: " + list.slice(0, 4).map(function (f, i) { return '<a href="#" data-pick="' + i + '">' + esc(f.properties.fullAddress) + "</a>"; }).join(" · ");
+        $("pl-matches").querySelectorAll("[data-pick]").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); use(list[+a.dataset.pick]); }); });
+      } else $("pl-matches").textContent = "";
+    }).catch(function () {
+      found = null;
+      $("pl-matches").innerHTML = '<span class="warn">Could not reach the BC address service.</span> Pick the municipality below; the links still work.';
+      var guess = CITIES.find(function (c) { return text.toLowerCase().indexOf(c[0].replace(/ \(.*\)/, "").toLowerCase()) > -1; });
+      if (guess) $("pl-city").value = guess[0];
+      render();
+    });
+  }
+
+  $("pl-form").addEventListener("submit", function (e) { e.preventDefault(); var t = $("pl-address").value.trim(); if (t) lookup(t); });
+  $("pl-city").addEventListener("change", function () { if (found && matchCity(found.locality) !== this.value) found = null; render(); });
+  $("pl-project").addEventListener("change", render);
+  $("pl-print").addEventListener("click", function () { window.print(); });
+  $("pl-address").value = state.address || ""; $("pl-project").value = state.project || "house"; $("pl-city").value = state.city || "";
+  render();
+})();
+</script>
+
+<script>MCTabs.showFromAddress();</script>
 </body>
 </html>
