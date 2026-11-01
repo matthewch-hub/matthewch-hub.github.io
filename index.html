@@ -1141,7 +1141,7 @@ function planNotes(plan) {
   if (plan.miss.length) n.push('No door link found for: ' + escapeText(plan.miss.slice(0, 4).join(', ')) + '. Move those rooms next to a neighbour in the Refine tab.');
   if (plan.failed.length) n.push('Below the room standards: ' + escapeText(plan.failed.slice(0, 5).join(', ')) + '. Adjust them in the Refine tab.');
   if (plan.opts.open) n.push('Open plan: living, dining and kitchen are one space; the thin dashed lines only mark where each area ends.');
-  n.push('Windows are labelled width × height in inches. Bedroom windows are sized for egress; confirm sill height and opening area with the local code.' + (plan.floors.some(f => f.kind === 'base') ? ' Basement bedroom windows need window wells.' : ''));
+  n.push('Windows and doors are tagged width × height in inches. Bedroom windows are sized for egress; confirm sill height and opening area with the local code.' + (plan.floors.some(f => f.kind === 'base') ? ' Basement bedroom windows need window wells.' : ''));
   if (plan.settings.adaptable) n.push('Adaptable mode: 36 in doors, a ' + Math.round(plan.opts.hallW * 12) + ' in hall, and 5 ft wide bathrooms for a 60 in turning circle.');
   n.push('Cost is a rough estimate from floor area, exterior wall length, corners and plumbing groups. It is not a quote.');
   return n;
@@ -1155,7 +1155,7 @@ function buildPlanOption(P, s, cfg, goal) {
     letter: '', goal: goal.id, cfg: cfg, settings: s, floors: geo.floors, desc: geo.desc, dropped: geo.dropped,
     opts: { style: s.style, open: goal.open ? true : STYLES[s.style].open, closet: s.closetSec === 'walkin' ? 'none' : s.closetSec,
       doorW: adapt ? 3 : 2.67, hallW: adapt ? Math.max(4, goal.hallW) : goal.hallW, adaptable: adapt, snap: 0.5,
-      showCloset: true, showDims: true, showFurn: true, showWin: true },
+      showCloset: true, showDims: true, showFurn: true, showWin: true, showDoorTags: true },
     hist: [], hi: -1
   };
   analyze(plan);
@@ -1495,6 +1495,14 @@ function doorDrawing(d, X, Y, s) {
   return h;
 }
 
+/* A door's size in inches, width × height, as written on a door tag. Interior and entry doors are
+   80 in (6 ft 8 in) tall; overhead garage doors are 84 in (7 ft). Plain openings get no tag. */
+function doorSize(d) {
+  if (d.kind === 'opening') return '';
+  const wide = Math.round(Math.hypot(d.x2 - d.x1, d.y2 - d.y1) * 12 / 2) * 2;
+  return wide + '×' + (d.kind === 'garage' ? 84 : 80);
+}
+
 /* One floor as an SVG drawing. title = { num, name } adds dimension strings, a view title and a scale bar. */
 function floorDrawing(f, plan, vb, edit, sel, title) {
   const v = drawingScale(vb, !!title), s = v.s, X = x => v.ox + (x - vb.minX) * s, Y = y => v.oy + (y - vb.minY) * s, id = ++drawingCount, o = plan.opts;
@@ -1551,8 +1559,14 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
     const out = { t: [0, -1], b: [0, 1], l: [-1, 0], r: [1, 0] }[w.side], mx = (ax + bx) / 2 + out[0] * (half + 7), my = (ay + by) / 2 + out[1] * (half + 7);
     h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + (vert ? ' transform="rotate(-90 ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + w.wi + '×' + w.hi + '</text>';
   });
-  /* 6. doors */
+  /* 6. doors, each tagged width × height in inches like the windows. The tag sits on the side the door
+        does not swing into (outside, for exterior doors), so it stays clear of the swing arc. */
   f.doors.forEach(d => { h += doorDrawing(d, X, Y, s); });
+  if (o.showDoorTags !== false) f.doors.forEach(d => {
+    const size = doorSize(d); if (!size) return;
+    const vert = isClose(d.x1, d.x2), mx = (X(d.x1) + X(d.x2)) / 2 - d.nx * (+ew / 2 + 7), my = (Y(d.y1) + Y(d.y2)) / 2 - d.ny * (+ew / 2 + 7);
+    h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '" paint-order="stroke" stroke="#fff" stroke-width="2.5"' + (vert ? ' transform="rotate(-90 ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + size + '</text>';
+  });
   /* 7. rooms that break a standard get a thin red dashed outline */
   f.rooms.forEach(r => { if (r.bad) h += R({ x: r.x + 0.5, y: r.y + 0.5, w: Math.max(0.5, r.w - 1), h: Math.max(0.5, r.h - 1) }, 'fill="none" stroke="#c0392b" stroke-width="0.9" stroke-dasharray="4 3"'); });
   /* 8. room tags: name in capitals, size underneath */
@@ -1670,7 +1684,8 @@ function refineHtml(plan) {
     + '<label><input type="checkbox" id="rfOpen"' + (o.open ? ' checked' : '') + '> Open living</label>'
     + '<label><input type="checkbox" id="rfShowCl"' + (o.showCloset ? ' checked' : '') + '> Closets</label>'
     + '<label><input type="checkbox" id="rfFurn"' + (o.showFurn ? ' checked' : '') + '> Furniture</label>'
-    + '<label><input type="checkbox" id="rfWin"' + (o.showWin ? ' checked' : '') + '> Windows</label></div>';
+    + '<label><input type="checkbox" id="rfWin"' + (o.showWin ? ' checked' : '') + '> Windows</label>'
+    + '<label><input type="checkbox" id="rfDoorTags"' + (o.showDoorTags !== false ? ' checked' : '') + '> Door tags</label></div>';
   if (plan.floors.length > 1) h += '<div class="tabs">' + plan.floors.map((fl, i) => '<button class="btn' + (i === editFloor ? ' active' : '') + '" data-floor="' + i + '" type="button">' + fl.label + '</button>').join('') + '</div>';
   h += '<div class="hint">Click a room to select it. Drag to move, drag a blue corner to resize, or type exact values below. Doors, closets, windows and furniture update after every change.</div>';
   h += floorDrawing(f, plan, plan.vb, true, selectedRoom);
@@ -1794,6 +1809,7 @@ function onEditorChange(e) {
   else if (id === 'rfShowCl') o.showCloset = e.target.checked;
   else if (id === 'rfFurn') o.showFurn = e.target.checked;
   else if (id === 'rfWin') o.showWin = e.target.checked;
+  else if (id === 'rfDoorTags') o.showDoorTags = e.target.checked;
   else if (id === 'addRoom') {
     if (!v) return;
     const rc = ROOM_TYPES[v].rec;
@@ -1885,7 +1901,7 @@ function init() {
   $('saveJson').addEventListener('click', () => {
     if (!plans.length) return;
     const p = plans[refineIdx != null ? refineIdx : (optTab === 'all' ? 0 : optTab)];
-    download('floorplan_' + p.letter + '.json', JSON.stringify({ settings: p.settings, goal: p.goal, options: p.opts, floors: p.floors.map(f => ({ label: f.label, rooms: f.rooms.map(roomForSaving), windows: f.windows.map(w => ({ room: f.rooms[w.ri].n, side: w.side, width_in: w.wi, height_in: w.hi })) })) }, null, 2), 'application/json');
+    download('floorplan_' + p.letter + '.json', JSON.stringify({ settings: p.settings, goal: p.goal, options: p.opts, floors: p.floors.map(f => ({ label: f.label, rooms: f.rooms.map(roomForSaving), windows: f.windows.map(w => ({ room: f.rooms[w.ri].n, side: w.side, width_in: w.wi, height_in: w.hi })), doors: f.doors.filter(d => doorSize(d)).map(d => ({ between: [f.rooms[d.a] && f.rooms[d.a].n, d.b > -1 ? f.rooms[d.b].n : 'outside'], type: d.kind, size_in: doorSize(d) })) })) }, null, 2), 'application/json');
   });
   updateLabels(); updateEstimate();
   generate();
