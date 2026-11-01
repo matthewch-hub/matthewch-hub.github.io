@@ -78,6 +78,9 @@ select,input[type=number],input[type=text]{padding:6px;background:var(--bg);bord
 .fold:not([open])>summary::after{content:"Expand"}
 .fold>summary:hover::after{border-color:var(--text);color:var(--text)}
 .fold[open]>summary{margin-bottom:10px}
+.shape-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.shape-tools .floor-label{width:100%;margin:0}
+.shape-tools .hint{width:100%;margin:0}
 .sizebox{border:1px solid var(--line);background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:6px}
 .sizebox .hint{margin:0}
 .estimate{border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
@@ -672,6 +675,7 @@ function buildAllFloors(P, cfg, g) {
   if (up) floors.push({ label: 'Upper floor', kind: 'upper', rooms: up.rooms });
   if (bs) floors.push({ label: 'Basement', kind: 'base', rooms: bs.rooms });
   const all = [].concat.apply([], floors.map(f => f.rooms));
+  all.forEach((r, i) => { r.id = 'r' + (i + 1); });          /* every room gets a label so its parts can find it */
   const mx = Math.min(...all.map(r => r.x)), my = Math.min(...all.map(r => r.y));
   all.forEach(r => { r.x -= mx; r.y -= my; });
   if (cfg.mirror) { const W = Math.max(...all.map(r => r.x + r.w)); all.forEach(r => { r.x = W - r.x - r.w; }); }
@@ -694,6 +698,66 @@ function layoutVariations(P, s) {
   const res = [];
   out.forEach(c => [0, 1, 2].forEach(sd => res.push(Object.assign({ seed: sd + 1, aligned: multi, key: c.svc + (c.split ? 'S' : '') + c.bendF + c.bendK }, c))));
   return res;
+}
+
+/* ---------------- rooms that are not plain rectangles ----------------
+   An L-shaped room is stored as its main rectangle plus "parts": extra rectangles whose partOf names the
+   main room's id. A 45° corner (cut) clips an outside corner of a room; a bay is a 45° window bay that
+   pushes out from an exterior wall. Everything else in the program still works on rectangles. */
+function sameRoom(a, b) { if (a === b) return true; const ka = a.partOf || a.id, kb = b.partOf || b.id; return !!ka && ka === kb; }
+function roomGroup(rooms, r) { const main = r.partOf ? rooms.find(x => x.id === r.partOf) || r : r; return rooms.filter(x => x === main || (main.id && x.partOf === main.id)); }
+/* Floor area of one rectangle, including any bay and minus any cut corners. */
+function roomArea(r) { return r.w * r.h + (r.shapeArea || 0); }
+const OUTWARD = { t: [0, -1], b: [0, 1], l: [-1, 0], r: [1, 0] };
+const SIDE_TO_WALL = { n: 't', s: 'b', w: 'l', e: 'r' };
+/* Removes the stretch [from, to] from a room's exterior wall on one side. Returns false if that stretch is not all exterior wall. */
+function cutExteriorWall(f, r, side, from, to) {
+  const horiz = side === 't' || side === 'b';
+  const i = f.ext.findIndex(w => w.r === r && w.side === side && (horiz ? w.x1 : w.y1) <= from + 0.01 && (horiz ? w.x2 : w.y2) >= to - 0.01);
+  if (i < 0) return false;
+  const w = f.ext[i], a = horiz ? w.x1 : w.y1, b = horiz ? w.x2 : w.y2, pieces = [];
+  if (from - a > 0.2) pieces.push([a, from]);
+  if (b - to > 0.2) pieces.push([to, b]);
+  f.ext.splice(i, 1, ...pieces.map(p => horiz ? { x1: p[0], y1: w.y1, x2: p[1], y2: w.y1, side: side, len: p[1] - p[0], r: r } : { x1: w.x1, y1: p[0], x2: w.x1, y2: p[1], side: side, len: p[1] - p[0], r: r }));
+  return true;
+}
+/* Applies corner cuts and bays to the exterior walls of a floor, and works out the extra area. */
+function applyShapes(f) {
+  f.rooms.forEach(r => {
+    r.shapeArea = 0; r.cutDone = null; r.bayShape = null;
+    if (r.cut) Object.keys(r.cut).forEach(corner => {
+      const c = r.cut[corner]; if (!c || c > Math.min(r.w, r.h) / 2) return;
+      const front = corner[0] === 'n', left = corner[1] === 'w', cx = left ? r.x : r.x + r.w, cy = front ? r.y : r.y + r.h;
+      const hs = front ? 't' : 'b', vs = left ? 'l' : 'r', hx = left ? [cx, cx + c] : [cx - c, cx], vy = front ? [cy, cy + c] : [cy - c, cy];
+      const okH = f.ext.some(w => w.r === r && w.side === hs && w.x1 <= hx[0] + 0.01 && w.x2 >= hx[1] - 0.01);
+      const okV = f.ext.some(w => w.r === r && w.side === vs && w.y1 <= vy[0] + 0.01 && w.y2 >= vy[1] - 0.01);
+      if (!okH || !okV) return;                             /* only an outside corner can be cut */
+      cutExteriorWall(f, r, hs, hx[0], hx[1]); cutExteriorWall(f, r, vs, vy[0], vy[1]);
+      const p1 = [left ? cx + c : cx - c, cy], p2 = [cx, front ? cy + c : cy - c];
+      f.ext.push({ x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], side: 'd', diag: true, len: c * Math.SQRT2, r: r, out: [left ? -0.7071 : 0.7071, front ? -0.7071 : 0.7071] });
+      r.shapeArea -= c * c / 2;
+      (r.cutDone = r.cutDone || {})[corner] = c;
+    });
+    if (r.bay) {
+      const side = SIDE_TO_WALL[r.bay.sd], horiz = side === 't' || side === 'b', L = r.bay.len, D = r.bay.dep || 2;
+      const segs = f.ext.filter(w => w.r === r && w.side === side && w.len >= L + 1).sort((a, b) => b.len - a.len);
+      if (!segs.length || L < 2 * D + 2) return;
+      const w = segs[0], a = horiz ? w.x1 : w.y1, b = horiz ? w.x2 : w.y2, mid = horiz ? r.x + r.w / 2 : r.y + r.h / 2;
+      const c = clamp(mid, a + L / 2 + 0.5, b - L / 2 - 0.5), from = c - L / 2, to = c + L / 2, o = OUTWARD[side], line = horiz ? w.y1 : w.x1;
+      const P = (along, out) => horiz ? [along, line + o[1] * out] : [line + o[0] * out, along];
+      const A = P(from, 0), F1 = P(from + D, D), F2 = P(to - D, D), B = P(to, 0);
+      const box = { x: Math.min(A[0], F2[0], B[0]), y: Math.min(A[1], F2[1], B[1]), w: Math.abs(B[0] - A[0]) || D, h: Math.abs(B[1] - A[1]) || D };
+      if (horiz) { box.h = D; box.y = o[1] < 0 ? line - D : line; } else { box.w = D; box.x = o[0] < 0 ? line - D : line; }
+      if (f.rooms.some(x => x !== r && overlaps(x, box))) return;      /* the bay would run into another room */
+      cutExteriorWall(f, r, side, from, to);
+      const diagOut = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1], n = Math.hypot(dx, dy); let nx = dy / n, ny = -dx / n; if (nx * o[0] + ny * o[1] < 0) { nx = -nx; ny = -ny; } return [nx, ny]; };
+      f.ext.push({ x1: A[0], y1: A[1], x2: F1[0], y2: F1[1], side: 'd', diag: true, bay: true, len: D * Math.SQRT2, r: r, out: diagOut(A, F1) });
+      f.ext.push(horiz ? { x1: F1[0], y1: F1[1], x2: F2[0], y2: F2[1], side: side, len: L - 2 * D, r: r, bay: true } : { x1: F1[0], y1: F1[1], x2: F2[0], y2: F2[1], side: side, len: L - 2 * D, r: r, bay: true });
+      f.ext.push({ x1: F2[0], y1: F2[1], x2: B[0], y2: B[1], side: 'd', diag: true, bay: true, len: D * Math.SQRT2, r: r, out: diagOut(F2, B) });
+      r.shapeArea += (L + (L - 2 * D)) / 2 * D;
+      r.bayShape = [A, F1, F2, B];
+    }
+  });
 }
 
 /* ---------------- exterior walls ---------------- */
@@ -789,22 +853,35 @@ function placeDoors(rooms, o, rootKey) {
   const key = (a, b) => Math.min(a, b) + '-' + Math.max(a, b);
   const small = x => x.t === 'wet' || x.t === 'clo' || x.k === 'pantry' || x.k === 'storage' || x.k === 'mechS';
   const widthFor = (a, b) => (small(a) || small(b)) && !o.adaptable ? Math.min(o.doorW, 2.5) : o.doorW;
+  /* parts of an L-shaped room are joined to each other with no wall or door between them */
+  rooms.forEach((p, pi) => {
+    if (!p.partOf) return;
+    let best = null;
+    rooms.forEach((x, xi) => { if (x === p || !sameRoom(p, x)) return; const sg = sharedWall(p, x); if (sg && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0 }; });
+    if (best && !seen[key(pi, best.xi)]) {
+      seen[key(pi, best.xi)] = 1;
+      const g = best.sg, d = g.ax === 'v' ? { x1: g.L, y1: g.s0, x2: g.L, y2: g.s1, nx: 0, ny: 0 } : { x1: g.s0, y1: g.L, x2: g.s1, y2: g.L, nx: 0, ny: 0 };
+      d.kind = 'join'; d.a = pi; d.b = best.xi; list.push(d);
+    }
+  });
   rooms.forEach((r, ri) => {
+    if (r.partOf) return;                                   /* a part uses its main room's door */
+    const members = rooms.map((m, mi) => m === r || (r.id && m.partOf === r.id) ? mi : -1).filter(mi => mi > -1);
     const prefs = doorPreferences(r);
     for (let k = 0; k < prefs.length; k++) {
       let best = null;
-      rooms.forEach((x, xi) => {
-        if (x === r || !prefs[k](x)) return;
-        const sg = sharedWall(r, x), dw = widthFor(r, x);
+      members.forEach(mi => rooms.forEach((x, xi) => {
+        if (sameRoom(rooms[mi], x) || !prefs[k](x)) return;
+        const sg = sharedWall(rooms[mi], x), dw = widthFor(r, x);
         if (!sg || sg.s1 - sg.s0 < dw + 0.6) return;
-        if (!best || sg.s1 - sg.s0 > best.len) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0, x: x, dw: dw };
-      });
+        if (!best || sg.s1 - sg.s0 > best.len) best = { mi: mi, xi: xi, sg: sg, len: sg.s1 - sg.s0, x: x, dw: dw };
+      }));
       if (!best) continue;
-      const kk = key(ri, best.xi);
+      const kk = key(best.mi, best.xi);
       if (!seen[kk]) {
         seen[kk] = 1;
         const op = isOpenConnection(o, r, best.x);
-        addDoor(list, rooms, ri, best.xi, best.sg, op ? 'opening' : 'swing', op ? Math.min(6, best.len - 0.8) : best.dw);
+        addDoor(list, rooms, best.mi, best.xi, best.sg, op ? 'opening' : 'swing', op ? Math.min(6, best.len - 0.8) : best.dw);
       }
       return;
     }
@@ -815,13 +892,13 @@ function placeDoors(rooms, o, rootKey) {
     const H = inGroup('hall'), prefs = [hasType('kitchen'), H, hasType('foyer'), hasType('family'), hasType('nook'), hasType('dining'), hasType('living'), hasType('laundry')];
     for (let k = 0; k < prefs.length; k++) {
       let best = null;
-      rooms.forEach((x, xi) => { if (x === r || !prefs[k](x) || seen[key(ri, xi)]) return; const sg = sharedWall(r, x); if (sg && sg.s1 - sg.s0 >= o.doorW + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0 }; });
+      rooms.forEach((x, xi) => { if (sameRoom(r, x) || !prefs[k](x) || seen[key(ri, xi)]) return; const sg = sharedWall(r, x); if (sg && sg.s1 - sg.s0 >= o.doorW + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0 }; });
       if (best) { seen[key(ri, best.xi)] = 1; addDoor(list, rooms, ri, best.xi, best.sg, 'swing', o.doorW); break; }
     }
   });
   /* open-plan rooms open to every open neighbour, not just one */
   rooms.forEach((a, ai) => rooms.forEach((b, bi) => {
-    if (bi <= ai || seen[key(ai, bi)] || !isOpenConnection(o, a, b)) return;
+    if (bi <= ai || seen[key(ai, bi)] || sameRoom(a, b) || !isOpenConnection(o, a, b)) return;
     const sg = sharedWall(a, b);
     if (sg && sg.s1 - sg.s0 >= 3) { seen[key(ai, bi)] = 1; addDoor(list, rooms, ai, bi, sg, 'opening', Math.min(8, sg.s1 - sg.s0 - 0.8)); }
   }));
@@ -837,14 +914,14 @@ function placeDoors(rooms, o, rootKey) {
       if (reach[ri]) return;
       let best = null;
       rooms.forEach((x, xi) => {
-        if (!reach[xi] || ['garage', 'wic', 'wic2', 'ensuite', 'pantry', 'linen'].indexOf(x.k) > -1 || x.t === 'sleep') return;
+        if (!reach[xi] || sameRoom(r, x) || ['garage', 'wic', 'wic2', 'ensuite', 'pantry', 'linen'].indexOf(x.k) > -1 || x.t === 'sleep') return;
         const sg = sharedWall(r, x), dw = widthFor(r, x);
         if (sg && sg.s1 - sg.s0 >= dw + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0, dw: dw };
       });
       if (best) { addDoor(list, rooms, ri, best.xi, best.sg, 'swing', best.dw); reach[ri] = true; spread(); progress = true; }
     });
   }
-  rooms.forEach((r, ri) => { if (!reach[ri]) miss.push(r.n); });
+  rooms.forEach((r, ri) => { if (!reach[ri] && miss.indexOf(r.n) < 0) miss.push(r.n); });
   return { list: list, miss: miss };
 }
 
@@ -932,6 +1009,14 @@ function placeWindows(f, plan) {
     const sp = windowSize(r, f.kind);
     if (!sp) { if (r.k === 'garage') garageSideWindow(f, r, ri, out); return; }
     f.ext.filter(w => w.r === r).forEach(w => {
+      if (w.diag) {
+        /* the angled sides of a bay are glazed too; a clipped (45°) corner gets no window */
+        const wi = Math.floor((w.len - 0.5) * 12 / 6) * 6;
+        if (!w.bay || wi < 12) return;
+        const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2, ux = (w.x2 - w.x1) / w.len, uy = (w.y2 - w.y1) / w.len, half = wi / 24;
+        out.push({ x1: mx - ux * half, y1: my - uy * half, x2: mx + ux * half, y2: my + uy * half, side: 'd', diag: true, out: w.out, wi: wi, hi: sp[1], ri: ri });
+        return;
+      }
       const horiz = w.side === 't' || w.side === 'b';
       const blocks = f.doors.filter(d => d.b === -1 && (horiz ? isClose(d.y1, w.y1) && isClose(d.y2, w.y1) : isClose(d.x1, w.x1) && isClose(d.x2, w.x1)))
         .map(d => horiz ? [Math.min(d.x1, d.x2) - 0.8, Math.max(d.x1, d.x2) + 0.8] : [Math.min(d.y1, d.y2) - 0.8, Math.max(d.y1, d.y2) + 0.8]);
@@ -967,7 +1052,7 @@ function clearSize(r, c) {
 }
 function checkRoomSize(r, c, o) {
   r.bad = false; r.why = '';
-  if (r.filler || r.k === 'linen' || r.k === 'unf') return;
+  if (r.filler || r.partOf || r.k === 'linen' || r.k === 'unf') return;
   if (r.t === 'hall') { const m = Math.min(r.w, r.h); if (m < 2.82) { r.bad = true; r.why = 'hall under 860 mm (34 in)'; } return; }
   if (r.k === 'garage') { const mn = minimumSize(r); r.bad = Math.min(r.w, r.h) < Math.min(mn[0], mn[1]) - 0.3 || Math.max(r.w, r.h) < Math.max(mn[0], mn[1]) - 0.3; if (r.bad) r.why = 'smaller than ' + mn[0] + ' × ' + mn[1] + ' ft'; return; }
   const sp = ROOM_TYPES[r.k]; if (!sp || !sp.min) return;
@@ -1011,6 +1096,7 @@ function analyze(plan) {
   plan.miss = [];
   plan.floors.forEach(f => {
     f.ext = findExteriorWalls(f.rooms);
+    applyShapes(f);
     const res = placeDoors(f.rooms, o, f.kind === 'main' ? 'foyer' : 'stairs');
     f.doors = res.list; plan.miss = plan.miss.concat(res.miss);
     if (f.kind === 'main') placeExteriorDoors(f, o);
@@ -1018,11 +1104,11 @@ function analyze(plan) {
     f.windows = placeWindows(f, plan);
     f.rooms.forEach((r, ri) => {
       checkRoomSize(r, f.cls[ri], o);
-      if (r.t === 'sleep' && !f.windows.some(w => w.ri === ri)) { r.bad = true; r.why = 'no exterior wall for an egress window'; }
+      if (r.t === 'sleep' && !r.partOf && !roomGroup(f.rooms, r).some(m => f.windows.some(w => f.rooms[w.ri] === m))) { r.bad = true; r.why = 'no exterior wall for an egress window'; }
     });
   });
   const M = plan.metrics = {};
-  const areaOf = list => sum(list, r => r.w * r.h);
+  const areaOf = list => sum(list, roomArea);
   const fin = f => f.rooms.filter(r => r.k !== 'garage' && r.t !== 'unf');
   plan.floors.forEach(f => { f.area = areaOf(fin(f)); });
   const byKind = k => plan.floors.filter(f => f.kind === k);
@@ -1045,8 +1131,8 @@ function analyze(plan) {
     const len = sum(f.ext, w => w.len);
     M.wall += f.kind === 'base' ? len * 0.6 : f.kind === 'upper' ? len * 0.9 : len;
     const lines = {};
-    f.ext.forEach(w => { const h = w.side === 't' || w.side === 'b', k = w.side + ':' + (h ? w.y1 : w.x1).toFixed(2); (lines[k] = lines[k] || []).push(h ? [w.x1, w.x2] : [w.y1, w.y2]); });
     let edges = 0;
+    f.ext.forEach(w => { if (w.diag) { edges++; return; } const h = w.side === 't' || w.side === 'b', k = w.side + ':' + (h ? w.y1 : w.x1).toFixed(2); (lines[k] = lines[k] || []).push(h ? [w.x1, w.x2] : [w.y1, w.y2]); });
     Object.keys(lines).forEach(k => { const iv = lines[k].sort((a, b) => a[0] - b[0]); let e = -1e9; iv.forEach(s => { if (s[0] > e + 0.1) edges++; e = Math.max(e, s[1]); }); });
     if (f.kind === 'main') M.corners = edges;
   });
@@ -1095,7 +1181,7 @@ function analyze(plan) {
   if (seedR != null) {
     comp[seedR] = 1;
     let go = true;
-    while (go) { go = false; mf.doors.forEach(d => { if (d.kind === 'opening' && d.b > -1 && OPEN_PLAN_ROOMS[mf.rooms[d.a].k] && OPEN_PLAN_ROOMS[mf.rooms[d.b].k] && comp[d.a] !== comp[d.b]) { comp[d.a] = comp[d.b] = 1; go = true; } }); }
+    while (go) { go = false; mf.doors.forEach(d => { if ((d.kind === 'opening' || d.kind === 'join') && d.b > -1 && OPEN_PLAN_ROOMS[mf.rooms[d.a].k] && OPEN_PLAN_ROOMS[mf.rooms[d.b].k] && comp[d.a] !== comp[d.b]) { comp[d.a] = comp[d.b] = 1; go = true; } }); }
   }
   const cr = Object.keys(comp).map(i => mf.rooms[i]);
   M.openArea = areaOf(cr);
@@ -1116,7 +1202,7 @@ function analyze(plan) {
     });
   });
   /* rule checks */
-  const checked = all.filter(r => !r.filler && r.k !== 'linen' && r.k !== 'unf'), failed = checked.filter(r => r.bad);
+  const checked = all.filter(r => !r.filler && !r.partOf && r.k !== 'linen' && r.k !== 'unf'), failed = checked.filter(r => r.bad);
   plan.checked = checked.length; plan.passed = checked.length - failed.length; plan.failed = failed.map(r => r.n + ' (' + r.why + ')');
   M.noEgress = all.filter(r => r.t === 'sleep' && /egress/.test(r.why)).length;
   /* goal score: lower is better */
@@ -1141,6 +1227,10 @@ function planNotes(plan) {
   if (plan.miss.length) n.push('No door link found for: ' + escapeText(plan.miss.slice(0, 4).join(', ')) + '. Move those rooms next to a neighbour in the Refine tab.');
   if (plan.failed.length) n.push('Below the room standards: ' + escapeText(plan.failed.slice(0, 5).join(', ')) + '. Adjust them in the Refine tab.');
   if (plan.opts.open) n.push('Open plan: living, dining and kitchen are one space; the thin dashed lines only mark where each area ends.');
+  const allRooms = [].concat.apply([], plan.floors.map(f => f.rooms));
+  if (allRooms.some(r => r.bayShape)) n.push('45° bay windows push out 2 ft from the wall, with glass on all three faces.');
+  if (allRooms.some(r => r.partOf)) n.push('L-shaped rooms are drawn as one room with no wall between their parts.');
+  n.push('Rooms can be made L-shaped, given 45° corners or bay windows in the Refine tab.');
   n.push('Windows and doors are tagged width × height in inches. Bedroom windows are sized for egress; confirm sill height and opening area with the local code.' + (plan.floors.some(f => f.kind === 'base') ? ' Basement bedroom windows need window wells.' : ''));
   if (plan.settings.adaptable) n.push('Adaptable mode: 36 in doors, a ' + Math.round(plan.opts.hallW * 12) + ' in hall, and 5 ft wide bathrooms for a 60 in turning circle.');
   n.push('Cost is a rough estimate from floor area, exterior wall length, corners and plumbing groups. It is not a quote.');
@@ -1158,8 +1248,38 @@ function buildPlanOption(P, s, cfg, goal) {
       showCloset: true, showDims: true, showFurn: true, showWin: true, showDoorTags: true },
     hist: [], hi: -1
   };
+  if (plan.opts.open) makeLShapes(plan);
   analyze(plan);
+  if (goal.id === 'path' || goal.id === 'open' || goal.id === 'private') { addBays(plan, goal.id); analyze(plan); }
   return plan;
+}
+
+/* L-shaped living spaces: in an open plan, a leftover den that sits against the living room, family room
+   or rec room (and is not the same depth, so the two make an L) becomes part of that room. */
+function makeLShapes(plan) {
+  plan.floors.forEach(f => f.rooms.forEach(r => {
+    if (r.k !== 'den' || !r.filler) return;
+    const host = f.rooms.find(x => ['living', 'family', 'rec'].indexOf(x.k) > -1 && !x.partOf && (() => {
+      const sg = sharedWall(r, x); if (!sg || sg.s1 - sg.s0 < Math.min(6, (sg.ax === 'v' ? r.h : r.w) - 0.5)) return false;
+      return sg.ax === 'v' ? Math.abs(r.h - x.h) > 0.5 : Math.abs(r.w - x.w) > 0.5;
+    })());
+    if (!host) return;
+    Object.assign(r, { n: host.n, k: host.k, t: host.t, partOf: host.id, cl: 'none' });
+    delete r.filler;
+  }));
+}
+
+/* 45° bay windows: the primary bedroom gets one, and the dining room or nook too unless the goal is privacy.
+   A bay goes on the back or side wall with the longest run of exterior wall, never where a door is. */
+function addBays(plan, goalId) {
+  plan.floors.forEach(f => f.rooms.forEach(r => {
+    if (r.partOf) return;
+    const want = r.k === 'primary' ? 10 : (r.k === 'dining' || r.k === 'nook') && goalId !== 'private' ? 8 : 0;
+    if (!want) return;
+    const doorSides = f.doors.filter(d => d.b === -1 && f.rooms[d.a] === r).map(d => isClose(d.x1, d.x2) ? (isClose(d.x1, r.x) ? 'w' : 'e') : (isClose(d.y1, r.y) ? 'n' : 's'));
+    const sd = ['s', 'w', 'e', 'n'].filter(x => doorSides.indexOf(x) < 0).find(x => f.ext.some(w => w.r === r && w.side === SIDE_TO_WALL[x] && w.len >= want + 1));
+    if (sd) r.bay = { sd: sd, len: want, dep: 2 };
+  }));
 }
 function generateAllOptions(s) {
   program = makeProgram(s);
@@ -1223,6 +1343,7 @@ function keepClearAreas(f, r, ri) {
     obs.push(c.sd === 'n' ? { x: c.x, y: c.y + c.h, w: c.w, h: 2.5 } : c.sd === 's' ? { x: c.x, y: c.y - 2.5, w: c.w, h: 2.5 } : c.sd === 'w' ? { x: c.x + c.w, y: c.y, w: 2.5, h: c.h } : { x: c.x - 2.5, y: c.y, w: 2.5, h: c.h });
   }
   if (r.walk === 'n') obs.push({ x: r.x, y: r.y, w: r.w, h: 3 });
+  if (r.cutDone) Object.keys(r.cutDone).forEach(cn => { const c = r.cutDone[cn] + 0.5; obs.push({ x: cn[1] === 'w' ? r.x : r.x + r.w - c, y: cn[0] === 'n' ? r.y : r.y + r.h - c, w: c, h: c }); });
   return obs;
 }
 function wallInfo(f, r, ri) {
@@ -1265,6 +1386,7 @@ function freeStretchesAlongWall(r, sd, dep, obs) {
 }
 
 function furnitureFor(f, r, ri, plan) {
+  if (r.partOf) return [];                                   /* furniture goes in the main part of an L-shaped room */
   const out = [], obs = keepClearAreas(f, r, ri), I = wallInfo(f, r, ri);
   const F = (rect, rx, kd) => { out.push({ r: rect, rx: rx || 0, kd: kd || 'f' }); obs.push(rect); return rect; };
   const A = (rect, rx) => { out.push({ r: rect, rx: rx || 0, kd: 'a' }); return rect; };
@@ -1498,9 +1620,19 @@ function doorDrawing(d, X, Y, s) {
 /* A door's size in inches, width × height, as written on a door tag. Interior and entry doors are
    80 in (6 ft 8 in) tall; overhead garage doors are 84 in (7 ft). Plain openings get no tag. */
 function doorSize(d) {
-  if (d.kind === 'opening') return '';
+  if (d.kind === 'opening' || d.kind === 'join') return '';
   const wide = Math.round(Math.hypot(d.x2 - d.x1, d.y2 - d.y1) * 12 / 2) * 2;
   return wide + '×' + (d.kind === 'garage' ? 84 : 80);
+}
+
+/* The corner points of a room's rectangle, with any 45° corner cuts taken off. */
+function roomOutline(r) {
+  const c = r.cutDone || {}, x0 = r.x, y0 = r.y, x1 = r.x + r.w, y1 = r.y + r.h, pts = [];
+  if (c.nw) pts.push([x0, y0 + c.nw], [x0 + c.nw, y0]); else pts.push([x0, y0]);
+  if (c.ne) pts.push([x1 - c.ne, y0], [x1, y0 + c.ne]); else pts.push([x1, y0]);
+  if (c.se) pts.push([x1, y1 - c.se], [x1 - c.se, y1]); else pts.push([x1, y1]);
+  if (c.sw) pts.push([x0 + c.sw, y1], [x0, y1 - c.sw]); else pts.push([x0, y1]);
+  return pts;
 }
 
 /* One floor as an SVG drawing. title = { num, name } adds dimension strings, a view title and a scale bar. */
@@ -1513,8 +1645,11 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   if (edit) h += '<pattern id="g' + id + '" width="' + (5 * s).toFixed(2) + '" height="' + (5 * s).toFixed(2) + '" patternUnits="userSpaceOnUse" x="' + f1(X(0)) + '" y="' + f1(Y(0)) + '"><path d="M ' + (5 * s).toFixed(2) + ' 0 L 0 0 0 ' + (5 * s).toFixed(2) + '" fill="none" stroke="#ececec" stroke-width="0.5"/></pattern>';
   h += '</defs><rect width="' + DRAWING_WIDTH + '" height="' + v.h + '" fill="' + (edit ? 'url(#g' + id + ')' : '#fff') + '"/>';
   /* 1. floor areas (white; the selected room is tinted while editing) */
+  const picked = edit && sel != null && f.rooms[sel] ? roomGroup(f.rooms, f.rooms[sel]) : [];
   f.rooms.forEach((r, i) => {
-    h += R(r, (edit ? 'class="ed-room" data-i="' + i + '" style="cursor:move" ' : '') + 'fill="' + (sel === i ? '#eaf1fb' : '#fff') + '" stroke="none"');
+    const fill = picked.indexOf(r) > -1 ? '#eaf1fb' : '#fff', cls = edit ? 'class="ed-room" data-i="' + i + '" style="cursor:move" ' : '';
+    h += '<polygon ' + cls + 'points="' + roomOutline(r).map(p => f1(X(p[0])) + ',' + f1(Y(p[1]))).join(' ') + '" fill="' + fill + '" stroke="none"/>';
+    if (r.bayShape) h += '<polygon ' + cls + 'points="' + r.bayShape.map(p => f1(X(p[0])) + ',' + f1(Y(p[1]))).join(' ') + '" fill="' + fill + '" stroke="none"/>';
     if (r.t === 'unf') h += R(r, 'fill="url(#hx' + id + ')" pointer-events="none"');
   });
   h += '<g pointer-events="none">';
@@ -1543,7 +1678,7 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
         shared edge is an interior wall; edges facing outside are the thick exterior walls */
   const iw = Math.max(1.6, INT_WALL * s).toFixed(1), ew = Math.max(2.6, EXT_WALL * s).toFixed(1);
   f.rooms.forEach((a, ai) => f.rooms.forEach((b, bi) => {
-    if (bi <= ai) return;
+    if (bi <= ai || sameRoom(a, b)) return;
     const sg = sharedWall(a, b); if (!sg) return;
     const p = sg.ax === 'v' ? [sg.L, sg.s0, sg.L, sg.s1] : [sg.s0, sg.L, sg.s1, sg.L];
     if (o.open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), LINE_COLOURS.light, 0.6, ' stroke-dasharray="5 3"');
@@ -1552,29 +1687,32 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   f.ext.forEach(w => { h += line(X(w.x1), Y(w.y1), X(w.x2), Y(w.y2), LINE_COLOURS.wall, ew, ' stroke-linecap="square"'); });
   /* 5. windows: a cut in the wall with two wall-face lines and a glass line, tagged width × height in inches */
   if (o.showWin) f.windows.forEach(w => {
-    const vert = isClose(w.x1, w.x2), ax = X(w.x1), ay = Y(w.y1), bx = X(w.x2), by = Y(w.y2), half = +ew / 2;
+    const ax = X(w.x1), ay = Y(w.y1), bx = X(w.x2), by = Y(w.y2), half = +ew / 2, len = Math.hypot(bx - ax, by - ay);
+    const ux = (bx - ax) / len, uy = (by - ay) / len, px = -uy, py = ux;          /* along the wall, and across it */
     h += line(ax, ay, bx, by, '#fff', (+ew + 0.6).toFixed(1));
-    [-half, 0, half].forEach(off => { h += vert ? line(ax + off, ay, bx + off, by, LINE_COLOURS.fine, off ? 0.7 : 0.5) : line(ax, ay + off, bx, by + off, LINE_COLOURS.fine, off ? 0.7 : 0.5); });
-    h += vert ? line(ax - half, ay, ax + half, ay, LINE_COLOURS.fine, 0.7) + line(bx - half, by, bx + half, by, LINE_COLOURS.fine, 0.7) : line(ax, ay - half, ax, ay + half, LINE_COLOURS.fine, 0.7) + line(bx, by - half, bx, by + half, LINE_COLOURS.fine, 0.7);
-    const out = { t: [0, -1], b: [0, 1], l: [-1, 0], r: [1, 0] }[w.side], mx = (ax + bx) / 2 + out[0] * (half + 7), my = (ay + by) / 2 + out[1] * (half + 7);
-    h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + (vert ? ' transform="rotate(-90 ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + w.wi + '×' + w.hi + '</text>';
+    [-half, 0, half].forEach(off => { h += line(ax + px * off, ay + py * off, bx + px * off, by + py * off, LINE_COLOURS.fine, off ? 0.7 : 0.5); });
+    h += line(ax - px * half, ay - py * half, ax + px * half, ay + py * half, LINE_COLOURS.fine, 0.7) + line(bx - px * half, by - py * half, bx + px * half, by + py * half, LINE_COLOURS.fine, 0.7);
+    const out = w.out || OUTWARD[w.side], mx = (ax + bx) / 2 + out[0] * (half + 7), my = (ay + by) / 2 + out[1] * (half + 7);
+    let turn = Math.atan2(uy, ux) * 180 / Math.PI; if (turn > 90) turn -= 180; if (turn <= -90) turn += 180;
+    h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + (Math.abs(turn) > 0.5 ? ' transform="rotate(' + turn.toFixed(0) + ' ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + w.wi + '×' + w.hi + '</text>';
   });
   /* 6. doors, each tagged width × height in inches like the windows. The tag sits on the side the door
         does not swing into (outside, for exterior doors), so it stays clear of the swing arc. */
-  f.doors.forEach(d => { h += doorDrawing(d, X, Y, s); });
+  f.doors.forEach(d => { if (d.kind !== 'join') h += doorDrawing(d, X, Y, s); });
   if (o.showDoorTags !== false) f.doors.forEach(d => {
     const size = doorSize(d); if (!size) return;
     const vert = isClose(d.x1, d.x2), mx = (X(d.x1) + X(d.x2)) / 2 - d.nx * (+ew / 2 + 7), my = (Y(d.y1) + Y(d.y2)) / 2 - d.ny * (+ew / 2 + 7);
     h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '" paint-order="stroke" stroke="#fff" stroke-width="2.5"' + (vert ? ' transform="rotate(-90 ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + size + '</text>';
   });
   /* 7. rooms that break a standard get a thin red dashed outline */
-  f.rooms.forEach(r => { if (r.bad) h += R({ x: r.x + 0.5, y: r.y + 0.5, w: Math.max(0.5, r.w - 1), h: Math.max(0.5, r.h - 1) }, 'fill="none" stroke="#c0392b" stroke-width="0.9" stroke-dasharray="4 3"'); });
+  f.rooms.forEach(r => { if (r.bad && !r.partOf) h += R({ x: r.x + 0.5, y: r.y + 0.5, w: Math.max(0.5, r.w - 1), h: Math.max(0.5, r.h - 1) }, 'fill="none" stroke="#c0392b" stroke-width="0.9" stroke-dasharray="4 3"'); });
   /* 8. room tags: name in capitals, size underneath */
   f.rooms.forEach(r => {
     const pw = r.w * s, ph = r.h * s, cx = X(r.x + r.w / 2), cy = Y(r.y + r.h / 2), halo = ' paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round"';
-    if (r.k === 'stairs') return;
+    if (r.k === 'stairs' || r.partOf) return;
     if (r.t === 'hall') { if (pw > 40 || ph > 40) h += '<text x="' + f1(cx) + '" y="' + f1(cy) + '" font-size="7.5" letter-spacing="0.6" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + halo + '>HALL</text>'; return; }
-    const name = r.n.toUpperCase(), nameW = name.length * 7 + 8, size = formatLength(r.w) + ' × ' + formatLength(r.h);
+    const group = roomGroup(f.rooms, r), shaped = group.length > 1 || r.shapeArea;
+    const name = r.n.toUpperCase(), nameW = name.length * 7 + 8, size = shaped ? formatArea(sum(group, roomArea)) : formatLength(r.w) + ' × ' + formatLength(r.h);
     if (pw > nameW && ph > 28) {
       h += '<text x="' + f1(cx) + '" y="' + f1(cy - 5) + '" font-size="9.5" font-weight="700" letter-spacing="0.4" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.text + '"' + halo + '>' + escapeText(name) + '</text>';
       if (pw > size.length * 4.8 + 6) h += '<text x="' + f1(cx) + '" y="' + f1(cy + 7) + '" font-size="8" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + halo + '>' + size + '</text>';
@@ -1616,7 +1754,7 @@ function floorDrawing(f, plan, vb, edit, sel, title) {
   h += '</g>';
   if (edit && sel != null && f.rooms[sel]) {
     const r = f.rooms[sel], pts = [['nw', r.x, r.y, 'nwse'], ['ne', r.x + r.w, r.y, 'nesw'], ['se', r.x + r.w, r.y + r.h, 'nwse'], ['sw', r.x, r.y + r.h, 'nesw']];
-    h += R(r, 'fill="none" stroke="#2f6fb5" stroke-width="1.6" pointer-events="none"');
+    picked.forEach(m => { h += R(m, 'fill="none" stroke="#2f6fb5" stroke-width="' + (m === r ? 1.8 : 1) + '"' + (m === r ? '' : ' stroke-dasharray="4 3"') + ' pointer-events="none"'); });
     pts.forEach(p => { h += '<rect class="ed-handle" data-h="' + p[0] + '" x="' + f1(X(p[1]) - 6) + '" y="' + f1(Y(p[2]) - 6) + '" width="12" height="12" fill="#2f6fb5" stroke="#fff" style="cursor:' + p[3] + '-resize"/>'; });
   }
   return h + '</svg>';
@@ -1657,7 +1795,10 @@ function optionSheetHtml(plan, idx, single) {
   if (single) {
     h += '<div class="notes">' + plan.notes.map(x => '<div class="note">' + x + '</div>').join('') + '</div>';
     h += '<details class="sched"><summary>Room schedule</summary><table><thead><tr><th>Room</th><th>Floor</th><th>Size</th><th>Area</th></tr></thead><tbody>';
-    plan.floors.forEach(f => f.rooms.filter(r => r.t !== 'hall').forEach(r => { h += '<tr' + (r.bad ? ' class="bad"' : '') + '><td>' + escapeText(r.n) + '</td><td>' + f.label.replace(' floor', '') + '</td><td>' + formatLength(r.w) + ' × ' + formatLength(r.h) + '</td><td>' + formatArea(r.w * r.h) + '</td></tr>'; }));
+    plan.floors.forEach(f => f.rooms.filter(r => r.t !== 'hall' && !r.partOf).forEach(r => {
+      const group = roomGroup(f.rooms, r), shape = group.length > 1 ? 'L-shape, ' : r.bayShape ? 'with bay, ' : r.cutDone ? 'angled corner, ' : '';
+      h += '<tr' + (r.bad ? ' class="bad"' : '') + '><td>' + escapeText(r.n) + '</td><td>' + f.label.replace(' floor', '') + '</td><td>' + shape + formatLength(r.w) + ' × ' + formatLength(r.h) + '</td><td>' + formatArea(sum(group, roomArea)) + '</td></tr>';
+    }));
     h += '</tbody></table></details>';
   }
   return h + '</div>';
@@ -1701,8 +1842,39 @@ function refineHtml(plan) {
       + '<div class="field"><label>X (ft)</label><input type="number" id="iX" step="0.5" value="' + r1(r.x) + '"></div>'
       + '<div class="field"><label>Y (ft)</label><input type="number" id="iY" step="0.5" value="' + r1(r.y) + '"></div>'
       + (isBed ? '<div class="field"><label>Closet</label><select id="iC">' + optionsHtml([['', 'Plan default'], ['none', 'None'], ['reach', 'Reach-in'], ['double', 'Double']], r.cl == null ? '' : r.cl) + '</select></div>' : '') + '</div>';
+    /* shape tools: L-shapes, 45° corners and bay windows */
+    const main = r.partOf ? f.rooms.find(x => x.id === r.partOf) || r : r, cuts = main.cut || {};
+    const cornerName = { nw: 'Front-left', ne: 'Front-right', sw: 'Back-left', se: 'Back-right' };
+    h += '<div class="shape-tools"><div class="floor-label">Room shape</div>';
+    if (r.partOf) h += '<div class="hint">This is part of the L-shaped ' + escapeText(main.n) + '. Drag it or its corners to reshape the L; dragging the main part moves the whole room.</div><button class="btn" id="edDetach" type="button">Make it a separate room</button>';
+    else {
+      h += '<button class="btn" id="edLeg" type="button">Add an L-leg</button>'
+        + '<label>45° corner <select id="iCut" style="width:auto"><option value="">' + (Object.keys(cuts).filter(k => cuts[k]).map(k => cornerName[k]).join(', ') || 'None') + '</option>'
+        + ['nw', 'ne', 'sw', 'se'].map(k => '<option value="' + k + '">' + (cuts[k] ? 'Square off ' : 'Angle ') + cornerName[k].toLowerCase() + '</option>').join('') + '</select></label>'
+        + '<label>Bay window <select id="iBay" style="width:auto">' + optionsHtml([['', 'None'], ['n', 'Front wall'], ['s', 'Back wall'], ['w', 'Left wall'], ['e', 'Right wall']], main.bay ? main.bay.sd : '') + '</select></label>'
+        + '<div class="hint">Only outside corners can be angled, and a bay needs a stretch of exterior wall.' + (main.bay && !main.bayShape ? ' <b>The bay does not fit on that wall.</b>' : '') + '</div>';
+    }
+    h += '</div>';
   }
   return h + '</div>';
+}
+/* A new, unique label for a room added in the editor. */
+function newRoomId() { return 'e' + Date.now().toString(36) + Math.floor(Math.random() * 1e4); }
+/* Deletes a room; deleting the main part of an L-shaped room deletes all of its parts. */
+function deleteRoom(f, i) {
+  const r = f.rooms[i], gone = r.partOf ? [r] : roomGroup(f.rooms, r);
+  f.rooms = f.rooms.filter(x => gone.indexOf(x) < 0);
+}
+/* Adds a 5 ft deep leg to a room, making it L-shaped. The leg goes on the first side where it fits
+   without running into another room. Returns the leg's position in the room list so it is selected. */
+function addLeg(f, r) {
+  if (!r.id) r.id = newRoomId();
+  const d = 5, hw = Math.max(4, r.w / 2), hh = Math.max(4, r.h / 2);
+  const tries = [{ x: r.x + r.w, y: r.y, w: d, h: hh }, { x: r.x + r.w, y: r.y + r.h - hh, w: d, h: hh }, { x: r.x - d, y: r.y, w: d, h: hh }, { x: r.x - d, y: r.y + r.h - hh, w: d, h: hh },
+    { x: r.x, y: r.y + r.h, w: hw, h: d }, { x: r.x + r.w - hw, y: r.y + r.h, w: hw, h: d }, { x: r.x, y: r.y - d, w: hw, h: d }, { x: r.x + r.w - hw, y: r.y - d, w: hw, h: d }];
+  const spot = tries.find(t => !f.rooms.some(x => overlaps(x, t))) || tries[0];
+  f.rooms.push(makeRoom({ k: r.k, n: r.n, cl: 'none' }, spot.x, spot.y, spot.w, spot.h, { id: newRoomId(), partOf: r.id }));
+  return f.rooms.length - 1;
 }
 function pointerInFeet(e) {
   const sv = document.getElementById('edSvg');
@@ -1789,7 +1961,9 @@ function onEditorClick(e) {
   if (b.id === 'edUndo' && plan.hi > 0) { restoreFromHistory(plan, plan.hi - 1); selectedRoom = null; render(); }
   else if (b.id === 'edRedo' && plan.hi < plan.hist.length - 1) { restoreFromHistory(plan, plan.hi + 1); selectedRoom = null; render(); }
   else if (b.id === 'edRotate' && selectedRoom != null) { const r = f.rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
-  else if (b.id === 'edDelete' && selectedRoom != null) { f.rooms.splice(selectedRoom, 1); selectedRoom = null; saveEdit(plan); }
+  else if (b.id === 'edDelete' && selectedRoom != null) { deleteRoom(f, selectedRoom); selectedRoom = null; saveEdit(plan); }
+  else if (b.id === 'edLeg' && selectedRoom != null) { selectedRoom = addLeg(f, f.rooms[selectedRoom]); saveEdit(plan); }
+  else if (b.id === 'edDetach' && selectedRoom != null) { const r = f.rooms[selectedRoom]; delete r.partOf; r.id = newRoomId(); r.n = 'Room'; r.k = 'flex'; r.t = 'flex'; saveEdit(plan); }
   else if (b.id === 'edReset') { restoreFromHistory(plan, 0); plan.hist = plan.hist.slice(0, 1); plan.hi = 0; selectedRoom = null; render(); }
   else if (b.id === 'edSvgSave') {
     let t = new XMLSerializer().serializeToString($('edSvg'));
@@ -1813,8 +1987,12 @@ function onEditorChange(e) {
   else if (id === 'addRoom') {
     if (!v) return;
     const rc = ROOM_TYPES[v].rec;
-    plan.floors[editFloor].rooms.push(makeRoom({ k: v, n: ROOM_TYPES[v].n, cl: v === 'bed' ? undefined : undefined }, 0, 0, rc[0], rc[1]));
+    plan.floors[editFloor].rooms.push(makeRoom({ k: v, n: ROOM_TYPES[v].n }, 0, 0, rc[0], rc[1], { id: newRoomId() }));
     selectedRoom = plan.floors[editFloor].rooms.length - 1;
+  } else if (id === 'iCut' || id === 'iBay') {
+    const f = plan.floors[editFloor], r = selectedRoom != null && f.rooms[selectedRoom]; if (!r || !v) { if (r && id === 'iBay') delete r.bay; else return; }
+    if (r && v && id === 'iCut') { r.cut = r.cut || {}; r.cut[v] = r.cut[v] ? 0 : 3; }
+    if (r && v && id === 'iBay') r.bay = { sd: v, len: Math.max(6, Math.min(10, (v === 'n' || v === 's' ? r.w : r.h) - 2)), dep: 2 };
   } else if (/^i[NWHXYC]$/.test(id)) {
     const r = selectedRoom != null && plan.floors[editFloor].rooms[selectedRoom]; if (!r) return;
     const vb = plan.vb, n = parseFloat(v);
@@ -1833,7 +2011,11 @@ function onPointerDown(e) {
   const plan = plans[refineIdx], rooms = plan.floors[editFloor].rooms, pt = pointerInFeet(e); if (!pt) return;
   const handle = e.target.closest('.ed-handle'), roomEl = e.target.closest('.ed-room');
   if (handle && selectedRoom != null && rooms[selectedRoom]) { const r = rooms[selectedRoom]; drag = { mode: 'handle', h: handle.dataset.h, i: selectedRoom, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
-  else if (roomEl) { const i = +roomEl.dataset.i, r = rooms[i]; selectedRoom = i; drag = { mode: 'move', i: i, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
+  else if (roomEl) {
+    const i = +roomEl.dataset.i, r = rooms[i], group = r.partOf ? [r] : roomGroup(rooms, r);
+    selectedRoom = i;
+    drag = { mode: 'move', i: i, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false, others: group.filter(m => m !== r).map(m => ({ m: m, x: m.x, y: m.y })) };
+  }
   else selectedRoom = null;
   try { $('mount').setPointerCapture(e.pointerId); } catch (_) { }
   e.preventDefault(); render();
@@ -1849,6 +2031,7 @@ function onPointerMove(e) {
   if (drag.mode === 'move') {
     r.x = Math.max(vb.minX, Math.min(maxX - r.w, sn(o.x + dx)));
     r.y = Math.max(vb.minY, Math.min(maxY - r.h, sn(o.y + dy)));
+    (drag.others || []).forEach(p => { p.m.x = p.x + (r.x - o.x); p.m.y = p.y + (r.y - o.y); });
   } else {
     let x = o.x, y = o.y, w = o.w, h = o.h;
     if (drag.h.indexOf('e') > -1) w = Math.max(MIN, sn(o.w + dx));
@@ -1873,7 +2056,7 @@ function onKey(e) {
   const plan = plans[refineIdx], k = (e.key || '').toLowerCase();
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey ? plan.hi < plan.hist.length - 1 : plan.hi > 0) { restoreFromHistory(plan, plan.hi + (e.shiftKey ? 1 : -1)); selectedRoom = null; render(); } }
   else if (k === 'r' && selectedRoom != null && !e.ctrlKey && !e.metaKey) { const r = plan.floors[editFloor].rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
-  else if ((k === 'delete' || k === 'backspace') && selectedRoom != null) { e.preventDefault(); plan.floors[editFloor].rooms.splice(selectedRoom, 1); selectedRoom = null; saveEdit(plan); }
+  else if ((k === 'delete' || k === 'backspace') && selectedRoom != null) { e.preventDefault(); deleteRoom(plan.floors[editFloor], selectedRoom); selectedRoom = null; saveEdit(plan); }
 }
 
 function init() {
