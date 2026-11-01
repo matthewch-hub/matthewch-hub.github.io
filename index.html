@@ -3,20 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ArchPlan Studio</title>
+<title>ArchPlan Studio · MC Designs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23161616'/%3E%3Cpath d='M3 14.5 16 4l13 10.5' fill='none' stroke='white' stroke-width='2.2'/%3E%3Cpath d='M7 12v16h18V12' fill='none' stroke='white' stroke-width='2.2'/%3E%3Ctext x='16' y='24.6' text-anchor='middle' font-family='Arial' font-size='8.6' font-weight='800' fill='white'%3EMC%3C/text%3E%3C/svg%3E">
 <style>
-:root{--bg:#f8fafc;--panel:#fff;--text:#0f172a;--sub:#475569;--line:#cbd5e1;--accent:#2563eb;--soft:#eff6ff;--bad:#dc2626}
-@media (prefers-color-scheme:dark){:root{--bg:#0b0f19;--panel:#111827;--text:#f8fafc;--sub:#cbd5e1;--line:#334155;--accent:#60a5fa;--soft:#1e3a8a44;--bad:#f87171}}
+:root{--bg:#f4f4f2;--panel:#fff;--text:#161616;--sub:#5b5b58;--line:#d6d6d2;--accent:#161616;--onaccent:#fff;--soft:#ececea;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--panel:#1b1b1b;--text:#f2f2f0;--sub:#b5b5b0;--line:#3a3a38;--accent:#f2f2f0;--onaccent:#121212;--soft:#ffffff14;--bad:#f2867c}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
 header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-header h1{font-size:16px}
+header h1{font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--sub)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:34px;height:34px;color:var(--text)}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:.22em;line-height:1.1}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:12.5px}
-.btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:6px 11px;cursor:pointer;font-weight:600;font-size:12px;letter-spacing:.02em}
+.btn:hover:not(:disabled):not(.active){border-color:var(--text)}
+.btn.active{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn.big{width:100%;padding:11px;background:var(--accent);border-color:var(--accent);color:#fff;font-size:14px}
+.btn.big{width:100%;padding:12px;background:var(--accent);border-color:var(--accent);color:var(--onaccent);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
 .layout{display:block}
 .sidebar{background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)}
 .stage{padding:14px}
@@ -25,7 +30,7 @@ header h1{font-size:16px}
   .sidebar{overflow-y:auto;border-right:1px solid var(--line);border-bottom:none}
   .stage{overflow-y:auto}
 }
-h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub)}
+h3{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--sub)}
 .field{display:flex;flex-direction:column;gap:4px;transition:opacity .15s}
 .field.off{opacity:.4}
 .field label{display:flex;justify-content:space-between;font-weight:600;font-size:12.5px;color:var(--sub)}
@@ -36,31 +41,55 @@ select,input[type=number],input[type=text]{padding:6px;background:var(--bg);bord
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .checks label,.modes label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .modes{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--soft);border-radius:8px}
-.stale{background:var(--soft);color:var(--accent);padding:8px 10px;border-radius:6px;font-weight:600;font-size:12px}
+.stale{background:var(--soft);color:var(--text);padding:8px 10px;border-radius:3px;font-weight:600;font-size:12px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px}
-.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px}
 .sheet h2{font-size:17px}
 .sheet .sub{color:var(--sub);font-size:12.5px;margin-bottom:10px}
 .head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
-.metric{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--sub)}
-.metric b{display:block;font-family:ui-monospace,monospace;font-size:16px;color:var(--text)}
+.metric{background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:8px 10px;font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
+.metric b{display:block;font-size:19px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text);margin:2px 0}
 .floor-label{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--sub);margin:10px 0 4px}
 .notes{display:grid;gap:8px;margin-top:12px}
-.note{border-left:3px solid var(--accent);background:var(--bg);padding:8px 12px;border-radius:0 6px 6px 0;color:var(--sub);font-size:12.5px}
+.note{border-left:2px solid var(--text);background:var(--bg);padding:8px 12px;color:var(--sub);font-size:12.5px}
 .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
 .hint{font-size:12px;color:var(--sub);margin:6px 0}
 .chip{display:inline-block;font-size:11.5px;padding:3px 8px;border-radius:6px;margin:0 6px 6px 0;background:#fef3c7;border:1px solid #f59e0b;color:#92400e}
 .chip.ok{background:#dcfce7;border-color:#22c55e;color:#166534}
 .insp{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
 .error{color:var(--bad)}
+.picker{display:grid;grid-template-columns:1fr 58px;gap:5px 10px;align-items:center}
+.picker label{font-size:12.5px;font-weight:600;color:var(--sub)}
+.picker select{padding:4px 6px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.program ul{list-style:none;display:grid;gap:2px;font-size:12px}
+.program li{display:flex;justify-content:space-between;gap:8px;color:var(--sub);border-bottom:1px dotted var(--line);padding:2px 0}
+.program li span:last-child{font-family:ui-monospace,monospace;white-space:nowrap}
+.goal{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--sub)}
+.metric.hl{border-color:var(--text);background:var(--panel)}
+.kchips{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 12px}
+.kchips span{font-size:11px;padding:3px 8px;border-radius:2px;background:var(--bg);border:1px solid var(--line);color:var(--sub)}
+.sheet .plan{border:1px solid var(--line);margin-bottom:12px;background:#fff}
+.sheet .plan svg{display:block}
+.fold>summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;gap:8px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"Collapse";font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);border:1px solid var(--line);border-radius:3px;padding:3px 8px;background:var(--panel)}
+.fold:not([open])>summary::after{content:"Expand"}
+.fold>summary:hover::after{border-color:var(--text);color:var(--text)}
+.fold[open]>summary{margin-bottom:10px}
+.sched{margin-top:12px}
+.sched summary{cursor:pointer;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.sched table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.sched th,.sched td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+.sched td:nth-child(3),.sched td:nth-child(4){font-family:ui-monospace,monospace}
+.sched tr.bad td{color:var(--bad)}
 @media print{header,.sidebar,.tabs,.bar,.hint,button{display:none!important}.layout{display:block;height:auto}.stage{overflow:visible}}
 </style>
 </head>
 <body>
 <header>
-  <h1>ArchPlan Studio</h1>
+  <div class="brand"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 14.5 16 4l13 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter"/><path d="M7 12v16h18V12" fill="none" stroke="currentColor" stroke-width="2.2"/><text x="16" y="24.6" text-anchor="middle" font-family="Helvetica Neue,Arial,sans-serif" font-size="8.6" font-weight="800" letter-spacing="0.2" fill="currentColor">MC</text></svg><div><div class="brand-name">MC DESIGNS</div><h1>ArchPlan Studio</h1></div></div>
   <div class="row">
     <button class="btn active" id="unitImperial" type="button">Feet</button>
     <button class="btn" id="unitMetric" type="button">Metres</button>
@@ -70,42 +99,29 @@ select,input[type=number],input[type=text]{padding:6px;background:var(--bg);bord
 </header>
 <div class="layout">
 <aside class="sidebar" id="sidebar">
-  <div class="modes">
-    <h3>Size the house by</h3>
-    <label><input type="radio" name="sizeMode" value="area" checked> Total living area</label>
-    <label><input type="radio" name="sizeMode" value="dims"> Width and depth</label>
-  </div>
-  <div class="field" id="areaField"><label>Living area (no garage) <output id="areaOut"></output></label><input type="range" id="area" min="500" max="5600" step="25" value="2100"></div>
-  <div class="field" id="widthField"><label>Overall width <output id="widthOut"></output></label><input type="range" id="width" min="24" max="110" step="1" value="70"></div>
-  <div class="field" id="depthField"><label>Overall depth <output id="depthOut"></output></label><input type="range" id="depth" min="26" max="90" step="1" value="45"></div>
-
-  <h3>Rooms needed</h3>
+  <h3>Levels</h3>
   <div class="two">
-    <div class="field"><label>Bedrooms</label><select id="bedrooms"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
-    <div class="field"><label>Bathrooms</label><select id="bathrooms"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
-    <div class="field"><label>Levels</label><select id="levels"><option value="1" selected>1 story</option><option value="2">2 stories</option></select></div>
-    <div class="field"><label>Garage</label><select id="garage"><option value="0">None</option><option value="1">1-car</option><option value="2" selected>2-car</option></select></div>
+    <div class="field"><label>Storeys</label><select id="storeys"><option value="1" selected>1 storey</option><option value="2">2 storeys</option></select></div>
+    <div class="field"><label>Basement</label><select id="basement"><option value="none" selected>None</option><option value="unf">Unfinished</option><option value="fin">Finished</option></select></div>
   </div>
-  <div class="checks">
-    <label><input type="checkbox" id="office" checked> Home office</label>
-    <label><input type="checkbox" id="mudroom" checked> Mudroom</label>
-    <label><input type="checkbox" id="pantry" checked> Pantry</label>
-    <label><input type="checkbox" id="gym"> Gym / flex</label>
-    <label><input type="checkbox" id="adaptable"> Adaptable living</label>
-    <label><input type="checkbox" id="popouts" checked> Pop-out bays</label>
+  <details class="fold" open><summary><h3>Rooms needed</h3></summary>
+  <div class="picker" id="picker"></div>
+  </details>
+  <h3>Closets</h3>
+  <div class="two">
+    <div class="field"><label>Primary closet</label><select id="closetPri"><option value="walk1" selected>Walk-in, one side</option><option value="walk2">Walk-in, both sides</option><option value="twin">Two walk-ins</option><option value="reach">Double reach-in</option></select></div>
+    <div class="field"><label>Bedroom closets</label><select id="closetSec"><option value="reach" selected>Reach-in (6 ft)</option><option value="double">Double reach-in (9 ft)</option><option value="walkin">Walk-in</option></select></div>
   </div>
-
-  <h3>Style and shape</h3>
+  <h3>Style and budget</h3>
   <div class="two">
     <div class="field"><label>Design style</label><select id="style"></select></div>
-    <div class="field"><label>Footprint shape</label><select id="shape"></select></div>
-    <div class="field"><label>Pop-out depth</label><select id="popDepth"><option value="4">4 ft</option><option value="6" selected>6 ft</option><option value="8">8 ft</option></select></div>
     <div class="field"><label>Finish level</label><select id="finish"><option value="standard">Standard</option><option value="mid" selected>Mid-range</option><option value="high">High-end</option></select></div>
   </div>
-  <div class="field"><label>Target budget <output id="budgetOut"></output></label><input type="range" id="budget" min="100000" max="2000000" step="25000" value="475000"></div>
-
+  <div class="field"><label>Target budget <output id="budgetOut"></output></label><input type="range" id="budget" min="100000" max="3000000" step="25000" value="650000"></div>
+  <div class="checks"><label><input type="checkbox" id="adaptable"> Accessible / adaptable</label></div>
   <button class="btn big" id="generate" type="button">Generate Plans</button>
   <div id="stale"></div>
+  <div id="program" class="program"></div>
 </aside>
 <main class="stage">
   <div class="tabs" id="mainTabs"></div>
@@ -116,267 +132,531 @@ select,input[type=number],input[type=text]{padding:6px;background:var(--bg);bord
 
 <script>
 /* =====================================================================
-   ArchPlan Studio v2
-   1. Read settings.  2. Build a room program using standard room sizes.
-   3. Pack the rooms into three zones ("wings"): Public, Private, Service.
-   4. Attach the wings in an L, T, staggered, U or block shape, so the
-      footprint comes out of the rooms, not the other way round.
-   5. Add pop-out bays, doors and closets.  6. Check sizes and cost.
+   ARCHPLAN STUDIO by MC DESIGNS: how this program works
+   ---------------------------------------------------------------------
+   The program designs a house the way an architect would, in four steps:
+   1. Room list: the room picker gives the list of rooms you need. Each room is
+      put on a floor (basement, main or upper) by common house-planning rules.
+   2. Building blocks: every room type carries a minimum and a recommended size
+      taken from the room layout and clearance standards (furniture plus clear
+      floor space), so each room is sized for real use.
+   3. Layout: rooms hang off a circulation spine. The living spaces (foyer,
+      kitchen, dining, living) form the hub. Bedrooms open off a hall that starts
+      at the hub, and the garage reaches the kitchen through the mudroom.
+   4. Five options: the program tries many layouts and keeps the best one for
+      each goal (path of travel, space, openness, privacy, cost).
+
+   HOW TO READ THE CODE
+   Words in CAPITALS are fixed settings (sizes, costs, colours). Every function
+   starts with a comment saying what it does. Measurements are in feet unless a
+   name says otherwise (window sizes are in inches).
+
+   SHORT NAMES USED THROUGHOUT (kept short because they appear thousands of times)
+     r, room   one room              f, floor   one floor of the plan
+     x, y      position of a room's top-left corner, in feet (y grows toward the back)
+     w, h      a room's width (left to right) and length (front to back), in feet
+     n         a room's name ("Bedroom 2")
+     k         a room's type key ("bed", "kitchen"); see ROOM_TYPES for the list
+     t         a room's group: pub = living spaces, sleep = bedrooms, wet = bathrooms,
+               svc = service, clo = closets, hall, stair, gar = garage, flex, unf = unfinished
+     it        one item on the room list before it is placed
+     g         the goal settings for the option being built
+     s         the hall width (in layout code) or the drawing scale (in drawing code)
+     u, v      along a wall, and out from it into the room
+     ri, i     the position of a room in its floor's list
+     X(), Y()  turn feet into drawing coordinates
+     sd        a wall side: n (front), s (back), w (left), e (right)
+     Df, Db    depth of the front row and back row of rooms
+     sq ft     square feet; pc = piece (a 4-pc bath has 4 fixtures)
    ===================================================================== */
 
-const FT = 0.3048, SQ = 0.092903;
-const COST = { standard: 155, mid: 215, high: 320 };
+const METRES_PER_FOOT = 0.3048, SQ_METRES_PER_SQ_FOOT = 0.092903, CLOSET_DEPTH = 2.25;          /* reach-in closet: 27 in deep inside */
+const COST_PER_SQ_FT = { standard: 120, mid: 165, high: 250 };     /* $ per sq ft of finished floor */
+const WALL_COST_PER_FT = { standard: 250, mid: 340, high: 500 };     /* $ per lineal ft of exterior wall, per storey */
+const FOUNDATION_AND_ROOF_COST = { standard: 28, mid: 36, high: 50 };       /* $ per sq ft of footprint (foundation and roof) */
 
-/* Room size rules: [target area sq ft, shortest allowed side ft, longest allowed length-to-width ratio].
-   Based on common residential practice: the building code asks for at least 70 sq ft and 7 ft in
-   habitable rooms; typical primary suites are about 14x14, other bedrooms 10x12, kitchens 10x14. */
-const RULES = {
-  Foyer: [56, 6, 1.7], Living: [224, 12, 1.6], Dining: [132, 10, 1.5], Kitchen: [140, 9, 1.8],
-  Pantry: [30, 4, 2], Office: [120, 9, 1.5], 'Gym/Flex': [150, 10, 1.6],
-  Primary: [196, 12, 1.45], 'Walk-in Closet': [48, 5, 1.8], Ensuite: [80, 7, 1.9],
-  'Bed 2': [132, 10, 1.5], 'Bed 3': [120, 10, 1.5], 'Bed 4': [110, 9.5, 1.5], 'Bed 5': [110, 9.5, 1.5],
-  Bath: [45, 5, 2], Powder: [25, 4, 2], Laundry: [56, 6, 1.8], Mudroom: [56, 6, 1.8],
-  Hall: [60, 3.5, 4.5], Stairs: [56, 4.5, 3], Flex: [120, 8, 2]
+/* Room catalogue, in feet. min and rec are [width, depth] from the standards:
+   min = smallest workable size, rec = comfortable size. win = [width in, height in, one window per N ft of wall, max per wall]. */
+const ROOM_TYPES = {
+  foyer:   { n: 'Foyer', t: 'entry', min: [5, 5], rec: [6, 8], asp: 3 },
+  living:  { n: 'Living Room', t: 'pub', min: [12, 13], rec: [15, 16], win: [60, 60, 8, 2], grow: 1, open: 1 },
+  family:  { n: 'Family Room', t: 'pub', min: [12, 14], rec: [15, 16], win: [60, 60, 8, 2], grow: 1, open: 1 },
+  dining:  { n: 'Dining Room', t: 'pub', min: [9, 12], rec: [11, 13], win: [48, 60, 8, 2], grow: 1, open: 1 },
+  kitchen: { n: 'Kitchen', t: 'pub', min: [8, 10], rec: [12, 13], win: [36, 42, 10, 1], grow: 1, open: 1 },
+  nook:    { n: 'Nook', t: 'pub', min: [8, 8], rec: [9, 10], win: [48, 60, 8, 2], open: 1 },
+  pantry:  { n: 'Pantry', t: 'svc', min: [4, 4], rec: [5, 6], asp: 2.5 },
+  office:  { n: 'Office', t: 'flex', min: [8, 9], rec: [10, 11], win: [48, 60, 9, 1], grow: 1 },
+  gym:     { n: 'Gym / Flex', t: 'flex', min: [10, 10], rec: [12, 13], win: [48, 48, 9, 2], grow: 1 },
+  rec:     { n: 'Rec Room', t: 'pub', min: [13, 15], rec: [16, 18], win: [48, 48, 9, 2], grow: 1 },
+  media:   { n: 'Media Room', t: 'flex', min: [12, 14], rec: [13, 16], grow: 1 },
+  primary: { n: 'Primary Bedroom', t: 'sleep', min: [12, 12], rec: [13.5, 14.5], win: [48, 60, 9, 2], grow: 1 },
+  ensuite: { n: 'Ensuite', t: 'wet', min: [8, 10], rec: [9, 12], win: [30, 36, 9, 1] },
+  wic:     { n: 'Walk-in Closet', t: 'clo', min: [5, 6], rec: [6, 6], asp: 3 },
+  wic2:    { n: 'Walk-in Closet', t: 'clo', min: [6, 6], rec: [7, 8], asp: 3 },
+  bed:     { n: 'Bedroom', t: 'sleep', min: [9, 10.5], rec: [11, 12], win: [36, 48, 10, 1], grow: 1 },
+  bath:    { n: 'Bathroom', t: 'wet', min: [5, 8], rec: [5.5, 9], win: [24, 36, 9, 1], asp: 2.2 },
+  bath3:   { n: '3-pc Bath', t: 'wet', min: [5, 6], rec: [5.5, 8], win: [24, 36, 9, 1], asp: 2.2 },
+  powder:  { n: 'Powder', t: 'wet', min: [4, 4], rec: [4.5, 5.5], asp: 2.2 },
+  laundry: { n: 'Laundry', t: 'svc', min: [5.5, 6.5], rec: [7, 8], win: [24, 36, 9, 1], asp: 2.2 },
+  mud:     { n: 'Mudroom', t: 'svc', min: [5, 6], rec: [6, 8], asp: 4 },
+  storage: { n: 'Storage', t: 'svc', min: [4, 5], rec: [8, 10], asp: 4 },
+  mech:    { n: 'Mechanical', t: 'svc', min: [6, 7], rec: [8, 9] },
+  mechS:   { n: 'Mech.', t: 'svc', min: [3, 4], rec: [4, 5], asp: 3 },
+  garage:  { n: 'Garage', t: 'gar' },
+  stairs:  { n: 'Stairs', t: 'stair', min: [7.5, 11], rec: [7.5, 11] },
+  hall:    { n: 'Hall', t: 'hall' },
+  linen:   { n: 'Linen', t: 'clo', min: [1.5, 2], rec: [3, 4], asp: 12 },
+  loft:    { n: 'Loft', t: 'flex', min: [6, 6], rec: [10, 10], win: [48, 48, 9, 1], open: 1 },
+  flex:    { n: 'Flex Room', t: 'flex', min: [6, 6], rec: [10, 10], win: [36, 48, 9, 1] },
+  den:     { n: 'Den', t: 'flex', min: [6, 7], rec: [10, 10], win: [48, 60, 9, 1] },
+  unf:     { n: 'Unfinished', t: 'unf', min: [4, 4], rec: [10, 10] }
 };
 
-/* Styles decide the preferred footprint shape, whether living spaces are open to each other, and cost. */
+/* The room picker: [key, label, default count, max]. */
+const ROOM_PICKER = [
+  ['bed', 'Bedrooms', 2, 9], ['primary', 'Primary suites (with ensuite)', 1, 9], ['bath', 'Bathrooms (4-pc, tub)', 1, 9],
+  ['bath3', 'Bathrooms (3-pc, shower)', 0, 9], ['powder', 'Powder rooms', 1, 9], ['kitchen', 'Kitchens', 1, 9],
+  ['nook', 'Breakfast nooks', 0, 9], ['dining', 'Dining rooms', 1, 9], ['living', 'Living rooms', 1, 9],
+  ['family', 'Family rooms', 0, 9], ['pantry', 'Walk-in pantries', 1, 9], ['office', 'Offices', 1, 9],
+  ['gym', 'Gym / flex rooms', 0, 9], ['rec', 'Rec rooms', 0, 9], ['media', 'Media rooms', 0, 9],
+  ['mud', 'Mudrooms', 1, 9], ['laundry', 'Laundry rooms', 1, 9], ['storage', 'Storage rooms', 0, 9],
+  ['garage', 'Garage (car bays)', 2, 4]
+];
+
+/* Styles decide whether kitchen, dining and living are open to each other, and adjust cost. */
 const STYLES = {
-  mod: { n: 'Modern', shape: 'Z', open: true, cost: 1.10 },
-  open: { n: 'Open Concept', shape: 'T', open: true, cost: 1.0 },
-  craft: { n: 'Craftsman', shape: 'L', open: false, cost: 1.08 },
-  ranch: { n: 'Ranch', shape: 'Z', open: false, cost: 0.97 },
-  farm: { n: 'Modern Farmhouse', shape: 'T', open: true, cost: 1.07 },
-  mid: { n: 'Mid-Century', shape: 'L', open: true, cost: 1.05 },
-  col: { n: 'Colonial', shape: 'R', open: false, cost: 1.10 },
-  med: { n: 'Mediterranean', shape: 'U', open: false, cost: 1.15 },
-  coast: { n: 'Coastal', shape: 'Z', open: true, cost: 1.02 },
-  tudor: { n: 'Tudor', shape: 'T', open: false, cost: 1.12 },
-  contemp: { n: 'Contemporary', shape: 'Z', open: true, cost: 1.08 },
-  cape: { n: 'Cape Cod', shape: 'R', open: false, cost: 1.04 },
-  vict: { n: 'Victorian', shape: 'T', open: false, cost: 1.18 },
-  prairie: { n: 'Prairie', shape: 'Z', open: true, cost: 1.10 },
-  spanish: { n: 'Spanish Revival', shape: 'U', open: false, cost: 1.14 },
-  cabin: { n: 'Mountain Cabin', shape: 'L', open: true, cost: 1.06 },
-  scandi: { n: 'Scandinavian', shape: 'R', open: true, cost: 1.06 }
+  mod: { n: 'Modern', open: true, cost: 1.10 }, open: { n: 'Open Concept', open: true, cost: 1.0 },
+  craft: { n: 'Craftsman', open: false, cost: 1.08 }, ranch: { n: 'Ranch', open: false, cost: 0.97 },
+  farm: { n: 'Modern Farmhouse', open: true, cost: 1.07 }, mid: { n: 'Mid-Century', open: true, cost: 1.05 },
+  col: { n: 'Colonial', open: false, cost: 1.10 }, med: { n: 'Mediterranean', open: false, cost: 1.15 },
+  coast: { n: 'Coastal', open: true, cost: 1.02 }, tudor: { n: 'Tudor', open: false, cost: 1.12 },
+  contemp: { n: 'Contemporary', open: true, cost: 1.08 }, cape: { n: 'Cape Cod', open: false, cost: 1.04 },
+  vict: { n: 'Victorian', open: false, cost: 1.18 }, prairie: { n: 'Prairie', open: true, cost: 1.10 },
+  spanish: { n: 'Spanish Revival', open: false, cost: 1.14 }, cabin: { n: 'Mountain Cabin', open: true, cost: 1.06 },
+  scandi: { n: 'Scandinavian', open: true, cost: 1.06 }
 };
-const SHAPES = { L: 'L-shape', T: 'T-shape', Z: 'Staggered wings', U: 'U-shape courtyard', R: 'Compact block' };
-const ROOM_COLORS = { entry: '#fdf6e3', pub: '#fdf6e3', sleep: '#e8f1fb', wet: '#e3f6f5', clo: '#f1f1f1', svc: '#f1efe7', gar: '#e5e7eb', flex: '#f3ecfb', hall: '#ffffff', stair: '#f1f5f9' };
 
-let useMetric = false, plans = [], seed = 1;
+/* The five options. f = room size between minimum (0) and recommended (1); grow = extra size for living spaces. */
+const GOALS = [
+  { id: 'path', n: 'Best path of travel', f: 0.7, hallW: 3.5, grow: 1,
+    why: 'Shortest everyday walks: garage to kitchen, bedrooms to bathrooms, front door to living spaces.' },
+  { id: 'space', n: 'Most space efficient', f: 0.25, hallW: 3, grow: 1,
+    why: 'Least floor area spent on halls and leftover space; rooms close to their minimum workable size.' },
+  { id: 'open', n: 'Most open feel', f: 0.75, hallW: 3.5, grow: 1.18, open: true,
+    why: 'Kitchen, dining and living share one open space with long sightlines and generous windows.' },
+  { id: 'private', n: 'Most private bedrooms', f: 0.8, hallW: 3.5, grow: 1,
+    why: 'Primary suite apart from the other bedrooms, and bedrooms kept away from garage, kitchen and living noise.' },
+  { id: 'cost', n: 'Most cost efficient', f: 0.2, hallW: 3, grow: 1,
+    why: 'Compact footprint with few corners, short exterior walls and bathrooms grouped on shared plumbing walls.' }
+];
+
+
+let useMetric = false, plans = [], seed = 1, program = null;
 let mainTab = 'options', optTab = 0, refineIdx = null;
-let edFloor = 0, edSel = null, drag = null, edView = null;
+let editFloor = 0, selectedRoom = null, drag = null, editView = null, drawingCount = 0;
 
 const sum = (list, fn) => list.reduce((t, x) => t + fn(x), 0);
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const escapeText = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+function seededRandom(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 /* ---------------- formatting ---------------- */
-function fmtLen(ft) {
-  if (useMetric) return (ft * FT).toFixed(1) + ' m';
-  let f = Math.floor(ft), i = Math.round((ft - f) * 12);
+function formatLength(ft) {
+  if (useMetric) return (ft * METRES_PER_FOOT).toFixed(1) + ' m';
+  let f = Math.floor(ft + 1e-6), i = Math.round((ft - f) * 12);
   if (i === 12) { f++; i = 0; }
   return f + "'" + (i ? i + '"' : '');
 }
-function fmtArea(sq) { return Math.round(useMetric ? sq * SQ : sq).toLocaleString() + (useMetric ? ' m²' : ' sq ft'); }
-function fmtMoney(n) { return n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : '$' + Math.round(n / 1000) + 'k'; }
+function formatArea(sq) { return Math.round(useMetric ? sq * SQ_METRES_PER_SQ_FOOT : sq).toLocaleString() + (useMetric ? ' m²' : ' sq ft'); }
+function formatMoney(n) { return n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : '$' + Math.round(n / 1000) + 'k'; }
+function formatDistance(ft) { return useMetric ? (ft * METRES_PER_FOOT).toFixed(1) + ' m' : Math.round(ft) + ' ft'; }
 
-/* ---------------- step 2: the room program ---------------- */
-function buildProgram(s) {
-  const g = s.adaptable ? 1.15 : 1, two = s.levels === 2, hallW = s.adaptable ? 4.5 : 3.5;
-  const mk = (name, type, grow, extra) => {
-    const r = RULES[name] || RULES.Flex;
-    return Object.assign({ n: name, t: type, area: r[0] * (grow ? g : 1), minSide: r[1], maxAspect: r[2] }, extra || {});
-  };
-  const pub = [s.office ? mk('Office', 'flex') : null, mk('Foyer', 'entry'), mk('Living', 'pub'), mk('Dining', 'pub'), mk('Kitchen', 'pub', 1), s.pantry ? mk('Pantry', 'svc') : null];
-  const priv = [mk('Walk-in Closet', 'clo', 1), mk('Primary', 'sleep', 1)];
-  if (s.bathrooms >= 2) priv.push(mk('Ensuite', 'wet', 1));
-  const beds = s.bedrooms - 1, baths = s.bathrooms >= 2 ? s.bathrooms - 1 : 1;
-  for (let i = 0; i < Math.max(beds, baths); i++) {
-    if (i < beds) priv.push(mk('Bed ' + (i + 2), 'sleep', 0));
-    if (i < baths) priv.push(mk('Bath', 'wet', 1));
+/* ---------------- step 1: the room program ---------------- */
+/* Turns the picker counts into a list of rooms per floor. Rules:
+   - public rooms, garage and mudroom stay on the main floor;
+   - bedrooms go upstairs in a two-storey house; in a one-storey house with a finished basement,
+     the primary and two bedrooms stay on the main floor and the rest go down;
+   - rec, media and gym rooms go to a finished basement; storage and mechanical go to any basement. */
+function makeProgram(s) {
+  const c = s.counts, two = s.storeys === 2, B = s.basement;
+  const P = { main: [], upper: [], base: [], notes: [] };
+  const it = (k, n, x) => Object.assign({ k: k, n: n || ROOM_TYPES[k].n }, x || {});
+  const many = (k, cnt, floor) => { for (let i = 0; i < cnt; i++) floor.push(it(k, cnt > 1 ? ROOM_TYPES[k].n + ' ' + (i + 1) : null)); };
+  P.main.push(it('foyer'));
+  many('kitchen', c.kitchen, P.main); many('nook', c.nook, P.main); many('dining', c.dining, P.main);
+  many('living', c.living, P.main); many('family', c.family, P.main); many('pantry', c.pantry, P.main);
+  many('office', c.office, P.main); many('mud', c.mud, P.main); many('powder', c.powder, P.main);
+  if (c.garage) P.main.push(it('garage', c.garage === 1 ? 'Garage' : c.garage + '-Car Garage', { bays: c.garage }));
+  const sleep = two ? P.upper : P.main;
+  for (let i = 0; i < c.primary; i++) {
+    const nm = 'Primary Bedroom' + (c.primary > 1 ? ' ' + (i + 1) : ''), grp = 'P' + i, tag = c.primary > 1 ? ' ' + (i + 1) : '';
+    sleep.push(it('primary', nm, { grp: grp, cl: s.closetPri === 'reach' ? 'double' : 'none' }));
+    sleep.push(it('ensuite', 'Ensuite' + tag, { of: nm, grp: grp }));
+    if (s.closetPri === 'walk1') sleep.push(it('wic', 'Walk-in Closet' + tag, { of: nm, grp: grp }));
+    else if (s.closetPri === 'walk2') sleep.push(it('wic2', 'Walk-in Closet' + tag, { of: nm, grp: grp }));
+    else if (s.closetPri === 'twin') { sleep.push(it('wic', 'His Closet' + tag, { of: nm, grp: grp })); sleep.push(it('wic', 'Her Closet' + tag, { of: nm, grp: grp })); }
   }
-  if (two) {
-    pub.push(mk('Powder', 'wet', 0), mk('Stairs', 'stair', 0));
-    priv.unshift(mk('Stairs', 'stair', 0));
-    if (s.gym) pub.push(mk('Gym/Flex', 'flex'));
-  } else if (s.gym) priv.push(mk('Gym/Flex', 'flex'));
-  if (s.bedrooms >= 2) priv.unshift(mk('Hall', 'hall', 0, { minSide: hallW }));
-  return {
-    pub: pub.filter(Boolean), priv: priv.filter(Boolean),
-    svc: { garageW: s.garage === 2 ? 20 : s.garage === 1 ? 12 : 0, mud: s.mudroom ? mk('Mudroom', 'svc') : null, laundry: mk('Laundry', 'svc') }
-  };
+  const first = c.primary ? 2 : 1;
+  let downBeds = 0;
+  for (let i = 0; i < c.bed; i++) {
+    const nm = 'Bedroom ' + (first + i), grp = 'B' + i;
+    let floor = sleep;
+    if (!two && B === 'fin' && i >= 2) { floor = P.base; downBeds++; }
+    floor.push(it('bed', nm, { grp: grp, cl: s.closetSec === 'walkin' ? 'none' : s.closetSec }));
+    if (s.closetSec === 'walkin') floor.push(it('wic', 'W/I Closet ' + (first + i), { of: nm, grp: grp }));
+  }
+  if (downBeds) P.notes.push(downBeds + ' bedroom' + (downBeds > 1 ? 's are' : ' is') + ' in the finished basement, which keeps a one-storey footprint from growing too long.');
+  const baths = [];
+  const nb = c.bath + c.bath3;
+  for (let i = 0; i < c.bath3; i++) baths.push(it('bath3', c.bath3 > 1 ? '3-pc Bath ' + (i + 1) : null));
+  for (let i = 0; i < c.bath; i++) baths.push(it('bath', c.bath > 1 ? 'Bathroom ' + (i + 1) : null));
+  if (downBeds && nb >= 2) P.base.push(baths.shift());
+  else if (downBeds) P.notes.push('The basement bedrooms have no bathroom of their own; add a bathroom to give them one.');
+  if (two && !c.powder && nb >= 2) P.main.push(baths.shift());
+  baths.forEach(b => sleep.push(b));
+  for (let i = 0; i < c.laundry; i++) (i === 0 && two ? P.upper : P.main).push(it('laundry', c.laundry > 1 ? 'Laundry ' + (i + 1) : null));
+  ['gym', 'rec', 'media'].forEach(k => many(k, c[k], B === 'fin' ? P.base : P.main));
+  many('storage', c.storage, B !== 'none' ? P.base : P.main);
+  if (B !== 'none') P.base.push(it('mech')); else P.main.push(it('mechS'));
+  if (two || B !== 'none') { P.main.push(it('stairs')); if (two) P.upper.push(it('stairs')); if (B !== 'none') P.base.push(it('stairs')); }
+  if (two) P.notes.push('Bedrooms' + (c.laundry ? ' and laundry' : '') + ' are upstairs; the main floor holds the living spaces.');
+  if (two && !c.powder && nb < 2) P.notes.push('There is no bathroom on the main floor; add a powder room for guests.');
+  if (B === 'unf') P.notes.push('The basement is left unfinished apart from mechanical and storage.');
+  P.minArea = sum(P.main.concat(P.upper, P.base), x => x.k === 'garage' ? 0 : ROOM_TYPES[x.k].min[0] * ROOM_TYPES[x.k].min[1]);
+  return P;
 }
-const filler = (name, area) => ({ n: name, t: 'flex', area: area, minSide: 8, maxAspect: 2 });
 
-/* Garage plus a narrow column of mudroom and laundry. Their depths stagger, which creates a jog. */
-function buildService(sv, scale) {
-  const rooms = [], col = 8, gw = sv.garageW;
-  let y = 0;
-  if (gw) rooms.push({ n: 'Garage', t: 'gar', x: 0, y: 0, w: gw, h: 20, minSide: 10, maxAspect: 2 });
-  [sv.mud, sv.laundry].filter(Boolean).forEach(it => {
-    const h = Math.max(5, it.area * scale / col);
-    rooms.push(Object.assign({}, it, { x: gw, y: y, w: col, h: h }));
-    y += h;
+/* ---------------- step 2: building blocks ---------------- */
+function minimumSize(it) { return it.k === 'garage' ? [it.bays === 1 ? 12 : it.bays * 10, 20] : ROOM_TYPES[it.k].min; }
+function recommendedSize(it) { return it.k === 'garage' ? [it.bays === 1 ? 14 : it.bays * 11, 22] : ROOM_TYPES[it.k].rec; }
+function roomDepth(it, g) { return lerp(minimumSize(it)[1], recommendedSize(it)[1], g.f); }
+/* Width of a room along its row when the row is d deep: area at the goal's size level, never below the
+   standard's minimum sides or a sensible proportion. Bedrooms with reach-in closets get the closet depth added. */
+function roomWidthInRow(it, d, g) {
+  const sp = ROOM_TYPES[it.k], mn = minimumSize(it), rc = recommendedSize(it);
+  if (it.k === 'stairs') return 7.5;
+  if (it.k === 'garage') return Math.ceil(lerp(mn[0], rc[0], g.f) * 2) / 2;
+  const area = lerp(mn[0] * mn[1], rc[0] * rc[1], g.f) * (sp.t === 'pub' || it.k === 'loft' ? g.grow : 1);
+  const lo = Math.min(mn[0], mn[1]), hi = Math.max(mn[0], mn[1]);
+  let a = Math.max(area / d, d >= hi - 0.01 ? lo : hi, d / (sp.asp || 1.8));
+  if ((it.k === 'bed' || it.k === 'primary') && it.cl && it.cl !== 'none') a += CLOSET_DEPTH;
+  if (it.k === 'foyer') a += 2;                       /* coat closet beside the door */
+  return Math.ceil(a * 4) / 4;
+}
+
+/* Makes a row of rooms exactly L long. Spare length first grows the rooms that can grow (up to
+   pol.grow, a fraction of their width); anything left becomes a filler room: a linen closet when
+   narrow, storage when medium, or pol.big (den, flex room, loft) when wide. Returns any overflow. */
+function fillRow(list, L, pol) {
+  const S = sum(list, x => x.a);
+  if (S > L + 0.01) return S - L;
+  let extra = L - S;
+  if (extra < 0.01) return 0;
+  const spread = (amt, set) => { const t = sum(set, x => x.a) || 1; set.forEach(x => { x.a += amt * x.a / t; }); };
+  const growers = list.filter(x => x.it.k !== 'stairs' && ROOM_TYPES[x.it.k].grow);
+  const pool = growers.length ? growers : list.filter(x => x.it.k !== 'stairs' && x.it.k !== 'garage');
+  const cap = sum(pool, x => x.a) * (pol.grow == null ? 0.15 : pol.grow);
+  if (extra <= cap + 0.01 || (!pol.big && !pol.small)) { spread(extra, pool.length ? pool : list.length ? list : []); if (pool.length || list.length) return 0; }
+  else { spread(cap, pool); extra -= cap; }
+  if (!list.length || extra > 0.01) {
+    const kind = pol.big && extra >= (pol.bigMin || 8) ? pol.big : extra >= 4 && pol.small ? (pol.mid || 'storage') : pol.small || pol.big || 'linen';
+    if (extra < 3 && list.length) spread(extra, list);
+    else {
+      /* very long leftovers become several rooms, each no wider than 16 ft */
+      const n = kind === pol.big ? Math.max(1, Math.round(extra / (pol.chunk || 15))) : 1;
+      for (let i = 0; i < n; i++) list.push({ it: { k: kind, n: ROOM_TYPES[kind].n + (n > 1 ? ' ' + (i + 1) : ''), filler: 1 }, a: extra / n });
+    }
+  }
+  return 0;
+}
+
+function groupRoomsTogether(items) {
+  const m = {}, out = [];
+  items.forEach((it, i) => { const key = it.grp || 'u' + i; if (!m[key]) { m[key] = { key: key, items: [] }; out.push(m[key]); } m[key].items.push(it); });
+  return out;
+}
+function makeRoom(it, x, y, w, h, extra) {
+  const r = { n: it.n, k: it.k, t: ROOM_TYPES[it.k].t, x: x, y: y, w: w, h: h };
+  ['of', 'cl', 'bays', 'filler'].forEach(p => { if (it[p] !== undefined) r[p] = it[p]; });
+  return Object.assign(r, extra || {});
+}
+
+/* ---------------- step 3: wings hung off the spine ---------------- */
+/* A wing in local coordinates: u runs along the hall away from the hub, v across it.
+   Row A sits at v from -dA to 0, the hall at 0..s, row B at s..s+dB. An optional primary
+   suite caps the far end: bedroom on the B side, ensuite and closets on the A side. */
+function buildWing(units, endcap, dA, dB, s, aStart, g, rng) {
+  if (!units.length && !endcap) return null;
+  const ulen = (u, d) => sum(u.items, it => roomWidthInRow(it, d, g));
+  /* split the units between the two sides of the hall so both rows end close together */
+  let rows = null, bestGap = Infinity;
+  for (let t = 0; t < 24; t++) {
+    const rs = [[], []], end = [aStart, 0];
+    const order = units.slice().sort((p, q) => ulen(q, 12) - ulen(p, 12) + (t ? (rng() - 0.5) * 8 : 0));
+    order.forEach(u => { const i = end[0] + ulen(u, dA) <= end[1] + ulen(u, dB) ? 0 : 1; rs[i].push(u); end[i] += ulen(u, i ? dB : dA); });
+    const gap = Math.abs(end[0] - end[1]) + (end[0] < aStart + 0.01 && aStart ? 0 : 0);
+    if (gap < bestGap - 0.01) { bestGap = gap; rows = rs; }
+  }
+  if (rng() < 0.5) rows.forEach(r => r.reverse());
+  const items = (us, d) => { const l = []; us.forEach(u => { const its = rng() < 0.5 ? u.items : u.items.slice().reverse(); its.forEach(it => l.push({ it: it, a: roomWidthInRow(it, d, g) })); }); return l; };
+  const A = items(rows[0], dA), B = items(rows[1], dB);
+  let uEnd = Math.max(aStart + sum(A, x => x.a), sum(B, x => x.a));
+  if (endcap && aStart > 0) uEnd = Math.max(uEnd, aStart);
+  const pol = { big: 'flex', small: 'linen', mid: 'storage', grow: 0.2 };
+  if (uEnd - aStart >= 1.5) fillRow(A, uEnd - aStart, pol); else A.length = 0;
+  if (uEnd >= 1.5) fillRow(B, uEnd, pol);
+  const out = [];
+  let u = aStart;
+  A.forEach(x => { out.push({ it: x.it, u0: u, v0: -dA, lu: x.a, lv: dA }); u += x.a; });
+  u = 0;
+  B.forEach(x => { out.push({ it: x.it, u0: u, v0: s, lu: x.a, lv: dB }); u += x.a; });
+  if (uEnd > 0.01) out.push({ it: { k: 'hall', n: 'Hall' }, u0: 0, v0: 0, lu: uEnd, lv: s });
+  let L = uEnd;
+  if (endcap) {
+    const pr = endcap.items.find(i => i.k === 'primary'), fr = endcap.items.filter(i => i !== pr);
+    fr.sort((p, q) => (p.k === 'ensuite') - (q.k === 'ensuite'));
+    const F = fr.map(it => ({ it: it, a: roomWidthInRow(it, dA, g) }));
+    const Wp = Math.max(roomWidthInRow(pr, s + dB, g), sum(F, x => x.a));
+    if (F.length) fillRow(F, Wp, { grow: 9 });
+    out.push({ it: pr, u0: uEnd, v0: 0, lu: Wp, lv: s + dB });
+    let uu = uEnd;
+    F.forEach(x => { out.push({ it: x.it, u0: uu, v0: -dA, lu: x.a, lv: dA }); uu += x.a; });
+    if (!F.length) out.push({ it: { k: 'linen', n: 'Linen', filler: 1 }, u0: uEnd, v0: -dA, lu: Wp, lv: dA });
+    L += Wp;
+  }
+  return { rooms: out, L: L };
+}
+
+/* Puts a wing beside the public block. side 'F' = right end, 'K' = left end (mirrored).
+   bent = the wing turns 90 degrees and runs toward the back, making an L. */
+function placeWing(w, side, bent, X0, X1, Df, wall) {
+  return w.rooms.map(p => {
+    let x, y, ww, hh;
+    if (!bent) { x = X1 + p.u0; y = Df + p.v0; ww = p.lu; hh = p.lv; }
+    else { x = X1 + p.v0; y = Df + p.u0; ww = p.lv; hh = p.lu; }
+    if (side === 'K') x = X0 + X1 - (x + ww);
+    return makeRoom(p.it, x, y, ww, hh, wall ? { wing: wall } : null);
   });
-  return { w: gw + col, d: Math.max(gw ? 20 : 0, y), rooms: rooms };
 }
 
-/* ---------------- step 3: pack rooms into a wing ---------------- */
-/* Splits a rectangle between the rooms (kept in order, so neighbours in the list stay neighbours).
-   Each cut goes across the longer side, which keeps rooms close to square. The cut that gives the
-   most rule-friendly result wins. */
-function partition(items, x, y, w, d) {
-  if (items.length === 1) {
-    const it = items[0];
-    const q = Math.max(Math.max(w / d, d / w) / (it.maxAspect || 2), (it.minSide || 0) / Math.min(w, d));
-    return { rooms: [Object.assign({}, it, { x: x, y: y, w: w, h: d })], score: q };
-  }
-  const total = sum(items, i => i.area), cuts = [];
-  let acc = 0;
-  for (let i = 1; i < items.length; i++) { acc += items[i - 1].area; cuts.push({ i: i, diff: Math.abs(acc - total / 2), a: acc / total }); }
-  cuts.sort((p, q) => p.diff - q.diff);
-  let best = null;
-  cuts.slice(0, 3).forEach(c => {
-    const left = items.slice(0, c.i), right = items.slice(c.i);
-    (Math.max(w / d, d / w) < 1.6 ? ['v', 'h'] : [w > d ? 'v' : 'h']).forEach(o => {
-      let L, R;
-      if (o === 'v') { const wl = w * c.a; L = partition(left, x, y, wl, d); R = partition(right, x + wl, y, w - wl, d); }
-      else { const hl = d * c.a; L = partition(left, x, y, w, hl); R = partition(right, x, y + hl, w, d - hl); }
-      const score = Math.max(L.score, R.score);
-      if (!best || score < best.score) best = { rooms: L.rooms.concat(R.rooms), score: score };
+/* Main floor: the public block (front row + back row, with the circulation spine merged into the
+   back-row living spaces), the service wing or forward garage, and the bedroom wing(s). */
+function buildMainFloor(P, cfg, g, minBody, needDb) {
+  const items = P.main.slice(), s = g.hallW, rng = seededRandom(cfg.seed * 977 + 13);
+  const take = keys => { const out = []; for (let i = items.length - 1; i >= 0; i--) if (keys.indexOf(items[i].k) > -1) out.unshift(items.splice(i, 1)[0]); return out; };
+  const gar = take(['garage'])[0] || null;
+  const svcEnd = cfg.svc === 'end' && !!gar;
+  const hasSleep = items.some(i => i.k === 'primary' || i.k === 'bed');
+  const priv = hasSleep ? take(['primary', 'ensuite', 'wic', 'wic2', 'bed', 'bath', 'bath3']) : [];
+  const mud = take(['mud']), pantry = take(['pantry']), svcRest = take(['laundry', 'storage', 'mech', 'mechS']);
+  const kitchen = take(['kitchen']), nook = take(['nook']), family = take(['family']), dining = take(['dining']), living = take(['living']), rec = take(['rec']);
+  const foyer = take(['foyer']), powder = take(['powder', 'bath', 'bath3']), stairs = take(['stairs']), office = take(['office']), other = items;
+  const hasFam = family.length > 0;
+  const front = [], back = [];
+  let spine = null, wingSvc = [];
+  if (svcEnd) { spine = mud.shift() || null; wingSvc = mud.concat(svcRest); front.push(...pantry); }
+  else front.push(...pantry.slice(0, 1), ...mud, ...pantry.slice(1), ...svcRest);
+  if (hasFam) front.push(...dining);
+  const v = cfg.seed % 3, mid = v === 0 ? [powder, stairs, foyer, office] : v === 1 ? [stairs, powder, foyer, office] : [powder, foyer, stairs, office];
+  mid.forEach(l => { front.push(...l); if (l === foyer && hasFam) front.push(...living); });
+  front.push(...other);
+  back.push(...kitchen, ...nook);
+  if (hasFam) back.push(...family); else back.push(...dining, ...living);
+  back.push(...rec);
+  /* balance the two public rows: if the front row runs much longer, move formal rooms to the back row */
+  for (let guard = 0; guard < 6; guard++) {
+    const fa = sum(front, it => roomWidthInRow(it, 12, g)), ba = sum(back, it => roomWidthInRow(it, 13, g));
+    let best = null;
+    front.forEach((it, i) => {
+      if (['living', 'dining', 'gym', 'media', 'office'].indexOf(it.k) < 0) return;
+      const d = Math.abs((fa - roomWidthInRow(it, 12, g)) - (ba + roomWidthInRow(it, 13, g)));
+      if (d < Math.abs(fa - ba) - 2 && (!best || d < best.d)) best = { i: i, d: d };
     });
+    if (!best || fa - ba < 6) break;
+    const it = front.splice(best.i, 1)[0];
+    if (it.k === 'dining') back.splice(kitchen.length + nook.length, 0, it); else back.push(it);
+  }
+  if (!back.length) back.push({ k: 'den', n: 'Den', filler: 1 });
+
+  let Df = clamp(Math.max(9, ...front.map(it => roomDepth(it, g))), 9, 14);
+  if (stairs.length) Df = Math.max(Df, 11);
+  if (cfg.aligned && priv.filter(i => i.k === 'primary').length > 1) Df = Math.max(Df, 12.5);
+  const Db = Math.max(clamp(sum(back, it => roomDepth(it, g)) / back.length + 1, 11, 15), needDb || 0);
+  const D = Df + s + Db;
+  const F = front.map(it => ({ it: it, a: roomWidthInRow(it, Df, g) })), Bk = back.map(it => ({ it: it, a: roomWidthInRow(it, Db, g) }));
+
+  /* forward garage: it covers the service rooms at the kitchen end, never the foyer */
+  let Gw = 0, Gd = 0;
+  if (gar) { Gd = Math.round(roomDepth(gar, g) * 2) / 2; Gw = roomWidthInRow(gar, Gd, g); }
+  if (gar && !svcEnd) {
+    const fi = F.findIndex(x => x.it.k === 'foyer');
+    const pre = sum(F.slice(0, fi), x => x.a), short = Gw - pre;
+    if (short > 0.01) {
+      const m = F.find(x => x.it.k === 'mud');
+      if (m && short < 4) m.a += short;
+      else F.splice(fi, 0, { it: { k: 'storage', n: 'Storage', filler: 1 }, a: Math.max(short, 4) });
+    }
+  }
+
+  /* bedroom wings (built first so the body length is known) */
+  const units = groupRoomsTogether(priv), prim = units.filter(u => u.items.some(i => i.k === 'primary')), sec = units.filter(u => prim.indexOf(u) < 0);
+  const aligned = cfg.aligned, rowItems = [].concat.apply([], sec.concat(cfg.split ? prim.slice(1) : prim.slice(1)).map(u => u.items));
+  const dW = aligned ? null : clamp(Math.max(10, ...rowItems.filter(i => i.k === 'bed' || i.k === 'primary' || i.k === 'bath' || i.k === 'bath3').map(it => roomDepth(it, g))), 10, 15);
+  const dA = aligned ? Df : dW, dB = aligned ? Db : dW;
+  const startFor = bent => bent ? Db + s : 0;
+  let wingF = null, wingK = null;
+  /* a wing that is only a primary suite stays straight: bending it would leave a long empty hall */
+  const unitsF = cfg.split ? prim.slice(1) : sec.concat(prim.slice(1));
+  const bendF = !!cfg.bendF && unitsF.length > 0, bendK = !!cfg.bendK && sec.length > 0;
+  if (cfg.split) {
+    wingF = buildWing(unitsF, prim[0] || null, dA, dB, s, startFor(bendF), g, rng);
+    wingK = buildWing(sec, null, dA, dB, s, startFor(bendK), g, rng);
+  } else if (units.length) wingF = buildWing(unitsF, prim[0] || null, dA, dB, s, startFor(bendF), g, rng);
+  const inBody = aligned ? (wingF ? wingF.L : 0) + (wingK ? wingK.L : 0) : 0;
+
+  const Lp = Math.max(sum(F, x => x.a), sum(Bk, x => x.a), minBody - inBody, 12);
+  fillRow(F, Lp, { big: 'den', small: 'linen', mid: 'storage', grow: 0.25 }); fillRow(Bk, Lp, { big: 'den', bigMin: 10, grow: 0.45 });
+  const rooms = [];
+  let x = 0;
+  F.forEach(p => { rooms.push(makeRoom(p.it, x, 0, p.a, Df)); x += p.a; });
+  x = 0;
+  Bk.forEach(p => { rooms.push(makeRoom(p.it, x, Df, p.a, s + Db, { walk: 'n' })); x += p.a; });
+  const X0 = 0, X1 = Lp;
+  if (wingF) placeWing(wingF, 'F', bendF, X0, X1, Df, 'F').forEach(r => rooms.push(r));
+  if (wingK) placeWing(wingK, 'K', bendK, X0, X1, Df, 'K').forEach(r => rooms.push(r));
+
+  if (gar && svcEnd) {
+    /* service wing at the kitchen end: garage in front, a mudroom hall as its spine, laundry and storage behind */
+    const sw = spine ? 6 : s, dS = clamp(Math.max(6, ...wingSvc.map(it => roomDepth(it, g))), 6, 10);
+    const Bs = wingSvc.map(it => ({ it: it, a: roomWidthInRow(it, dS, g) }));
+    const L = Math.max(Gw, sum(Bs, p => p.a));
+    const As = [{ it: gar, a: Gw }];
+    if (L - Gw >= 4) As.push({ it: { k: 'storage', n: 'Storage', filler: 1 }, a: L - Gw }); else As[0].a = L;
+    if (Bs.length) fillRow(Bs, L, { big: 'storage', small: 'storage', grow: 0.3 });
+    const loc = [];
+    let u = 0;
+    As.forEach(p => { loc.push({ it: p.it, u0: u, v0: p.it.k === 'garage' ? -Gd : -Math.min(Gd, 10), lu: p.a, lv: p.it.k === 'garage' ? Gd : Math.min(Gd, 10) }); u += p.a; });
+    u = 0;
+    Bs.forEach(p => { loc.push({ it: p.it, u0: u, v0: sw, lu: p.a, lv: dS }); u += p.a; });
+    loc.push({ it: spine || { k: 'hall', n: 'Hall' }, u0: 0, v0: 0, lu: L, lv: sw });
+    placeWing({ rooms: loc }, 'K', false, X0, X1, Df, 'S').forEach(r => rooms.push(r));
+  } else if (gar) rooms.push(makeRoom(gar, X0, -Gd, Gw, Gd));
+
+  const st = rooms.find(r => r.k === 'stairs');
+  const bodyRooms = rooms.filter(r => r.wing !== 'S' && r.k !== 'garage');
+  const body = { X0: Math.min(...bodyRooms.map(r => r.x)), X1: Math.max(...bodyRooms.map(r => r.x + r.w)), Df: Df, s: s, Db: Db, D: D };
+  const bent = (bendF && wingF ? 1 : 0) + (bendK && wingK ? 1 : 0);
+  const desc = (bent === 2 ? 'U-shape' : bent ? 'L-shape' : 'Linear') + (cfg.split ? ', split bedrooms' : '') + (gar ? (svcEnd ? ', side garage' : ', forward garage') : '');
+  return { rooms: rooms, body: body, stairs: st ? { x: st.x, y: st.y, w: st.w, h: st.h } : null, desc: desc };
+}
+
+/* Upper floor or basement over the main body: rooms on both sides of a hall that lines up with the
+   stairs below. The primary suite takes one end of an upper floor. */
+function buildUpperOrBasement(items, body, st, g, kind, rng, force) {
+  const s = body.s, Df = body.Df, Db = body.Db, X0 = body.X0, X1 = body.X1, D = body.D;
+  const units = groupRoomsTogether(items.filter(i => i.k !== 'stairs'));
+  const rooms = [], notes = [];
+  let ex0 = X0, ex1 = X1;
+  const pu = kind === 'upper' ? units.find(u => u.items.some(i => i.k === 'primary')) : null;
+  if (pu) {
+    const pr = pu.items.find(i => i.k === 'primary'), fr = pu.items.filter(i => i !== pr);
+    fr.sort((p, q) => (p.k === 'ensuite') - (q.k === 'ensuite'));
+    const F = fr.map(it => ({ it: it, a: roomWidthInRow(it, Df, g) }));
+    const Wp = Math.max(roomWidthInRow(pr, s + Db, g), sum(F, x => x.a));
+    const okF = !st || st.x + st.w <= X1 - Wp + 0.01, okK = !st || st.x >= X0 + Wp - 0.01;
+    if ((okF || okK) && Wp < (X1 - X0) * 0.7) {
+      units.splice(units.indexOf(pu), 1);
+      const atF = okF && (!okK || rng() < 0.6), cx = atF ? X1 - Wp : X0;
+      if (F.length) fillRow(F, Wp, { grow: 9 });
+      rooms.push(makeRoom(pr, cx, Df, Wp, s + Db));
+      let xx = cx;
+      (atF ? F : F.slice().reverse()).forEach(p => { rooms.push(makeRoom(p.it, xx, 0, p.a, Df)); xx += p.a; });
+      if (!F.length) rooms.push(makeRoom({ k: 'linen', n: 'Linen', filler: 1 }, cx, 0, Wp, Df));
+      if (atF) ex1 = cx; else ex0 = cx + Wp;
+    }
+  }
+  const segs = [];
+  const addSeg = (x0, x1, y0, d) => { if (x1 - x0 > 0.3) segs.push({ x0: x0, x1: x1, y0: y0, d: d, list: [], used: 0 }); };
+  if (st && st.x >= ex0 - 0.01 && st.x + st.w <= ex1 + 0.01) { addSeg(ex0, st.x, 0, Df); addSeg(st.x + st.w, ex1, 0, Df); }
+  else addSeg(ex0, ex1, 0, Df);
+  addSeg(ex0, ex1, Df + s, Db);
+  let over = 0;
+  units.sort((p, q) => sum(q.items, it => roomWidthInRow(it, 12, g)) - sum(p.items, it => roomWidthInRow(it, 12, g)) + (rng() - 0.5) * 2);
+  units.forEach(u => {
+    let best = null;
+    segs.forEach(sg => { if (u.items.some(it => it.k !== 'linen' && Math.min(...minimumSize(it)) > sg.d + 0.01)) return; const len = sum(u.items, it => roomWidthInRow(it, sg.d, g)), rem = sg.x1 - sg.x0 - sg.used - len; if (rem >= -0.01 && (!best || rem > best.rem)) best = { sg: sg, len: len, rem: rem }; });
+    if (best) { best.sg.list.push(u); best.sg.used += best.len; }
+    else {
+      /* shortfall = what this unit needs beyond the most room left in any row deep enough for it */
+      const elig = segs.filter(sg => !u.items.some(it => it.k !== 'linen' && Math.min(...minimumSize(it)) > sg.d + 0.01));
+      const need = sum(u.items, it => roomWidthInRow(it, elig.length ? elig[0].d : Db, g));
+      over += Math.max(1, need - Math.max(0, ...elig.map(sg => sg.x1 - sg.x0 - sg.used)));
+      if (force) notes.push(u.items.map(i => i.n).join(', '));
+    }
   });
-  return best;
-}
-
-/* Fills a w x d rectangle with the rooms, stretching every room evenly to use all the space. */
-function pack(items, w, d, rand) {
-  const f = w * d / sum(items, i => i.area);
-  const r = partition(items.map(i => Object.assign({}, i, { area: i.area * f })), 0, 0, w, d);
-  r.score *= 1 + 0.05 * rand();
-  return r;
-}
-
-/* Counts rooms that cannot reach a hall, stair or loft. Closets, ensuites and pantries open into their parent room instead. */
-function linkPenalty(rooms) {
-  if (!rooms.some(r => r.t === 'hall')) return 0;
-  const connector = r => r.t === 'hall' || r.n === 'Stairs' || r.n === 'Loft' || r.n === 'Flex Room';
-  const reach = rooms.filter(r => r.t === 'hall');
-  for (let i = 0; i < reach.length; i++) {
-    rooms.forEach(x => {
-      if (connector(x) && reach.indexOf(x) < 0) { const sg = shared(reach[i], x); if (sg && sg.s1 - sg.s0 >= 2.5) reach.push(x); }
-    });
-  }
-  return rooms.filter(r => ['Walk-in Closet', 'Ensuite', 'Pantry'].indexOf(r.n) < 0 && !reach.some(c => { const sg = c === r ? null : shared(c, r); return c === r || (sg && sg.s1 - sg.s0 >= 2.5); })).length;
-}
-
-/* Tries several wing proportions and room orders and keeps the best. If forceW is given, the width is fixed. */
-function bestPack(items, area, rand, forceW) {
-  const hall = items.filter(i => i.t === 'hall'), rest = items.filter(i => i.t !== 'hall');
-  const orders = [items, items.slice().reverse()];
-  if (hall.length) orders.push(rest.slice(0, Math.floor(rest.length / 2)).concat(hall, rest.slice(Math.floor(rest.length / 2))));
-  let best = null;
-  orders.forEach(order => {
-    (forceW ? [0] : [0.55, 0.7, 0.85, 1, 1.2, 1.45, 1.7, 2]).forEach(a => {
-      const w = forceW || Math.max(8, Math.round(Math.sqrt(area * a) * 4) / 4), d = area / w;
-      const r = pack(order, w, d, rand);
-      r.score += 0.6 * linkPenalty(r.rooms);
-      if (!best || r.score < best.score) best = { w: w, d: d, rooms: r.rooms, score: r.score };
-    });
+  if (over && !force) return { over: over };
+  if (st) rooms.push(makeRoom({ k: 'stairs', n: 'Stairs' }, st.x, st.y, st.w, st.h));
+  rooms.push(makeRoom({ k: 'hall', n: 'Hall' }, ex0, Df, ex1 - ex0, s));
+  const pol = kind === 'upper' ? { big: 'loft', small: 'linen', mid: 'storage', grow: 0.2 } : (program && program.basement === 'fin' ? { big: 'flex', small: 'storage', mid: 'storage', grow: 1, chunk: 22 } : { big: 'unf', small: 'unf', mid: 'unf', grow: 0 });
+  segs.forEach(sg => {
+    const row = [];
+    sg.list.forEach(u => u.items.forEach(it => row.push({ it: it, a: roomWidthInRow(it, sg.d, g) })));
+    if (rng() < 0.5) row.reverse();
+    fillRow(row, sg.x1 - sg.x0, pol);
+    let x = sg.x0;
+    row.forEach(p => { rooms.push(makeRoom(p.it, x, sg.y0, p.a, sg.d)); x += p.a; });
   });
-  return best;
+  return { rooms: rooms, over: 0, dropped: notes };
 }
 
-const flipRooms = (rooms, w, d, fx, fy) => rooms.forEach(r => { if (fx) r.x = w - r.x - r.w; if (fy) r.y = d - r.y - r.h; });
-const moveRooms = (rooms, dx, dy) => rooms.map(r => Object.assign({}, r, { x: r.x + dx, y: r.y + dy }));
-const overlaps = (a, b) => a.x < b.x + b.w - 0.01 && b.x < a.x + a.w - 0.01 && a.y < b.y + b.h - 0.01 && b.y < a.y + a.h - 0.01;
-
-/* ---------------- step 4: attach the wings in a shape ---------------- */
-function placeWings(shape, P, B, S) {
-  const pl = {}, bw = B ? B.w : 0;
-  const fit = y => Math.min(y, P.d - S.d);            /* keeps the service wing from crossing the private wing */
-  if (shape === 'L') { pl.S = { x: P.w, y: fit(Math.round(P.d * 0.3)), m: true }; pl.B = { x: 0, y: P.d }; }
-  else if (shape === 'T') { pl.S = { x: -S.w, y: fit(Math.round(P.d * 0.3)), m: false }; pl.B = { x: (P.w - (B ? B.w : P.w)) / 2, y: P.d }; }
-  else if (shape === 'Z') { pl.S = { x: -S.w, y: Math.max(0, P.d - S.d * 0.5), m: false }; pl.B = { x: P.w * 0.5, y: P.d }; }
-  else if (shape === 'U') { pl.S = { x: Math.max(P.w - S.w, bw + 6), y: P.d, m: false }; pl.B = { x: 0, y: P.d }; }
-  else { pl.S = { x: -S.w, y: 0, m: false }; pl.B = { x: 0, y: P.d }; }
-  return pl;
+/* Builds every floor for one configuration. Upper floors and basements must sit over the main body,
+   so if they need more length the main floor is rebuilt longer. */
+function buildAllFloors(P, cfg, g) {
+  let minBody = 0, main, up = null, bs = null;
+  const needDb = Math.max(0, ...P.upper.concat(P.base).filter(i => ['rec', 'media', 'family', 'gym'].indexOf(i.k) > -1).map(i => Math.min(...minimumSize(i)) + 0.5));
+  for (let pass = 0; pass < 9; pass++) {
+    const force = pass === 8;
+    main = buildMainFloor(P, cfg, g, minBody, needDb);
+    const rng = seededRandom(cfg.seed * 31 + 7);
+    let over = 0;
+    up = P.upper.length ? buildUpperOrBasement(P.upper, main.body, main.stairs, g, 'upper', rng, force) : null;
+    if (up && up.over) over = Math.max(over, up.over);
+    bs = P.base.length ? buildUpperOrBasement(P.base, main.body, main.stairs, g, 'base', rng, force) : null;
+    if (bs && bs.over) over = Math.max(over, bs.over);
+    if (!over) break;
+    minBody = main.body.X1 - main.body.X0 + over + 0.5;
+  }
+  const floors = [{ label: 'Main floor', kind: 'main', rooms: main.rooms }];
+  if (up) floors.push({ label: 'Upper floor', kind: 'upper', rooms: up.rooms });
+  if (bs) floors.push({ label: 'Basement', kind: 'base', rooms: bs.rooms });
+  const all = [].concat.apply([], floors.map(f => f.rooms));
+  const mx = Math.min(...all.map(r => r.x)), my = Math.min(...all.map(r => r.y));
+  all.forEach(r => { r.x -= mx; r.y -= my; });
+  if (cfg.mirror) { const W = Math.max(...all.map(r => r.x + r.w)); all.forEach(r => { r.x = W - r.x - r.w; }); }
+  const dropped = [].concat(up && up.dropped || [], bs && bs.dropped || []);
+  return { floors: floors, desc: main.desc, dropped: dropped };
 }
 
-/* Adds a small bay on a free outside wall of a room. */
-function addPopOut(rooms, host, name, wid, dep) {
-  const h = rooms.find(r => r.n === host);
-  if (!h) return;
-  const sides = ['n', 'e', 'w', 's'];
-  for (let i = 0; i < sides.length; i++) {
-    const sd = sides[i], horiz = sd === 'n' || sd === 's';
-    const len = Math.min(wid, (horiz ? h.w : h.h) - 2);
-    if (len < 5) continue;
-    const rect = horiz
-      ? { x: h.x + (h.w - len) / 2, y: sd === 'n' ? h.y - dep : h.y + h.h, w: len, h: dep }
-      : { x: sd === 'w' ? h.x - dep : h.x + h.w, y: h.y + (h.h - len) / 2, w: dep, h: len };
-    if (rooms.some(o => overlaps(o, rect))) continue;
-    rooms.push(Object.assign({ n: name, t: h.t, openTo: host }, rect));
-    return;
-  }
-}
-
-/* Builds one complete plan for one shape. */
-function makePlan(s, shape, flip, scale, rand) {
-  const prog = buildProgram(s), two = s.levels === 2;
-  const scaled = list => list.map(i => Object.assign({}, i, { area: i.area * scale }));
-  const pubItems = scaled(prog.pub), privItems = scaled(prog.priv);
-  const S = buildService(prog.svc, scale);
-  const areaP = () => sum(pubItems, i => i.area), areaB = () => sum(privItems, i => i.area);
-  let P, B;
-  if (two) {
-    const A = Math.max(areaP(), areaB());                   /* both floors share one rectangle */
-    if (A - areaP() > 40) pubItems.push(filler('Flex Room', A - areaP()));
-    if (A - areaB() > 40) privItems.push(filler('Loft', A - areaB()));
-    P = bestPack(pubItems, areaP(), rand);
-    B = bestPack(privItems, P.w * P.d, rand, P.w);
-  } else if (shape === 'R') {
-    P = bestPack(pubItems, areaP(), rand);
-    B = bestPack(privItems, areaB(), rand, P.w);
-  } else {
-    B = bestPack(privItems, areaB(), rand);
-    P = bestPack(pubItems, areaP(), rand);
-    if (shape === 'U' && P.w < B.w + S.w + 8) P = bestPack(pubItems, areaP(), rand, B.w + S.w + 8);
-  }
-  const pl = placeWings(shape, P, two ? null : B, S);
-  const ground = moveRooms(P.rooms, 0, 0);
-  let upper = null;
-  if (two) upper = moveRooms(B.rooms, 0, 0);
-  else {
-    /* turn the private wing so its small hall sits on the side that touches the public wing */
-    flipRooms(B.rooms, B.w, B.d, P.w / 2 > pl.B.x - 0 + B.w / 2, P.d / 2 > pl.B.y + B.d / 2);
-    moveRooms(B.rooms, pl.B.x, pl.B.y).forEach(r => ground.push(r));
-  }
-  const sr = S.rooms.map(r => Object.assign({}, r));
-  flipRooms(sr, S.w, S.d, pl.S.m, false);
-  moveRooms(sr, pl.S.x, pl.S.y).forEach(r => ground.push(r));
-
-  const floors = [ground]; if (upper) floors.push(upper);
-  const all = [].concat.apply([], floors);
-  const mx = Math.min.apply(null, all.map(r => r.x)), my = Math.min.apply(null, all.map(r => r.y));
-  floors.forEach(f => f.forEach(r => { r.x -= mx; r.y -= my; }));
-
-  if (s.popouts) {
-    const dep = s.popDepth;
-    addPopOut(ground, 'Dining', 'Dining Nook', 10, Math.min(dep, 8));
-    addPopOut(upper || ground, 'Primary', 'Primary Bay', 10, dep);
-  }
-  const all2 = [].concat.apply([], floors);
-  const mx2 = Math.min.apply(null, all2.map(r => r.x)), my2 = Math.min.apply(null, all2.map(r => r.y));
-  all2.forEach(r => { r.x -= mx2; r.y -= my2; });
-  const W = Math.max.apply(null, all2.map(r => r.x + r.w)), D = Math.max.apply(null, all2.map(r => r.y + r.h));
-  floors.forEach(f => flipRooms(f, W, D, flip.x, flip.y));
-  const labels = two ? ['Ground level', 'Upper level'] : ['Floor plan'];
-  return { floors: floors.map((f, i) => ({ label: labels[i], rooms: f })), W: W, D: D, living: sum(all2.filter(r => r.t !== 'gar'), r => r.w * r.h) };
+/* Every layout the search tries: garage at the side or forward, one bedroom wing or a split plan,
+   straight or bent wings, and three room orders. Bent wings only for one-storey houses without a basement. */
+function layoutVariations(P, s) {
+  const multi = s.storeys === 2 || s.basement !== 'none';
+  const hasGar = P.main.some(i => i.k === 'garage');
+  const mainBeds = P.main.filter(i => i.k === 'bed').length, mainPrim = P.main.some(i => i.k === 'primary');
+  const hasPriv = mainBeds + (mainPrim ? 1 : 0) > 0;
+  const out = [];
+  const svcs = hasGar ? ['end', 'front'] : ['front'];
+  const bends = multi || !hasPriv ? [0] : [0, 1];
+  svcs.forEach(svc => bends.forEach(bf => out.push({ svc: svc, split: false, bendF: bf, bendK: 0 })));
+  if (mainPrim && mainBeds) bends.forEach(bf => bends.forEach(bk => out.push({ svc: 'front', split: true, bendF: bf, bendK: bk })));
+  const res = [];
+  out.forEach(c => [0, 1, 2].forEach(sd => res.push(Object.assign({ seed: sd + 1, aligned: multi, key: c.svc + (c.split ? 'S' : '') + c.bendF + c.bendK }, c))));
+  return res;
 }
 
 /* ---------------- exterior walls ---------------- */
-function getExtWalls(rooms) {
+function findExteriorWalls(rooms) {
   const eps = 0.08, walls = [];
   function add(s0, s1, pos, orient, dir, side, r) {
     let segs = [[s0, s1]];
@@ -409,8 +689,7 @@ function getExtWalls(rooms) {
 }
 
 /* ---------------- doors ---------------- */
-/* The wall two rooms share: axis, line position, and the range along it. */
-function shared(a, b) {
+function sharedWall(a, b) {
   const E = 0.08, ov = (a0, a1, b0, b1) => [Math.max(a0, b0), Math.min(a1, b1)];
   let o;
   if (Math.abs(a.x + a.w - b.x) < E) { o = ov(a.y, a.y + a.h, b.y, b.y + b.h); if (o[1] - o[0] > 0.5) return { ax: 'v', L: b.x, s0: o[0], s1: o[1] }; }
@@ -419,67 +698,94 @@ function shared(a, b) {
   if (Math.abs(b.y + b.h - a.y) < E) { o = ov(a.x, a.x + a.w, b.x, b.x + b.w); if (o[1] - o[0] > 0.5) return { ax: 'h', L: a.y, s0: o[0], s1: o[1] }; }
   return null;
 }
-const isName = n => x => x.n === n, isType = t => x => x.t === t;
-/* Which rooms each room should open into, in order of preference. */
-function prefOf(r) {
-  const H = isType('hall'), L = isName('Living'), D = isName('Dining'), K = isName('Kitchen'), F = isName('Foyer'), n = r.n;
-  if (n === 'Foyer') return [L, D, H];
-  if (n === 'Living') return [F, D, K];
-  if (n === 'Dining') return [K, L, F];
-  if (n === 'Kitchen') return [D, L, F];
-  if (n === 'Pantry') return [K];
-  if (n === 'Walk-in Closet' || n === 'Ensuite') return [isName('Primary')];
-  if (n === 'Primary' || /^Bed/.test(n)) return [H, L, D, F];
-  if (n === 'Bath') return [H, isType('sleep'), L];
-  if (n === 'Powder') return [F, L, H, K];
-  if (n === 'Mudroom') return [isType('gar'), K, F, L, H];
-  if (n === 'Laundry') return [isName('Mudroom'), H, K, isType('gar')];
-  if (n === 'Garage') return [isName('Mudroom'), isName('Laundry'), K, F, H];
-  if (n === 'Hall') return [L, D, K, F, isName('Stairs')];
-  if (n === 'Stairs') return [H, L, F, D];
-  return [H, L, F, D, K];
+const hasType = k => x => x.k === k, inGroup = t => x => x.t === t, hasName = n => x => x.n === n;
+/* Which rooms each room should open into, in order of preference (the path of travel). */
+function doorPreferences(r) {
+  const H = inGroup('hall');
+  if (r.of) return [hasName(r.of), inGroup('sleep')];
+  switch (r.k) {
+    case 'foyer': return [hasType('living'), hasType('family'), hasType('dining'), H, hasType('stairs'), hasType('kitchen'), hasType('office')];
+    case 'living': return [hasType('foyer'), hasType('dining'), hasType('family'), hasType('kitchen'), H];
+    case 'family': return [hasType('kitchen'), hasType('nook'), hasType('dining'), hasType('living'), hasType('foyer'), H];
+    case 'dining': return [hasType('kitchen'), hasType('living'), hasType('family'), hasType('nook'), hasType('foyer'), H];
+    case 'kitchen': return [hasType('dining'), hasType('nook'), hasType('family'), hasType('living'), hasType('foyer'), H];
+    case 'nook': return [hasType('kitchen'), hasType('family'), hasType('dining')];
+    case 'pantry': return [hasType('kitchen'), hasType('mud'), H];
+    case 'primary': case 'bed': return [H, hasType('loft'), hasType('rec'), hasType('family'), hasType('living'), hasType('foyer'), hasType('dining')];
+    case 'bath': case 'bath3': return [H, hasType('loft'), hasType('rec'), hasType('foyer'), hasType('mud'), inGroup('sleep'), hasType('living'), hasType('family')];
+    case 'powder': return [hasType('foyer'), H, hasType('mud'), hasType('living'), hasType('family'), hasType('dining'), hasType('kitchen'), hasType('rec')];
+    case 'mud': return [hasType('garage'), hasType('kitchen'), hasType('foyer'), H, hasType('pantry')];
+    case 'laundry': return [hasType('mud'), H, hasType('kitchen'), hasType('loft'), hasType('garage')];
+    case 'garage': return [hasType('mud'), H, hasType('laundry'), hasType('kitchen'), hasType('foyer'), hasType('storage')];
+    case 'hall': return [hasType('living'), hasType('family'), hasType('dining'), hasType('foyer'), hasType('kitchen'), hasType('nook'), hasType('stairs'), hasType('loft'), hasType('rec'), hasType('mud')];
+    case 'stairs': return [H, hasType('foyer'), hasType('living'), hasType('family'), hasType('loft'), hasType('rec'), hasType('dining'), hasType('kitchen')];
+    case 'linen': return [H, hasType('loft'), hasType('foyer'), hasType('rec'), hasType('mud')];
+    case 'office': return [hasType('foyer'), H, hasType('living'), hasType('family'), hasType('dining')];
+    default: return [H, hasType('foyer'), hasType('rec'), hasType('loft'), hasType('living'), hasType('family'), hasType('stairs'), hasType('mud'), hasType('kitchen'), hasType('dining'), hasType('garage')];
+  }
+}
+const OPEN_PLAN_ROOMS = { living: 1, family: 1, dining: 1, kitchen: 1, nook: 1 };
+function isOpenConnection(o, a, b) {
+  if (o.open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) return true;
+  const one = (p, q) => (a.k === p && q(b)) || (b.k === p && q(a));
+  if (one('foyer', x => x.k === 'living' || x.k === 'family' || x.t === 'hall')) return true;
+  if (one('hall', x => OPEN_PLAN_ROOMS[x.k] || x.k === 'loft' || x.k === 'rec' || x.k === 'foyer')) return true;
+  if (one('stairs', x => x.t === 'hall' || x.k === 'foyer' || x.k === 'loft' || x.k === 'rec' || OPEN_PLAN_ROOMS[x.k])) return true;
+  return false;
 }
 /* A door is a segment on a wall. (x1,y1) is the hinge, (x2,y2) the latch, (nx,ny) the swing direction. */
 function addDoor(list, rooms, ai, bi, sg, kind, dw) {
   const c = Math.min(Math.max((sg.s0 + sg.s1) / 2, sg.s0 + dw / 2 + 0.3), sg.s1 - dw / 2 - 0.3);
   const lowHinge = (c - sg.s0) < (sg.s1 - c), lo = lowHinge ? c - dw / 2 : c + dw / 2, hi = lowHinge ? c + dw / 2 : c - dw / 2;
-  const into = rooms[ai].t === 'gar' ? rooms[bi] : rooms[ai];
+  const into = rooms[ai].t === 'gar' || rooms[ai].t === 'hall' ? rooms[bi] : rooms[ai];
   const dir = sg.ax === 'v' ? (into.x >= sg.L - 0.1 ? 1 : -1) : (into.y >= sg.L - 0.1 ? 1 : -1);
   const d = sg.ax === 'v' ? { x1: sg.L, y1: lo, x2: sg.L, y2: hi, nx: dir, ny: 0 } : { x1: lo, y1: sg.L, x2: hi, y2: sg.L, nx: 0, ny: dir };
   d.kind = kind; d.a = ai; d.b = bi;
   list.push(d);
 }
-function computeDoors(rooms, o, rootName) {
-  const dw = o.doorW, list = [], miss = [], seen = {};
+function placeDoors(rooms, o, rootKey) {
+  const list = [], miss = [], seen = {};
   const key = (a, b) => Math.min(a, b) + '-' + Math.max(a, b);
-  const openPair = (a, b) => (o.open && ['Living', 'Dining', 'Kitchen'].indexOf(a.n) > -1 && ['Living', 'Dining', 'Kitchen'].indexOf(b.n) > -1) || (a.n === 'Foyer' && b.n === 'Living') || (a.n === 'Living' && b.n === 'Foyer');
+  const small = x => x.t === 'wet' || x.t === 'clo' || x.k === 'pantry' || x.k === 'storage' || x.k === 'mechS';
+  const widthFor = (a, b) => (small(a) || small(b)) && !o.adaptable ? Math.min(o.doorW, 2.5) : o.doorW;
   rooms.forEach((r, ri) => {
-    if (r.openTo) {
-      const bi = rooms.findIndex(x => x.n === r.openTo), sg = bi > -1 ? shared(r, rooms[bi]) : null;
-      if (sg && sg.s1 - sg.s0 >= 3) { addDoor(list, rooms, ri, bi, sg, 'opening', Math.min(6, sg.s1 - sg.s0 - 0.8)); seen[key(ri, bi)] = 1; }
-      return;
-    }
-    const prefs = prefOf(r);
+    const prefs = doorPreferences(r);
     for (let k = 0; k < prefs.length; k++) {
       let best = null;
       rooms.forEach((x, xi) => {
-        if (x === r || x.openTo || !prefs[k](x)) return;
-        const sg = shared(r, x);
+        if (x === r || !prefs[k](x)) return;
+        const sg = sharedWall(r, x), dw = widthFor(r, x);
         if (!sg || sg.s1 - sg.s0 < dw + 0.6) return;
-        if (!best || sg.s1 - sg.s0 > best.len) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0, x: x };
+        if (!best || sg.s1 - sg.s0 > best.len) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0, x: x, dw: dw };
       });
       if (!best) continue;
       const kk = key(ri, best.xi);
       if (!seen[kk]) {
         seen[kk] = 1;
-        const open = openPair(r, best.x);
-        addDoor(list, rooms, ri, best.xi, best.sg, open ? 'opening' : 'swing', open ? Math.min(6, best.len - 0.8) : dw);
+        const op = isOpenConnection(o, r, best.x);
+        addDoor(list, rooms, ri, best.xi, best.sg, op ? 'opening' : 'swing', op ? Math.min(6, best.len - 0.8) : best.dw);
       }
       return;
     }
   });
-  /* Make sure every room can be reached from the entry. Link any stragglers to a reachable neighbour. */
-  let root = rooms.findIndex(r => r.n === rootName); if (root < 0) root = 0;
+  /* the mudroom is a pass-through: besides the garage it needs a door into the house */
+  rooms.forEach((r, ri) => {
+    if (r.k !== 'mud') return;
+    const H = inGroup('hall'), prefs = [hasType('kitchen'), H, hasType('foyer'), hasType('family'), hasType('nook'), hasType('dining'), hasType('living'), hasType('laundry')];
+    for (let k = 0; k < prefs.length; k++) {
+      let best = null;
+      rooms.forEach((x, xi) => { if (x === r || !prefs[k](x) || seen[key(ri, xi)]) return; const sg = sharedWall(r, x); if (sg && sg.s1 - sg.s0 >= o.doorW + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0 }; });
+      if (best) { seen[key(ri, best.xi)] = 1; addDoor(list, rooms, ri, best.xi, best.sg, 'swing', o.doorW); break; }
+    }
+  });
+  /* open-plan rooms open to every open neighbour, not just one */
+  rooms.forEach((a, ai) => rooms.forEach((b, bi) => {
+    if (bi <= ai || seen[key(ai, bi)] || !isOpenConnection(o, a, b)) return;
+    const sg = sharedWall(a, b);
+    if (sg && sg.s1 - sg.s0 >= 3) { seen[key(ai, bi)] = 1; addDoor(list, rooms, ai, bi, sg, 'opening', Math.min(8, sg.s1 - sg.s0 - 0.8)); }
+  }));
+  /* every room must be reachable from the entry (or the stairs); link stragglers to a reachable neighbour */
+  let root = rooms.findIndex(r => r.k === rootKey); if (root < 0) root = 0;
   const reach = {}; reach[root] = true;
   const spread = () => { let go = true; while (go) { go = false; list.forEach(d => { if (reach[d.a] !== reach[d.b]) { reach[d.a] = reach[d.b] = true; go = true; } }); } };
   spread();
@@ -490,259 +796,883 @@ function computeDoors(rooms, o, rootName) {
       if (reach[ri]) return;
       let best = null;
       rooms.forEach((x, xi) => {
-        if (!reach[xi] || ['Garage', 'Walk-in Closet', 'Ensuite', 'Pantry'].indexOf(x.n) > -1) return;
-        const sg = shared(r, x);
-        if (sg && sg.s1 - sg.s0 >= dw + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0 };
+        if (!reach[xi] || ['garage', 'wic', 'wic2', 'ensuite', 'pantry', 'linen'].indexOf(x.k) > -1 || x.t === 'sleep') return;
+        const sg = sharedWall(r, x), dw = widthFor(r, x);
+        if (sg && sg.s1 - sg.s0 >= dw + 0.6 && (!best || sg.s1 - sg.s0 > best.len)) best = { xi: xi, sg: sg, len: sg.s1 - sg.s0, dw: dw };
       });
-      if (best) { addDoor(list, rooms, ri, best.xi, best.sg, 'swing', dw); reach[ri] = true; spread(); progress = true; }
+      if (best) { addDoor(list, rooms, ri, best.xi, best.sg, 'swing', best.dw); reach[ri] = true; spread(); progress = true; }
     });
   }
   rooms.forEach((r, ri) => { if (!reach[ri]) miss.push(r.n); });
   return { list: list, miss: miss };
 }
 
-/* ---------------- analysis: doors, size checks, cost, notes ---------------- */
-function analyze(plan) {
-  const s = plan.settings, o = plan.opts, front = plan.front;
-  plan.miss = [];
-  plan.floors.forEach((f, fi) => {
-    f.ext = getExtWalls(f.rooms);
-    f.rooms.forEach(r => {
-      r.bad = false;
-      if (r.minSide) { const sm = Math.min(r.w, r.h), lg = Math.max(r.w, r.h); r.bad = sm < r.minSide - 0.4 || lg / sm > (r.maxAspect || 2) * 1.3; }
-    });
-    const res = computeDoors(f.rooms, o, fi === 0 ? 'Foyer' : 'Stairs');
-    f.doors = res.list; plan.miss = plan.miss.concat(res.miss);
-    if (fi === 0) {
-      const outside = (room, minLen, kind, wid) => {
-        const walls = f.ext.filter(w => w.r === room && w.len >= minLen).sort((a, b) => (b.side === front ? 1000 : 0) + b.len - ((a.side === front ? 1000 : 0) + a.len));
-        const w = walls[0]; if (!w) return;
-        const horiz = w.side === 't' || w.side === 'b', c = horiz ? (w.x1 + w.x2) / 2 : (w.y1 + w.y2) / 2, ww = Math.min(wid, w.len - 0.6);
-        const d = horiz ? { x1: c - ww / 2, y1: w.y1, x2: c + ww / 2, y2: w.y1, nx: 0, ny: w.side === 't' ? 1 : -1 } : { x1: w.x1, y1: c - ww / 2, x2: w.x1, y2: c + ww / 2, nx: w.side === 'l' ? 1 : -1, ny: 0 };
-        d.kind = kind; f.doors.push(d);
-      };
-      const foyer = f.rooms.find(r => r.n === 'Foyer'), gar = f.rooms.find(r => r.t === 'gar');
-      if (foyer) outside(foyer, 3.6, 'entry', 3);
-      if (gar) outside(gar, 8, 'garage', Math.max(8, gar.w - 4));
+/* Front entry, overhead garage doors, and a patio door off the back of the living spaces. */
+function placeExteriorDoors(f, o) {
+  const ext = (r, sides, minLen) => f.ext.filter(w => w.r === r && w.len >= minLen).sort((a, b) => (sides.indexOf(a.side) < 0 ? 9 : sides.indexOf(a.side)) - (sides.indexOf(b.side) < 0 ? 9 : sides.indexOf(b.side)) || b.len - a.len)[0];
+  const put = (ri, w, c, wid, kind) => {
+    const horiz = w.side === 't' || w.side === 'b';
+    const d = horiz ? { x1: c - wid / 2, y1: w.y1, x2: c + wid / 2, y2: w.y1, nx: 0, ny: w.side === 't' ? 1 : -1 } : { x1: w.x1, y1: c - wid / 2, x2: w.x1, y2: c + wid / 2, nx: w.side === 'l' ? 1 : -1, ny: 0 };
+    d.kind = kind; d.a = ri; d.b = -1; d.room = ri; f.doors.push(d);
+  };
+  const mid = w => (w.side === 't' || w.side === 'b') ? (w.x1 + w.x2) / 2 : (w.y1 + w.y2) / 2;
+  const lo = w => (w.side === 't' || w.side === 'b') ? w.x1 : w.y1;
+  f.rooms.forEach((r, ri) => {
+    if (r.k === 'foyer') { const w = ext(r, ['t', 'l', 'r', 'b'], 3.6); if (w) put(ri, w, mid(w), Math.min(o.adaptable ? 3 : 3, w.len - 0.6), 'entry'); }
+    if (r.k === 'garage') {
+      const w = ext(r, ['t', 'l', 'r', 'b'], 9); if (!w) return;
+      const sizes = { 1: [9], 2: [16], 3: [16, 9], 4: [16, 16] }[r.bays || 2] || [16];
+      let tot = sum(sizes, x => x) + (sizes.length - 1) * 2;
+      const k = Math.min(1, (w.len - 2) / tot);
+      let c = mid(w) - tot * k / 2;
+      sizes.forEach(sz => { put(ri, w, c + sz * k / 2, sz * k, 'garage'); c += (sz + 2) * k; });
     }
   });
-  const all = [].concat.apply([], plan.floors.map(f => f.rooms));
-  const g0 = plan.floors[0].rooms;
-  plan.W = Math.max.apply(null, g0.map(r => r.x + r.w)) - Math.min.apply(null, g0.map(r => r.x));
-  plan.D = Math.max.apply(null, g0.map(r => r.y + r.h)) - Math.min.apply(null, g0.map(r => r.y));
-  const area = list => sum(list, r => r.w * r.h);
-  plan.living = area(all.filter(r => r.t !== 'gar'));
-  const gar = area(all.filter(r => r.t === 'gar')), halls = area(all.filter(r => r.t === 'hall'));
-  const checked = all.filter(r => r.minSide), failed = checked.filter(r => r.bad);
-  plan.hallPct = Math.round(halls / Math.max(plan.living, 1) * 100);
-  plan.checked = checked.length; plan.passed = checked.length - failed.length; plan.failed = failed.map(r => r.n);
-  const rate = COST[s.finish] * (STYLES[o.style] || STYLES.mod).cost;
-  plan.cost = Math.round((plan.living * rate + gar * rate * 0.4) / 1000) * 1000;
-  plan.over = plan.cost - s.budget;
-  const n = ['Path of travel: the foyer opens into the living space, and bedrooms share a short hall. There is no long central corridor.'];
-  if (plan.miss.length) n.push('No door link found for: ' + plan.miss.slice(0, 4).join(', ') + '. Move those rooms next to a neighbour in the Refine tab.');
-  if (plan.failed.length) n.push('Outside the size rules: ' + plan.failed.slice(0, 4).join(', ') + '. Try a different area or shape, or adjust them in the Refine tab.');
-  if (s.sizeMode === 'area' && Math.abs(plan.living - s.area) / s.area > 0.08) n.push('Closest achievable living area is ' + fmtArea(plan.living) + '. Room sizes were kept inside their rules, so this program cannot reach exactly ' + fmtArea(s.area) + '.');
-  if (o.open) n.push('Open style: living, dining and kitchen share dashed walls with no doors between them.');
-  if (s.adaptable) n.push('Adaptable mode: key rooms are 15% larger, the hall is 4.5 ft wide, and doors are 36 in.');
-  if (s.levels === 2) n.push('Two stories: the upper floor sits over the public wing. Stair positions on the two floors may not line up exactly, so check them in the Refine tab.');
-  plan.notes = n;
-}
-
-/* ---------------- generate all options ---------------- */
-function optionShapes(s) {
-  if (s.shape !== 'auto') return [s.shape, s.shape, s.shape, s.shape, s.shape];
-  const first = STYLES[s.style].shape;
-  return [first].concat(['L', 'T', 'Z', 'U', 'R'].filter(x => x !== first));
-}
-function buildOption(s, shape, i) {
-  const flip = { x: i % 2 === 1, y: i === 2 || i === 3 };
-  let scale = 1, res;
-  for (let it = 0; it < 5; it++) {
-    res = makePlan(s, shape, flip, scale, mulberry(seed * 131 + i * 17));
-    if (it === 4) break;
-    const ratio = s.sizeMode === 'area' ? s.area / res.living : Math.sqrt(s.width * s.depth / (res.W * res.D));
-    scale = Math.min(1.8, Math.max(0.6, scale * ratio));
+  const order = ['dining', 'nook', 'family', 'living', 'kitchen', 'rec'];
+  for (let i = 0; i < order.length; i++) {
+    const ri = f.rooms.findIndex(r => r.k === order[i]);
+    if (ri < 0) continue;
+    const w = ext(f.rooms[ri], ['b', 'l', 'r'], 8);
+    if (w && w.side !== 't') { put(ri, w, mid(w), 6, 'patio'); f.patio = ri; break; }
   }
-  const plan = {
-    letter: 'ABCDE'[i], shape: shape, settings: s, floors: res.floors, front: flip.y ? 'b' : 't',
-    opts: { style: s.style, open: STYLES[s.style].open, closet: 'reach', closetDepth: 2, doorW: s.adaptable ? 3 : 2.67, snap: 0.5, showCloset: true, showDims: true },
-    hist: [], hi: -1
-  };
-  analyze(plan);
-  plan.vb = { minX: -6, minY: -6, w: plan.W + 12, d: plan.D + 12 };
-  pushHist(plan);
-  return plan;
+  return lo;
 }
 
-/* ---------------- history for the editor ---------------- */
-const cleanRoom = r => { const c = Object.assign({}, r); delete c.bad; return c; };
-function snap(plan) { return JSON.stringify(plan.floors.map(f => f.rooms.map(cleanRoom))); }
-function pushHist(plan) {
-  const sn = snap(plan);
-  if (plan.hist[plan.hi] === sn) return;
-  plan.hist.splice(plan.hi + 1); plan.hist.push(sn); plan.hi = plan.hist.length - 1;
-}
-function restoreHist(plan, i) {
-  const data = JSON.parse(plan.hist[i]);
-  plan.floors.forEach((f, k) => { f.rooms = data[k]; });
-  plan.hi = i; analyze(plan);
-}
-
-/* ---------------- drawing ---------------- */
-function viewOf(vb) { const s = Math.min(410 / vb.w, 380 / vb.d); return { s: s, ox: (450 - vb.w * s) / 2, oy: 24, vb: vb, h: Math.round(vb.d * s + 40) }; }
-const near = (a, b) => Math.abs(a - b) < 0.1;
-
-/* Picks where a bedroom's reach-in closet goes: an inside wall with no door. */
-function closetRect(f, r, ri, plan) {
-  const kind = r.closet || (/^Bed/.test(r.n) ? plan.opts.closet : 'none');
-  if (kind === 'none' || !plan.opts.showCloset) return null;
+/* ---------------- reach-in closets ---------------- */
+/* Puts a bedroom's reach-in closet on an inside wall with no door; the foyer gets a coat closet. */
+const isClose = (a, b) => Math.abs(a - b) < 0.1;
+function placeReachInCloset(f, r, ri, plan) {
+  let kind = r.cl !== undefined ? r.cl : (r.k === 'bed' ? plan.opts.closet : 'none');
+  if (r.k === 'foyer') kind = 'coat';
+  if (r.k === 'bed' && kind === 'walkin') kind = 'none';
+  if (!kind || kind === 'none' || !plan.opts.showCloset) return null;
   const cands = ['n', 's', 'w', 'e'].map(sd => {
     const horiz = sd === 'n' || sd === 's', len = horiz ? r.w : r.h;
     const line = sd === 'n' ? r.y : sd === 's' ? r.y + r.h : sd === 'w' ? r.x : r.x + r.w;
     let inner = 0;
     f.rooms.forEach((o, oi) => {
       if (oi === ri) return;
-      if (horiz && near(sd === 'n' ? o.y + o.h : o.y, line)) inner += Math.max(0, Math.min(r.x + r.w, o.x + o.w) - Math.max(r.x, o.x));
-      if (!horiz && near(sd === 'w' ? o.x + o.w : o.x, line)) inner += Math.max(0, Math.min(r.y + r.h, o.y + o.h) - Math.max(r.y, o.y));
+      if (horiz && isClose(sd === 'n' ? o.y + o.h : o.y, line)) inner += Math.max(0, Math.min(r.x + r.w, o.x + o.w) - Math.max(r.x, o.x));
+      if (!horiz && isClose(sd === 'w' ? o.x + o.w : o.x, line)) inner += Math.max(0, Math.min(r.y + r.h, o.y + o.h) - Math.max(r.y, o.y));
     });
-    const door = f.doors.some(d => (d.a === ri || d.b === ri) && (horiz ? near(d.y1, d.y2) && near(d.y1, line) : near(d.x1, d.x2) && near(d.x1, line)));
-    return { sd: sd, len: len, inner: inner, door: door };
-  }).filter(c => c.len >= 6).sort((a, b) => (a.door - b.door) || (b.inner - a.inner));
+    const door = f.doors.some(d => (d.a === ri || d.b === ri) && (horiz ? isClose(d.y1, d.y2) && isClose(d.y1, line) : isClose(d.x1, d.x2) && isClose(d.x1, line)));
+    const minS = ROOM_TYPES[r.k] && ROOM_TYPES[r.k].min ? Math.min(...ROOM_TYPES[r.k].min) : 0, ok = ((horiz ? r.h : r.w) - (kind === 'coat' ? 2 : CLOSET_DEPTH)) >= minS - 0.25;
+    return { sd: sd, len: len, inner: inner, door: door, ok: ok };
+  }).filter(c => c.len >= (kind === 'coat' ? 4.5 : 6)).sort((a, b) => (a.door - b.door) || (b.ok - a.ok) || (b.inner - a.inner));
   if (!cands.length) return null;
-  const c = cands[0], cd = plan.opts.closetDepth, cw = Math.min(kind === 'double' ? 9 : 6, c.len - 1);
-  if (c.sd === 'n') return { x: r.x, y: r.y, w: cw, h: cd };
-  if (c.sd === 's') return { x: r.x, y: r.y + r.h - cd, w: cw, h: cd };
-  if (c.sd === 'w') return { x: r.x, y: r.y, w: cd, h: cw };
-  return { x: r.x + r.w - cd, y: r.y, w: cd, h: cw };
+  const c = cands[0], cd = kind === 'coat' ? 2 : CLOSET_DEPTH, cw = Math.min(kind === 'double' ? 9 : kind === 'coat' ? 4 : 6, c.len - 1);
+  /* slide the closet to the end of the wall that is farther from the room's door */
+  const dd = f.doors.find(d => d.a === ri || d.b === ri);
+  const horiz = c.sd === 'n' || c.sd === 's', span = horiz ? r.w : r.h, base = horiz ? r.x : r.y;
+  let off = 0;
+  if (dd) { const dm = horiz ? (dd.x1 + dd.x2) / 2 : (dd.y1 + dd.y2) / 2; if (dm - base < span / 2) off = span - cw; }
+  if (c.sd === 'n') return { x: r.x + off, y: r.y, w: cw, h: cd, sd: 'n' };
+  if (c.sd === 's') return { x: r.x + off, y: r.y + r.h - cd, w: cw, h: cd, sd: 's' };
+  if (c.sd === 'w') return { x: r.x, y: r.y + off, w: cd, h: cw, sd: 'w' };
+  return { x: r.x + r.w - cd, y: r.y + off, w: cd, h: cw, sd: 'e' };
 }
 
-function doorSvg(d, X, Y, s) {
-  const ax = X(d.x1), ay = Y(d.y1), bx = X(d.x2), by = Y(d.y2);
-  if (d.kind === 'garage') return '<rect x="' + Math.min(ax, bx).toFixed(1) + '" y="' + (Math.min(ay, by) - 3).toFixed(1) + '" width="' + Math.max(Math.abs(bx - ax), 6).toFixed(1) + '" height="' + Math.max(Math.abs(by - ay), 6).toFixed(1) + '" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.2"/>';
-  let h = '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" stroke="#fff" stroke-width="5"/>';
-  if (d.kind === 'opening') return h + '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>';
-  /* the door leaf is drawn swung open 90 degrees from the hinge, with an arc showing its path */
-  const width = Math.hypot(d.x2 - d.x1, d.y2 - d.y1), tx = X(d.x1 + d.nx * width), ty = Y(d.y1 + d.ny * width), r = width * s;
-  const cross = (bx - ax) * (ty - ay) - (by - ay) * (tx - ax), col = d.kind === 'entry' ? '#2563eb' : '#0f172a';
-  h += '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + tx.toFixed(1) + '" y2="' + ty.toFixed(1) + '" stroke="' + col + '" stroke-width="1.6"/>';
-  h += '<path d="M' + bx.toFixed(1) + ',' + by.toFixed(1) + ' A' + r.toFixed(1) + ',' + r.toFixed(1) + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + tx.toFixed(1) + ',' + ty.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="0.9" stroke-dasharray="3 2"/>';
+/* ---------------- windows ---------------- */
+/* Windows go on exterior walls, spread evenly, kept clear of exterior doors. Sizes are width x height in inches. */
+function windowSize(r, kind) {
+  if (kind === 'base') {
+    if (r.t === 'sleep') return [36, 48, 10, 1];
+    if (['rec', 'gym', 'flex', 'office', 'bath', 'bath3', 'den', 'family'].indexOf(r.k) > -1) return [32, 18, 9, 1];
+    return null;
+  }
+  if (r.k === 'garage') return null;
+  if (r.k === 'stairs') return [30, 48, 30, 1];
+  if (r.t === 'hall') return r.w * r.h > 60 ? [24, 36, 30, 1] : null;
+  return ROOM_TYPES[r.k] && ROOM_TYPES[r.k].win || null;
+}
+function placeWindows(f, plan) {
+  const out = [], big = plan.goal === 'open' ? 1.2 : 1;
+  f.rooms.forEach((r, ri) => {
+    const sp = windowSize(r, f.kind);
+    if (!sp) { if (r.k === 'garage') garageSideWindow(f, r, ri, out); return; }
+    f.ext.filter(w => w.r === r).forEach(w => {
+      const horiz = w.side === 't' || w.side === 'b';
+      const blocks = f.doors.filter(d => d.b === -1 && (horiz ? isClose(d.y1, w.y1) && isClose(d.y2, w.y1) : isClose(d.x1, w.x1) && isClose(d.x2, w.x1)))
+        .map(d => horiz ? [Math.min(d.x1, d.x2) - 0.8, Math.max(d.x1, d.x2) + 0.8] : [Math.min(d.y1, d.y2) - 0.8, Math.max(d.y1, d.y2) + 0.8]);
+      let iv = [[horiz ? w.x1 : w.y1, horiz ? w.x2 : w.y2]];
+      blocks.forEach(b => { const nx = []; iv.forEach(s => { if (b[1] <= s[0] || b[0] >= s[1]) nx.push(s); else { if (b[0] > s[0]) nx.push([s[0], b[0]]); if (b[1] < s[1]) nx.push([b[1], s[1]]); } }); iv = nx; });
+      iv.forEach(s => {
+        const len = s[1] - s[0], want = Math.round(sp[0] * (r.t === 'sleep' && f.kind !== 'base' ? 1 : big) / 6) * 6;
+        if (len < 2.5) return;
+        const n = clamp(Math.floor(len / sp[2]) || 1, 1, sp[3]);
+        const wi = Math.min(want, Math.floor(((len / n) - 1) * 12 / 6) * 6);
+        if (wi < 18) return;
+        for (let i = 0; i < n; i++) {
+          const c = s[0] + len * (i + 0.5) / n, half = wi / 24;
+          out.push(horiz ? { x1: c - half, y1: w.y1, x2: c + half, y2: w.y1, side: w.side, wi: wi, hi: sp[1], ri: ri } : { x1: w.x1, y1: c - half, x2: w.x1, y2: c + half, side: w.side, wi: wi, hi: sp[1], ri: ri });
+        }
+      });
+    });
+  });
+  return out;
+}
+function garageSideWindow(f, r, ri, out) {
+  const w = f.ext.filter(x => x.r === r && x.side !== 't' && x.len >= 5).sort((a, b) => b.len - a.len)[0];
+  if (!w) return;
+  const horiz = w.side === 't' || w.side === 'b', c = horiz ? (w.x1 + w.x2) / 2 : (w.y1 + w.y2) / 2;
+  out.push(horiz ? { x1: c - 1.5, y1: w.y1, x2: c + 1.5, y2: w.y1, side: w.side, wi: 36, hi: 24, ri: ri } : { x1: w.x1, y1: c - 1.5, x2: w.x1, y2: c + 1.5, side: w.side, wi: 36, hi: 24, ri: ri });
+}
+
+/* ---------------- analysis: doors, windows, size checks, travel, cost, goal score ---------------- */
+function clearSize(r, c) {
+  let w = r.w, h = r.h;
+  if (c && c.sd) { if (c.sd === 'n' || c.sd === 's') h -= c.h; else w -= c.w; }
+  return [w, h];
+}
+function checkRoomSize(r, c, o) {
+  r.bad = false; r.why = '';
+  if (r.filler || r.k === 'linen' || r.k === 'unf') return;
+  if (r.t === 'hall') { const m = Math.min(r.w, r.h); if (m < 2.82) { r.bad = true; r.why = 'hall under 860 mm (34 in)'; } return; }
+  if (r.k === 'garage') { const mn = minimumSize(r); r.bad = Math.min(r.w, r.h) < Math.min(mn[0], mn[1]) - 0.3 || Math.max(r.w, r.h) < Math.max(mn[0], mn[1]) - 0.3; if (r.bad) r.why = 'smaller than ' + mn[0] + ' × ' + mn[1] + ' ft'; return; }
+  const sp = ROOM_TYPES[r.k]; if (!sp || !sp.min) return;
+  const cd = clearSize(r, c), mn = sp.min.slice();
+  if (o.adaptable && (r.t === 'wet')) mn[0] = Math.max(mn[0], 5);
+  const lo = Math.min(cd[0], cd[1]), hi = Math.max(cd[0], cd[1]);
+  if (lo < Math.min(mn[0], mn[1]) - 0.25 || hi < Math.max(mn[0], mn[1]) - 0.25) { r.bad = true; r.why = 'clear size under ' + mn[0] + ' × ' + mn[1] + ' ft'; }
+}
+
+function walkingNetwork(plan) {
+  const adj = [], add = () => { adj.push([]); return adj.length - 1; }, link = (a, b, w) => { adj[a].push([b, w]); adj[b].push([a, w]); };
+  const node = plan.floors.map(f => f.rooms.map(() => add()));
+  plan.floors.forEach((f, fi) => {
+    const roomDoors = f.rooms.map(() => []);
+    f.doors.forEach(d => {
+      if (d.b < 0) return;
+      const n = add(), mx = (d.x1 + d.x2) / 2, my = (d.y1 + d.y2) / 2;
+      [d.a, d.b].forEach(ri => { const r = f.rooms[ri]; link(n, node[fi][ri], Math.abs(r.x + r.w / 2 - mx) + Math.abs(r.y + r.h / 2 - my)); roomDoors[ri].push([n, mx, my]); });
+    });
+    roomDoors.forEach(ds => { for (let i = 0; i < ds.length; i++) for (let j = i + 1; j < ds.length; j++) link(ds[i][0], ds[j][0], Math.abs(ds[i][1] - ds[j][1]) + Math.abs(ds[i][2] - ds[j][2])); });
+  });
+  const mi = plan.floors.findIndex(f => f.kind === 'main'), ms = plan.floors[mi].rooms.findIndex(r => r.k === 'stairs');
+  plan.floors.forEach((f, fi) => { const si = f.rooms.findIndex(r => r.k === 'stairs'); if (fi !== mi && si > -1 && ms > -1) link(node[fi][si], node[mi][ms], 14); });
+  const dij = src => {
+    const N = adj.length, dist = new Array(N).fill(Infinity), done = new Array(N).fill(false);
+    dist[src] = 0;
+    for (let it = 0; it < N; it++) {
+      let u = -1, best = Infinity;
+      for (let i = 0; i < N; i++) if (!done[i] && dist[i] < best) { best = dist[i]; u = i; }
+      if (u < 0) break;
+      done[u] = true;
+      adj[u].forEach(e => { if (dist[u] + e[1] < dist[e[0]]) dist[e[0]] = dist[u] + e[1]; });
+    }
+    return dist;
+  };
+  return { node: node, dij: dij };
+}
+
+function analyze(plan) {
+  const o = plan.opts, s = plan.settings;
+  plan.miss = [];
+  plan.floors.forEach(f => {
+    f.ext = findExteriorWalls(f.rooms);
+    const res = placeDoors(f.rooms, o, f.kind === 'main' ? 'foyer' : 'stairs');
+    f.doors = res.list; plan.miss = plan.miss.concat(res.miss);
+    if (f.kind === 'main') placeExteriorDoors(f, o);
+    f.cls = f.rooms.map((r, ri) => placeReachInCloset(f, r, ri, plan));
+    f.windows = placeWindows(f, plan);
+    f.rooms.forEach((r, ri) => {
+      checkRoomSize(r, f.cls[ri], o);
+      if (r.t === 'sleep' && !f.windows.some(w => w.ri === ri)) { r.bad = true; r.why = 'no exterior wall for an egress window'; }
+    });
+  });
+  const M = plan.metrics = {};
+  const areaOf = list => sum(list, r => r.w * r.h);
+  const fin = f => f.rooms.filter(r => r.k !== 'garage' && r.t !== 'unf');
+  plan.floors.forEach(f => { f.area = areaOf(fin(f)); });
+  const byKind = k => plan.floors.filter(f => f.kind === k);
+  M.main = sum(byKind('main'), f => f.area); M.upper = sum(byKind('upper'), f => f.area); M.base = sum(byKind('base'), f => f.area);
+  M.baseUnf = sum(byKind('base'), f => areaOf(f.rooms.filter(r => r.t === 'unf')));
+  M.garage = sum(plan.floors, f => areaOf(f.rooms.filter(r => r.k === 'garage')));
+  M.finished = M.main + M.upper + M.base;
+  M.aboveGrade = M.main + M.upper;
+  const all = [].concat.apply([], plan.floors.map(f => f.rooms));
+  M.hall = areaOf(all.filter(r => r.t === 'hall'));
+  M.hallPct = Math.round(M.hall / Math.max(M.finished, 1) * 100);
+  M.filler = areaOf(all.filter(r => r.filler));
+  const g0 = plan.floors[0].rooms;
+  plan.W = Math.max(...g0.map(r => r.x + r.w)) - Math.min(...g0.map(r => r.x));
+  plan.D = Math.max(...g0.map(r => r.y + r.h)) - Math.min(...g0.map(r => r.y));
+  M.footprint = areaOf(g0);
+  /* exterior wall length and number of outline edges (corners) */
+  M.wall = 0; M.corners = 0;
+  plan.floors.forEach(f => {
+    const len = sum(f.ext, w => w.len);
+    M.wall += f.kind === 'base' ? len * 0.6 : f.kind === 'upper' ? len * 0.9 : len;
+    const lines = {};
+    f.ext.forEach(w => { const h = w.side === 't' || w.side === 'b', k = w.side + ':' + (h ? w.y1 : w.x1).toFixed(2); (lines[k] = lines[k] || []).push(h ? [w.x1, w.x2] : [w.y1, w.y2]); });
+    let edges = 0;
+    Object.keys(lines).forEach(k => { const iv = lines[k].sort((a, b) => a[0] - b[0]); let e = -1e9; iv.forEach(s => { if (s[0] > e + 0.1) edges++; e = Math.max(e, s[1]); }); });
+    if (f.kind === 'main') M.corners = edges;
+  });
+  /* plumbing groups: wet rooms that share a wall or stack over each other share one plumbing run */
+  const wet = [];
+  plan.floors.forEach((f, fi) => f.rooms.forEach(r => { if (r.t === 'wet' || r.k === 'laundry' || r.k === 'kitchen') wet.push({ r: r, fi: fi }); }));
+  const par = wet.map((_, i) => i), find = i => par[i] === i ? i : (par[i] = find(par[i]));
+  wet.forEach((a, i) => wet.forEach((b, j) => {
+    if (j <= i) return;
+    const touch = a.fi === b.fi ? (() => { const sg = sharedWall(a.r, b.r); return sg && sg.s1 - sg.s0 >= 1; })() : overlaps(a.r, b.r);
+    if (touch) par[find(i)] = find(j);
+  }));
+  M.wetGroups = new Set(wet.map((_, i) => find(i))).size;
+  /* rough cost */
+  const st = STYLES[o.style] || STYLES.mod, rate = COST_PER_SQ_FT[s.finish] * st.cost;
+  M.cost = Math.round((rate * (M.main + 0.9 * M.upper + 0.55 * M.base + 0.3 * M.baseUnf + 0.45 * M.garage)
+    + WALL_COST_PER_FT[s.finish] * M.wall + FOUNDATION_AND_ROOF_COST[s.finish] * M.footprint + 1800 * M.corners + 5500 * M.wetGroups) / 1000) * 1000;
+  M.over = M.cost - s.budget;
+  /* path of travel: weighted everyday trips through the door network */
+  const G = walkingNetwork(plan), loc = [];
+  plan.floors.forEach((f, fi) => f.rooms.forEach((r, ri) => loc.push({ r: r, n: G.node[fi][ri] })));
+  const find1 = fn => loc.find(x => fn(x.r)), findAll = fn => loc.filter(x => fn(x.r));
+  const cache = {}, D = (a, b) => { if (!a || !b) return null; if (!cache[a.n]) cache[a.n] = G.dij(a.n); const d = cache[a.n][b.n]; return isFinite(d) ? d : 150; };
+  const kit = find1(hasType('kitchen')), gar = find1(hasType('garage')), foy = find1(hasType('foyer')), liv = find1(r => r.k === 'family' || r.k === 'living');
+  const beds = findAll(r => r.t === 'sleep'), baths = findAll(r => r.k === 'bath' || r.k === 'bath3'), pwr = findAll(r => r.t === 'wet' && r.k !== 'ensuite');
+  const trips = [];
+  const trip = (w, d, key) => { if (d != null) { trips.push([w, d]); if (key) M[key] = d; } };
+  trip(3, D(gar, kit), 'garKit'); trip(2, D(foy, kit), 'foyKit'); trip(1, D(foy, liv));
+  trip(4, D(kit, find1(hasType('dining')))); trip(2, D(kit, find1(hasType('pantry'))));
+  const bb = [];
+  beds.forEach(b => {
+    const own = loc.find(x => x.r.k === 'ensuite' && x.r.of === b.r.n);
+    const opts = own ? [own] : (baths.length ? baths : pwr);
+    const d = opts.length ? Math.min(...opts.map(x => D(b, x))) : null;
+    if (d != null) { trip(3, d); bb.push(d); }
+    trip(1.5, D(b, kit));
+  });
+  M.bedBath = bb.length ? sum(bb, x => x) / bb.length : null;
+  const lau = find1(hasType('laundry'));
+  if (lau && beds.length) trip(1, sum(beds, b => D(b, lau)) / beds.length, 'lauBed');
+  if (liv && pwr.length) trip(1.5, Math.min(...pwr.map(x => D(liv, x))));
+  M.avgTrip = trips.length ? sum(trips, t => t[0] * t[1]) / sum(trips, t => t[0]) : 0;
+  /* open feel: the open-connected living area around the kitchen */
+  const mf = plan.floors.find(f => f.kind === 'main'), seedR = ['kitchen', 'family', 'living', 'dining'].map(k => mf.rooms.findIndex(r => r.k === k)).find(i => i > -1);
+  const comp = {};
+  if (seedR != null) {
+    comp[seedR] = 1;
+    let go = true;
+    while (go) { go = false; mf.doors.forEach(d => { if (d.kind === 'opening' && d.b > -1 && OPEN_PLAN_ROOMS[mf.rooms[d.a].k] && OPEN_PLAN_ROOMS[mf.rooms[d.b].k] && comp[d.a] !== comp[d.b]) { comp[d.a] = comp[d.b] = 1; go = true; } }); }
+  }
+  const cr = Object.keys(comp).map(i => mf.rooms[i]);
+  M.openArea = areaOf(cr);
+  M.openShare = M.openArea / Math.max(M.main, 1);
+  M.sight = cr.length ? Math.hypot(Math.max(...cr.map(r => r.x + r.w)) - Math.min(...cr.map(r => r.x)), Math.max(...cr.map(r => r.y + r.h)) - Math.min(...cr.map(r => r.y))) : 0;
+  M.glazing = sum(plan.floors, f => sum(f.windows, w => w.wi * w.hi / 144));
+  M.glazePct = M.glazing / Math.max(M.finished, 1) * 100;
+  /* privacy */
+  const pri = beds.filter(b => b.r.k === 'primary'), secB = beds.filter(b => b.r.k === 'bed');
+  M.privSep = pri.length && secB.length ? Math.min(...pri.map(p => Math.min(...secB.map(b => D(p, b))))) : null;
+  const NOISY = { garage: 1, kitchen: 1, family: 1, living: 1, rec: 1, media: 1, laundry: 1, mud: 1, gym: 1, dining: 1, nook: 1 };
+  M.noisy = 0; M.bedPublic = 0;
+  plan.floors.forEach(f => {
+    f.rooms.forEach((r, ri) => {
+      if (r.t !== 'sleep') return;
+      f.rooms.forEach(x => { if (NOISY[x.k]) { const sg = sharedWall(r, x); if (sg && sg.s1 - sg.s0 >= 2) M.noisy++; } });
+      f.doors.forEach(d => { if (d.b > -1 && (d.a === ri || d.b === ri)) { const x = f.rooms[d.a === ri ? d.b : d.a]; if (x.t === 'pub' || x.t === 'entry') M.bedPublic++; } });
+    });
+  });
+  /* rule checks */
+  const checked = all.filter(r => !r.filler && r.k !== 'linen' && r.k !== 'unf'), failed = checked.filter(r => r.bad);
+  plan.checked = checked.length; plan.passed = checked.length - failed.length; plan.failed = failed.map(r => r.n + ' (' + r.why + ')');
+  M.noEgress = all.filter(r => r.t === 'sleep' && /egress/.test(r.why)).length;
+  /* goal score: lower is better */
+  const base = plan.miss.length * 300 + failed.length * 25 + M.noEgress * 150;
+  const sc = {
+    path: M.avgTrip + 0.3 * M.hallPct,
+    space: M.finished / Math.max(program ? program.minArea : M.finished, 1) * 100 + 0.5 * M.hallPct,
+    open: -(M.openShare * 60 + M.sight * 0.6 + M.glazePct * 1.5),
+    private: -(Math.min(M.privSep == null ? 40 : M.privSep, 100)) + M.noisy * 8 + M.bedPublic * 15,
+    cost: M.cost / 1000
+  };
+  plan.score = (sc[plan.goal] || 0) + base;
+  plan.notes = planNotes(plan);
+}
+
+function planNotes(plan) {
+  const M = plan.metrics, n = [], g = GOALS.find(x => x.id === plan.goal);
+  if (g) n.push('<b>Goal: ' + g.n + '.</b> ' + g.why);
+  n.push('Path of travel: the front door opens into the foyer and the living spaces; bedrooms open off a ' + formatLength(plan.opts.hallW) + ' (' + Math.round(plan.opts.hallW * 12) + ' in) hall that starts at the living spaces, so no bedroom is reached through another room.' + (M.garKit != null ? ' Garage to kitchen is about ' + formatDistance(M.garKit) + (plan.floors[0].rooms.some(r => r.k === 'mud') ? ', through the mudroom.' : '.') : ''));
+  if (program && program.notes.length) program.notes.forEach(x => n.push(x));
+  if (plan.dropped && plan.dropped.length) n.push('Could not fit on their floor: ' + escapeText(plan.dropped.join('; ')) + '. Try fewer rooms on that floor or another level.');
+  if (plan.miss.length) n.push('No door link found for: ' + escapeText(plan.miss.slice(0, 4).join(', ')) + '. Move those rooms next to a neighbour in the Refine tab.');
+  if (plan.failed.length) n.push('Below the room standards: ' + escapeText(plan.failed.slice(0, 5).join(', ')) + '. Adjust them in the Refine tab.');
+  if (plan.opts.open) n.push('Open plan: living, dining and kitchen are one space; the thin dashed lines only mark where each area ends.');
+  n.push('Windows are labelled width × height in inches. Bedroom windows are sized for egress; confirm sill height and opening area with the local code.' + (plan.floors.some(f => f.kind === 'base') ? ' Basement bedroom windows need window wells.' : ''));
+  if (plan.settings.adaptable) n.push('Adaptable mode: 36 in doors, a ' + Math.round(plan.opts.hallW * 12) + ' in hall, and 5 ft wide bathrooms for a 60 in turning circle.');
+  n.push('Cost is a rough estimate from floor area, exterior wall length, corners and plumbing groups. It is not a quote.');
+  return n;
+}
+
+/* ---------------- generate the five options ---------------- */
+function buildPlanOption(P, s, cfg, goal) {
+  const geo = buildAllFloors(P, cfg, goal);
+  const adapt = s.adaptable;
+  const plan = {
+    letter: '', goal: goal.id, cfg: cfg, settings: s, floors: geo.floors, desc: geo.desc, dropped: geo.dropped,
+    opts: { style: s.style, open: goal.open ? true : STYLES[s.style].open, closet: s.closetSec === 'walkin' ? 'none' : s.closetSec,
+      doorW: adapt ? 3 : 2.67, hallW: adapt ? Math.max(4, goal.hallW) : goal.hallW, adaptable: adapt, snap: 0.5,
+      showCloset: true, showDims: true, showFurn: true, showWin: true },
+    hist: [], hi: -1
+  };
+  analyze(plan);
+  return plan;
+}
+function generateAllOptions(s) {
+  program = makeProgram(s);
+  program.basement = s.basement;
+  const cfgs = layoutVariations(program, s), used = {}, out = [];
+  GOALS.forEach((goal, gi) => {
+    const g = Object.assign({}, goal, s.adaptable ? { hallW: Math.max(4, goal.hallW) } : {});
+    const cands = cfgs.map(c => buildPlanOption(program, s, Object.assign({}, c, { mirror: gi % 2 === 1 }), g)).sort((a, b) => a.score - b.score);
+    /* prefer a layout no earlier option used, as long as it scores close to the best */
+    const best = cands[0], alt = cands.find(p => !used[p.cfg.key]);
+    const pick = alt && alt.score - best.score <= Math.max(3, Math.abs(best.score) * 0.06) ? alt : best;
+    used[pick.cfg.key] = 1;
+    pick.letter = 'ABCDE'[gi];
+    const all = [].concat.apply([], pick.floors.map(f => f.rooms));
+    pick.vb = { minX: -9, minY: -4, w: Math.max(...all.map(r => r.x + r.w)) + 13, d: Math.max(...all.map(r => r.y + r.h)) + 8 };
+    saveToHistory(pick);
+    out.push(pick);
+  });
+  return out;
+}
+
+/* ---------------- history for the editor ---------------- */
+const roomForSaving = r => { const c = Object.assign({}, r); delete c.bad; delete c.why; return c; };
+function planSnapshot(plan) { return JSON.stringify(plan.floors.map(f => f.rooms.map(roomForSaving))); }
+function saveToHistory(plan) {
+  const sn = planSnapshot(plan);
+  if (plan.hist[plan.hi] === sn) return;
+  plan.hist.splice(plan.hi + 1); plan.hist.push(sn); plan.hi = plan.hist.length - 1;
+}
+function restoreFromHistory(plan, i) {
+  const data = JSON.parse(plan.hist[i]);
+  plan.floors.forEach((f, k) => { f.rooms = data[k]; });
+  plan.hi = i; analyze(plan);
+}
+const overlaps = (a, b) => a.x < b.x + b.w - 0.01 && b.x < a.x + a.w - 0.01 && a.y < b.y + b.h - 0.01 && b.y < a.y + a.h - 0.01;
+
+/* ---------------- furniture: grey halftone outlines, placed clear of doors and closets ---------------- */
+const WALL_SIDES = ['n', 's', 'w', 'e'], OUTSIDE_FACE = { n: 't', s: 'b', w: 'l', e: 'r' };
+const wallLength = (r, sd) => sd === 'n' || sd === 's' ? r.w : r.h;
+const depthFromWall = (r, sd) => sd === 'n' || sd === 's' ? r.h : r.w;
+/* A rectangle against wall sd of room r: u along the wall, v out from it into the room. */
+function rectAgainstWall(r, sd, u, v, lu, lv) {
+  if (sd === 'n') return { x: r.x + u, y: r.y + v, w: lu, h: lv };
+  if (sd === 's') return { x: r.x + u, y: r.y + r.h - v - lv, w: lu, h: lv };
+  if (sd === 'w') return { x: r.x + v, y: r.y + u, w: lv, h: lu };
+  return { x: r.x + r.w - v - lv, y: r.y + u, w: lv, h: lu };
+}
+function keepClearAreas(f, r, ri) {
+  const obs = [];
+  f.doors.forEach(d => {
+    if (d.a !== ri && d.b !== ri) return;
+    const vert = isClose(d.x1, d.x2), L = vert ? d.x1 : d.y1, len = Math.hypot(d.x2 - d.x1, d.y2 - d.y1);
+    const side = vert ? (r.x + r.w / 2 > L ? 1 : -1) : (r.y + r.h / 2 > L ? 1 : -1);
+    const swing = d.kind === 'swing' || d.kind === 'entry', inward = swing && (vert ? d.nx : d.ny) === side;
+    const dep = inward ? len + 0.4 : swing ? 2 : 3, lo = vert ? Math.min(d.y1, d.y2) : Math.min(d.x1, d.x2);
+    obs.push(vert ? { x: side > 0 ? L : L - dep, y: lo - 0.3, w: dep, h: len + 0.6 } : { x: lo - 0.3, y: side > 0 ? L : L - dep, w: len + 0.6, h: dep });
+  });
+  const c = f.cls && f.cls[ri];
+  if (c) {
+    obs.push(c);
+    obs.push(c.sd === 'n' ? { x: c.x, y: c.y + c.h, w: c.w, h: 2.5 } : c.sd === 's' ? { x: c.x, y: c.y - 2.5, w: c.w, h: 2.5 } : c.sd === 'w' ? { x: c.x + c.w, y: c.y, w: 2.5, h: c.h } : { x: c.x - 2.5, y: c.y, w: 2.5, h: c.h });
+  }
+  if (r.walk === 'n') obs.push({ x: r.x, y: r.y, w: r.w, h: 3 });
+  return obs;
+}
+function wallInfo(f, r, ri) {
+  const I = {};
+  WALL_SIDES.forEach(sd => {
+    const es = OUTSIDE_FACE[sd];
+    I[sd] = { len: wallLength(r, sd), ext: f.ext.some(w => w.r === r && w.side === es), win: f.windows.some(w => w.ri === ri && w.side === es),
+      door: f.doors.some(d => (d.a === ri || d.b === ri) && (sd === 'n' || sd === 's' ? isClose(d.y1, d.y2) && isClose(d.y1, sd === 'n' ? r.y : r.y + r.h) : isClose(d.x1, d.x2) && isClose(d.x1, sd === 'w' ? r.x : r.x + r.w))),
+      walk: r.walk === sd };
+  });
+  return I;
+}
+function findSpotOnWall(r, obs, sides, lu, lv, opt) {
+  opt = opt || {};
+  for (let i = 0; i < sides.length; i++) {
+    const sd = sides[i], L = wallLength(r, sd), A = depthFromWall(r, sd), v = opt.v || 0, cl = opt.clear || 0;
+    if (lu > L - 0.1 || lv + v > A - 0.05) continue;
+    const c = opt.pref === 'start' ? 0.05 : opt.pref === 'end' ? L - lu - 0.05 : (L - lu) / 2, cands = [c];
+    for (let k = 0.5; k < L; k += 0.5) cands.push(c + k, c - k);
+    for (let j = 0; j < cands.length; j++) {
+      const u = cands[j];
+      if (u < 0.04 || u + lu > L - 0.04) continue;
+      const rc = rectAgainstWall(r, sd, u, v, lu, Math.min(lv + cl, A - v - 0.05));
+      if (!obs.some(o => overlaps(o, rc))) return { sd: sd, u: u, rect: rectAgainstWall(r, sd, u, v, lu, lv) };
+    }
+  }
+  return null;
+}
+/* Free stretches along a wall for a strip of the given depth (counters, shelves, closet rods). */
+function freeStretchesAlongWall(r, sd, dep, obs) {
+  const L = wallLength(r, sd), strip = rectAgainstWall(r, sd, 0, 0, L, dep);
+  let iv = [[0.05, L - 0.05]];
+  obs.forEach(o => {
+    if (!overlaps(o, strip)) return;
+    const a = sd === 'n' || sd === 's' ? o.x - r.x : o.y - r.y, b = a + (sd === 'n' || sd === 's' ? o.w : o.h), nx = [];
+    iv.forEach(s => { if (b <= s[0] || a >= s[1]) nx.push(s); else { if (a > s[0]) nx.push([s[0], a]); if (b < s[1]) nx.push([b, s[1]]); } });
+    iv = nx;
+  });
+  return iv.filter(s => s[1] - s[0] >= 1.8);
+}
+
+function furnitureFor(f, r, ri, plan) {
+  const out = [], obs = keepClearAreas(f, r, ri), I = wallInfo(f, r, ri);
+  const F = (rect, rx, kd) => { out.push({ r: rect, rx: rx || 0, kd: kd || 'f' }); obs.push(rect); return rect; };
+  const A = (rect, rx) => { out.push({ r: rect, rx: rx || 0, kd: 'a' }); return rect; };
+  const Cc = (cx, cy, rad, kd) => out.push({ c: [cx, cy, rad], kd: kd || 'a' });
+  const El = (cx, cy, rx, ry) => out.push({ e: [cx, cy, rx, ry], kd: 'a' });
+  const Ln = (x1, y1, x2, y2) => out.push({ l: [x1, y1, x2, y2] });
+  const inner = WALL_SIDES.filter(sd => !I[sd].walk).sort((a, b) => (I[a].win - I[b].win) || (I[a].door - I[b].door) || (I[b].len - I[a].len));
+  const winF = WALL_SIDES.filter(sd => !I[sd].walk).sort((a, b) => (I[b].win - I[a].win) || (I[a].door - I[b].door) || (I[b].len - I[a].len));
+  const longF = WALL_SIDES.filter(sd => !I[sd].walk).sort((a, b) => (I[b].len - I[a].len) || (I[a].door - I[b].door));
+  const shortF = WALL_SIDES.filter(sd => !I[sd].walk).sort((a, b) => (I[a].door - I[b].door) || (I[a].len - I[b].len));
+  const toilet = sides => { const p = findSpotOnWall(r, obs, sides, 1.7, 2.5, { clear: 1.75 }); if (!p) return; F(p.rect, 0.1, 'n'); A(rectAgainstWall(r, p.sd, p.u, 0, 1.7, 0.7), 0.1); const b = rectAgainstWall(r, p.sd, p.u + 0.25, 0.75, 1.2, 1.6); El(b.x + b.w / 2, b.y + b.h / 2, b.w / 2, b.h / 2); };
+  const vanity = (sides, len) => { const p = findSpotOnWall(r, obs, sides, len, 1.75, { clear: 2 }); if (!p) return; F(p.rect, 0.1); const n = len >= 5 ? 2 : 1; for (let i = 0; i < n; i++) { const b = rectAgainstWall(r, p.sd, p.u + len * (i + 0.5) / n - 0.7, 0.3, 1.4, 1.0); El(b.x + b.w / 2, b.y + b.h / 2, b.w / 2, b.h / 2); } };
+  const k = r.k;
+  if (k === 'primary' || k === 'bed') {
+    const cd = clearSize(r, f.cls[ri]), lo = Math.min(cd[0], cd[1]), hi = Math.max(cd[0], cd[1]);
+    let bw = 3.17, bl = 6.25;
+    if (k === 'primary' && lo >= 11.5) { bw = 6.33; bl = 6.67; } else if (lo >= 9.5 && hi >= 10) { bw = 5; bl = 6.67; } else if (lo >= 8.5) { bw = 4.5; bl = 6.25; }
+    const ns = 1.6, full = bw + 2 * (ns + 0.15);
+    let p = findSpotOnWall(r, obs, inner, full, bl, { clear: 2 }), both = true;
+    if (!p) { p = findSpotOnWall(r, obs, inner, bw, bl, { clear: 2 }); both = false; }
+    if (p) {
+      const u0 = both ? p.u + ns + 0.15 : p.u;
+      F(rectAgainstWall(r, p.sd, u0, 0, bw, bl), 0.3);
+      A(rectAgainstWall(r, p.sd, u0 + 0.3, 0.3, bw - 0.6, 1.1), 0.3);
+      Ln.apply(null, (q => [q.x, q.y, q.x + q.w, q.y + q.h])(rectAgainstWall(r, p.sd, u0, 1.9, bw, 0)));
+      if (both) { F(rectAgainstWall(r, p.sd, p.u, 0, ns, 1.4), 0.15); F(rectAgainstWall(r, p.sd, u0 + bw + 0.15, 0, ns, 1.4), 0.15); }
+      obs.push(rectAgainstWall(r, p.sd, u0, bl, bw, 2));
+    }
+    const q = findSpotOnWall(r, obs, inner, k === 'primary' ? 5.5 : 4, 1.6, { clear: 3 });
+    if (q) F(q.rect, 0.1);
+  } else if (k === 'living' || k === 'family' || k === 'rec' || k === 'den' || k === 'loft' || k === 'flex') {
+    const big = k === 'family' || k === 'rec', small = k === 'den' || k === 'loft' || k === 'flex';
+    const sw = small ? 6 : big ? 8.5 : 7.5;
+    let done = false;
+    for (let i = 0; i < inner.length && !done; i++) {
+      const sd = inner[i], Ac = depthFromWall(r, sd), dist = Math.min(9, Ac - 1.5 - 3 - (I[sd === 'n' ? 's' : sd === 's' ? 'n' : sd === 'w' ? 'e' : 'w'].walk ? 3 : 1));
+      if (dist < 6) continue;
+      const g = findSpotOnWall(r, obs, [sd], sw, 1.5 + dist + 3);
+      if (!g) continue;
+      done = true;
+      F(rectAgainstWall(r, sd, g.u + (sw - 5) / 2, 0, 5, 1.5), 0.1);
+      F(rectAgainstWall(r, sd, g.u, 1.5 + dist, sw, 3), 0.4);
+      F(rectAgainstWall(r, sd, g.u + (sw - 4) / 2, 1.5 + dist - 3.3, 4, 2), 0.3);
+      if (big) F(rectAgainstWall(r, sd, g.u, 1.5 + dist - 3.3, 3, 3.3), 0.4);
+      [[g.u - 3.1, 0], [g.u + sw + 0.5, 0]].forEach(c => {
+        if (big && c[0] < g.u) return;
+        const ch = rectAgainstWall(r, sd, c[0], 1.5 + dist - 3.5, 2.6, 2.6);
+        if (c[0] > 0.1 && c[0] + 2.6 < wallLength(r, sd) - 0.1 && !obs.some(o => overlaps(o, ch))) F(ch, 0.5);
+      });
+    }
+    if (!done) {
+      const p = findSpotOnWall(r, obs, inner, sw, 3, { clear: 4.5 });
+      if (p) { F(p.rect, 0.4); F(rectAgainstWall(r, p.sd, p.u + (sw - 4) / 2, 4.4, 4, 2), 0.3); }
+      else { const c = findSpotOnWall(r, obs, inner, 2.8, 2.8, { clear: 1 }); if (c) F(c.rect, 0.6); }
+    }
+  } else if (k === 'dining') {
+    let x0 = r.x, y0 = r.y, w = r.w, h = r.h;
+    if (r.walk === 'n') { y0 += 3; h -= 3; }
+    const along = w >= h, L = along ? w : h, S = along ? h : w;
+    const tl = clamp(Math.floor((L - 5.5) * 2) / 2, 3, 8), tw = clamp(S - 5.5, 2.5, 3.5);
+    if (S >= 7.5 && L >= 8) {
+      const cx = x0 + w / 2, cy = y0 + h / 2;
+      const t = along ? { x: cx - tl / 2, y: cy - tw / 2, w: tl, h: tw } : { x: cx - tw / 2, y: cy - tl / 2, w: tw, h: tl };
+      const n = Math.max(1, Math.floor(tl / 2.3));
+      for (let i = 0; i < n; i++) {
+        const c = -tl / 2 + tl * (i + 0.5) / n;
+        [[-1], [1]].forEach(sg => { const off = sg[0] * (tw / 2 + 0.25) + (sg[0] < 0 ? -1.5 : 0); F(along ? { x: cx + c - 0.75, y: cy + off, w: 1.5, h: 1.5 } : { x: cx + off, y: cy + c - 0.75, w: 1.5, h: 1.5 }, 0.3); });
+      }
+      if (L - tl >= 7) [-1, 1].forEach(sg => { const off = sg * (tl / 2 + 0.25) + (sg < 0 ? -1.5 : 0); F(along ? { x: cx + off, y: cy - 0.75, w: 1.5, h: 1.5 } : { x: cx - 0.75, y: cy + off, w: 1.5, h: 1.5 }, 0.3); });
+      F(t, 0.2);
+    }
+  } else if (k === 'nook') {
+    let y0 = r.y, h = r.h; if (r.walk === 'n') { y0 += 3; h -= 3; }
+    const rad = Math.min(1.9, (Math.min(r.w, h) - 4.4) / 2);
+    if (rad >= 1.2) {
+      const cx = r.x + r.w / 2, cy = y0 + h / 2;
+      [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(d => F({ x: cx + d[0] * (rad + 0.9) - 0.75, y: cy + d[1] * (rad + 0.9) - 0.75, w: 1.5, h: 1.5 }, 0.3));
+      out.push({ c: [cx, cy, rad], kd: 'f' });
+    }
+  } else if (k === 'kitchen') {
+    const runs = winF.map(sd => ({ sd: sd, iv: freeStretchesAlongWall(r, sd, 2, obs) })).map(x => Object.assign(x, { tot: sum(x.iv, s => s[1] - s[0]) })).filter(x => x.tot >= 4);
+    if (runs.length) {
+      const main = runs.slice().sort((a, b) => (I[b.sd].win - I[a.sd].win) * 3 + (b.tot - a.tot) / 4)[0];
+      const longest = main.iv.slice().sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
+      main.iv.forEach(s => F(rectAgainstWall(r, main.sd, s[0], 0, s[1] - s[0], 2), 0, 'c'));
+      const fr = rectAgainstWall(r, main.sd, longest[0], 0, 3, 2.5); A(fr, 0.1); Ln(fr.x, fr.y, fr.x + fr.w, fr.y + fr.h);
+      const win = f.windows.find(w => w.ri === ri && w.side === OUTSIDE_FACE[main.sd]);
+      let su = (longest[0] + longest[1]) / 2 + 1;
+      if (win) { const wc = main.sd === 'n' || main.sd === 's' ? (win.x1 + win.x2) / 2 - r.x : (win.y1 + win.y2) / 2 - r.y; if (wc - 1.4 > longest[0] + 3 && wc + 1.4 < longest[1]) su = wc; }
+      const sk = rectAgainstWall(r, main.sd, su - 1.3, 0.25, 2.6, 1.5); A(sk, 0.2); Ln.apply(null, (q => main.sd === 'n' || main.sd === 's' ? [q.x + q.w / 2, q.y, q.x + q.w / 2, q.y + q.h] : [q.x, q.y + q.h / 2, q.x + q.w, q.y + q.h / 2])(sk));
+      const perp = main.sd === 'n' || main.sd === 's' ? ['w', 'e'] : ['n', 's'];
+      const side2 = runs.filter(x => perp.indexOf(x.sd) > -1).sort((a, b) => b.tot - a.tot)[0];
+      let rangeOn = null;
+      if (side2) {
+        side2.iv.forEach(s => F(rectAgainstWall(r, side2.sd, s[0], 0, s[1] - s[0], 2), 0, 'c'));
+        const l2 = side2.iv.slice().sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
+        if (l2[1] - l2[0] >= 4) rangeOn = { sd: side2.sd, u: (l2[0] + l2[1]) / 2 - 1.25 };
+      }
+      if (!rangeOn && longest[1] - longest[0] >= 10) rangeOn = { sd: main.sd, u: Math.max(longest[0] + 3.5, Math.min(longest[1] - 3, su + 3.5)) };
+      if (!rangeOn && longest[1] - longest[0] >= 7) rangeOn = { sd: main.sd, u: longest[1] - 2.7 };
+      if (rangeOn) { const rg = rectAgainstWall(r, rangeOn.sd, rangeOn.u, 0, 2.5, 2); A(rg, 0.1); [[0.3, 0.3], [0.7, 0.3], [0.3, 0.7], [0.7, 0.7]].forEach(p => Cc(rg.x + rg.w * p[0], rg.y + rg.h * p[1], 0.32)); }
+      const Ac = depthFromWall(r, main.sd) - (I[main.sd === 'n' ? 's' : main.sd === 's' ? 'n' : main.sd === 'w' ? 'e' : 'w'].walk ? 3 : 0);
+      const iw = Math.min(3.5, Ac - 2 - 3.5 - 3.5), il = Math.min(7, longest[1] - longest[0] - 2.5);
+      if (iw >= 2 && il >= 4) {
+        const isl = rectAgainstWall(r, main.sd, (longest[0] + longest[1]) / 2 - il / 2, 5.5, il, iw);
+        if (!obs.some(o => overlaps(o, isl))) F(isl, 0.15, 'c');
+      } else if (Ac >= 7.5 && !side2) {
+        const opp = main.sd === 'n' ? 's' : main.sd === 's' ? 'n' : main.sd === 'w' ? 'e' : 'w';
+        if (!I[opp].walk) freeStretchesAlongWall(r, opp, 2, obs).forEach(s => F(rectAgainstWall(r, opp, s[0], 0, s[1] - s[0], 2), 0, 'c'));
+      }
+    }
+  } else if (k === 'bath' || k === 'bath3' || k === 'ensuite' || k === 'powder') {
+    if (k === 'bath') {
+      const p = findSpotOnWall(r, obs, shortF, Math.min(5, Math.min(r.w, r.h) - 0.1), 2.5, { pref: 'start', clear: 1.75 });
+      if (p) { F(p.rect, 0.2); const q = p.rect; A({ x: q.x + 0.25, y: q.y + 0.25, w: q.w - 0.5, h: q.h - 0.5 }, 0.6); }
+    } else if (k === 'bath3' || k === 'ensuite') {
+      const p = findSpotOnWall(r, obs, shortF, k === 'ensuite' ? 3.5 : 3, k === 'ensuite' ? 4 : 3, { pref: 'start', clear: 2 }) || findSpotOnWall(r, obs, shortF, 3, 3, { pref: 'end', clear: 2 });
+      if (p) { F(p.rect, 0); const q = p.rect; Ln(q.x, q.y, q.x + q.w, q.y + q.h); Ln(q.x + q.w, q.y, q.x, q.y + q.h); }
+    }
+    if (k === 'ensuite') { const t = findSpotOnWall(r, obs, longF, 5.5, 3, { clear: 2.5, pref: 'end' }); if (t) { F(t.rect, 0.6); const q = t.rect; A({ x: q.x + 0.3, y: q.y + 0.3, w: q.w - 0.6, h: q.h - 0.6 }, 1); } }
+    vanity(longF, k === 'ensuite' ? (Math.max(r.w, r.h) >= 11 ? 6 : 5) : k === 'powder' ? 1.8 : 2.5);
+    toilet(longF.concat(shortF));
+  } else if (k === 'laundry') {
+    const p = findSpotOnWall(r, obs, longF, 5.2, 2.6, { clear: 3 });
+    if (p) [0, 2.6].forEach(o => { const m = rectAgainstWall(r, p.sd, p.u + o, 0, 2.5, 2.5); F(m, 0.1, 'a'); Cc(m.x + m.w / 2, m.y + m.h / 2, 0.8); });
+    const q = findSpotOnWall(r, obs, longF, 4, 2, { clear: 2.5 }); if (q) F(q.rect, 0, 'c');
+  } else if (k === 'mud') {
+    const p = findSpotOnWall(r, obs, longF.filter(sd => !I[sd].door).concat(longF), Math.min(wallLength(r, longF[0]) - 1, 6), 1.5, { clear: 3 });
+    if (p) { F(p.rect, 0.1); for (let u = 1.5; u < Math.min(wallLength(r, p.sd) - 1, 6) - 0.5; u += 1.5) Ln.apply(null, (q => [q.x, q.y, q.x + q.w, q.y + q.h])(rectAgainstWall(r, p.sd, p.u + u, 0, 0, 1.5))); }
+  } else if (k === 'pantry' || k === 'storage' || k === 'linen') {
+    const dep = k === 'storage' ? 1.5 : 1.25;
+    WALL_SIDES.filter(sd => !I[sd].door).forEach(sd => freeStretchesAlongWall(r, sd, dep, obs).forEach(s => { if (depthFromWall(r, sd) >= dep + 2.5 || k === 'linen') F(rectAgainstWall(r, sd, s[0], 0, s[1] - s[0], dep), 0, 'c'); }));
+  } else if (k === 'wic' || k === 'wic2') {
+    const lng = WALL_SIDES.filter(sd => !I[sd].door).sort((a, b) => wallLength(r, b) - wallLength(r, a));
+    let n = 0;
+    lng.forEach(sd => {
+      if (n >= 2 || depthFromWall(r, sd) < 2 + 2.5 + (n ? 2 : 0)) return;
+      freeStretchesAlongWall(r, sd, 2, obs).forEach(s => { const q = F(rectAgainstWall(r, sd, s[0], 0, s[1] - s[0], 2), 0, 'c'); const m = rectAgainstWall(r, sd, s[0], 1, s[1] - s[0], 0); Ln(m.x, m.y, m.x + m.w, m.y + m.h); });
+      n++;
+    });
+  } else if (k === 'garage') {
+    const gd = f.doors.find(d => d.kind === 'garage' && d.a === ri);
+    let sd = 'n';
+    if (gd) sd = isClose(gd.y1, gd.y2) ? (isClose(gd.y1, r.y) ? 'n' : 's') : (isClose(gd.x1, r.x) ? 'w' : 'e');
+    const L = wallLength(r, sd), n = r.bays || 2, slot = L / n;
+    for (let i = 0; i < n; i++) {
+      const c = rectAgainstWall(r, sd, slot * (i + 0.5) - 3, 1.5, 6, 15.5);
+      if (depthFromWall(r, sd) >= 17) { out.push({ r: c, rx: 1.2, kd: 'f' }); const w = rectAgainstWall(r, sd, slot * (i + 0.5) - 2.6, 4.2, 5.2, 0); Ln(w.x, w.y, w.x + w.w, w.y + w.h); }
+    }
+    const opp = sd === 'n' ? 's' : sd === 's' ? 'n' : sd === 'w' ? 'e' : 'w';
+    if (depthFromWall(r, sd) >= 21) { const b = findSpotOnWall(r, obs, [opp], Math.min(8, L - 4), 2, {}); if (b) F(b.rect, 0, 'c'); }
+  } else if (k === 'office') {
+    const p = findSpotOnWall(r, obs, winF, 5, 2.5, { clear: 3 });
+    if (p) { F(p.rect, 0.1); const c = rectAgainstWall(r, p.sd, p.u + 1.6, 2.8, 1.8, 1.8); out.push({ c: [c.x + 0.9, c.y + 0.9, 0.9], kd: 'f' }); }
+    const q = findSpotOnWall(r, obs, inner, 3, 1.2, { clear: 2.5 }); if (q) F(q.rect, 0, 'c');
+  } else if (k === 'gym') {
+    const p = findSpotOnWall(r, obs, inner, 3, 6.5, { clear: 2 }); if (p) F(p.rect, 0.3);
+    const q = findSpotOnWall(r, obs, longF, 6, 3, { v: 0.5, clear: 1 }); if (q) F(q.rect, 0.2);
+    const s2 = findSpotOnWall(r, obs, inner, 4, 2, { clear: 2 }); if (s2) F(s2.rect, 0, 'c');
+  } else if (k === 'media') {
+    const p = findSpotOnWall(r, obs, inner, 6, 1.5, {});
+    if (p) {
+      F(p.rect, 0.1);
+      const Ac = depthFromWall(r, p.sd), L = Math.min(wallLength(r, p.sd) - 2, 9);
+      [Math.min(10, Ac - 8), Math.min(10, Ac - 8) + 3.5].forEach(v => { if (v > 5 && v + 3 < Ac) { const row = rectAgainstWall(r, p.sd, (wallLength(r, p.sd) - L) / 2, v, L, 3); if (!obs.some(o => overlaps(o, row))) { const n = Math.max(2, Math.floor(L / 3)); for (let i = 0; i < n; i++) F(rectAgainstWall(r, p.sd, (wallLength(r, p.sd) - L) / 2 + i * L / n + 0.1, v, L / n - 0.2, 3), 0.4); } } });
+    }
+  } else if (k === 'mech' || k === 'mechS') {
+    const p = findSpotOnWall(r, obs, inner, 2.5, 2.5, { pref: 'start' }); if (p) F(p.rect, 0.1, 'a');
+    const q = findSpotOnWall(r, obs, inner, 2, 2, { pref: 'end' }); if (q) Cc(q.rect.x + 1, q.rect.y + 1, 0.95);
+  } else if (k === 'foyer') {
+    const p = findSpotOnWall(r, obs, inner, 3.5, 1.4, { clear: 2.5 }); if (p) F(p.rect, 0.2);
+  }
+  return out;
+}
+
+/* ---------------- drawing: Revit-style greyscale plans ---------------- */
+/* Everything is drawn in shades of grey on a white sheet. Line weights tell the story, as on a
+   construction drawing: thick black exterior walls, medium interior walls, thin door swings and
+   windows, and light grey furniture (the Revit "halftone" look). Wall thicknesses are in feet so they
+   scale with the drawing: exterior walls 6 in, interior walls 4 in. */
+const EXT_WALL = 0.5, INT_WALL = 0.34;
+const LINE_COLOURS = { wall: '#151515', inner: '#3a3a3a', fine: '#222222', light: '#8f8f8f', furniture: '#a8a8a8', text: '#1c1c1c', note: '#5a5a5a' };
+const DRAWING_WIDTH = 900;
+function drawingScale(vb, withTitle) { const s = Math.min((DRAWING_WIDTH - 30) / vb.w, 640 / vb.d); return { s: s, ox: (DRAWING_WIDTH - vb.w * s) / 2, oy: 10, vb: vb, h: Math.round(vb.d * s + 20 + (withTitle ? 70 : 0)) }; }
+/* A length the way it is written on drawings: 75' - 3" (or millimetres in metric). */
+function formatDimension(ft) {
+  if (useMetric) return Math.round(ft * 304.8 / 10) * 10 + '';
+  let f = Math.floor(ft + 1e-6), i = Math.round((ft - f) * 12);
+  if (i === 12) { f++; i = 0; }
+  return f + "' - " + i + '"';
+}
+const line = (x1, y1, x2, y2, color, width, extra) => '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + color + '" stroke-width="' + width + '"' + (extra || '') + '/>';
+
+/* Stairs: two flights with a landing, treads every 11 in, and an arrow showing the way up. */
+function stairDrawing(r, X, Y, s, label) {
+  let h = '';
+  const L = (x1, y1, x2, y2, w) => { h += line(X(x1), Y(y1), X(x2), Y(y2), LINE_COLOURS.inner, w || 0.6); };
+  if (r.w < 7 || r.h < 10.5 || r.w > r.h + 1) { L(r.x, r.y, r.x + r.w, r.y + r.h); L(r.x + r.w, r.y, r.x, r.y + r.h); return h; }
+  const flight = (r.w - 0.4) / 2, top = r.y + 3.5, run = 8 * (11 / 12);
+  L(r.x + flight + 0.2, top, r.x + flight + 0.2, top + run, 1);
+  L(r.x, top, r.x + r.w, top, 0.8);
+  for (let i = 1; i <= 8; i++) { const y = top + i * 11 / 12; L(r.x, y, r.x + flight, y); L(r.x + r.w - flight, y, r.x + r.w, y); }
+  const ax = r.x + flight / 2, bx = r.x + r.w - flight / 2;
+  h += '<polyline points="' + [[ax, top + run], [ax, r.y + 1.75], [bx, r.y + 1.75], [bx, top + run - 0.4]].map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ') + '" fill="none" stroke="' + LINE_COLOURS.fine + '" stroke-width="0.8"/>';
+  h += '<path d="M' + X(bx - 0.35).toFixed(1) + ',' + Y(top + run - 1).toFixed(1) + ' L' + X(bx).toFixed(1) + ',' + Y(top + run - 0.3).toFixed(1) + ' L' + X(bx + 0.35).toFixed(1) + ',' + Y(top + run - 1).toFixed(1) + '" fill="none" stroke="' + LINE_COLOURS.fine + '" stroke-width="0.8"/>';
+  if (label) h += '<text x="' + X(ax).toFixed(1) + '" y="' + Y(top + run + 1).toFixed(1) + '" font-size="7.5" font-weight="700" letter-spacing="0.5" text-anchor="middle" fill="' + LINE_COLOURS.text + '">' + label + '</text>';
   return h;
 }
 
-function floorSvg(f, plan, vb, edit, sel) {
-  const v = viewOf(vb), s = v.s, X = x => v.ox + (x - vb.minX) * s, Y = y => v.oy + (y - vb.minY) * s;
-  let h = '<svg ' + (edit ? 'id="edSvg" ' : '') + 'width="100%" viewBox="0 0 450 ' + v.h + '" style="background:#fff;border-radius:8px;display:block' + (edit ? ';touch-action:none;user-select:none' : '') + '">';
-  if (edit) h += '<defs><pattern id="g" width="' + (5 * s).toFixed(2) + '" height="' + (5 * s).toFixed(2) + '" patternUnits="userSpaceOnUse"><path d="M ' + (5 * s).toFixed(2) + ' 0 L 0 0 0 ' + (5 * s).toFixed(2) + '" fill="none" stroke="#e2e8f0" stroke-width="0.5"/></pattern></defs><rect width="450" height="' + v.h + '" fill="url(#g)"/>';
+/* Doors and openings: the wall is cut, short jamb lines close the cut, then the door is drawn in it. */
+function doorDrawing(d, X, Y, s) {
+  const ax = X(d.x1), ay = Y(d.y1), bx = X(d.x2), by = Y(d.y2), vert = Math.abs(ax - bx) < 0.5;
+  const cut = Math.max(3, EXT_WALL * s + 1.5), half = cut / 2 - 0.4;
+  let h = line(ax, ay, bx, by, '#fff', cut.toFixed(1));
+  const jamb = (px, py) => vert ? line(px - half, py, px + half, py, LINE_COLOURS.inner, 0.9) : line(px, py - half, px, py + half, LINE_COLOURS.inner, 0.9);
+  h += jamb(ax, ay) + jamb(bx, by);
+  if (d.kind === 'opening') return h;
+  if (d.kind === 'garage') return h + line(ax, ay, bx, by, LINE_COLOURS.fine, 0.7, ' stroke-dasharray="6 3"') + (vert ? line(ax - half, ay, bx - half, by, LINE_COLOURS.fine, 0.6) : line(ax, ay - half, bx, by - half, LINE_COLOURS.fine, 0.6));
+  if (d.kind === 'patio') {
+    const o = half * 0.45;
+    return h + (vert ? line(ax - o, ay, ax - o, ay + (by - ay) * 0.55, LINE_COLOURS.fine, 0.9) + line(ax + o, ay + (by - ay) * 0.45, ax + o, by, LINE_COLOURS.fine, 0.9)
+      : line(ax, ay - o, ax + (bx - ax) * 0.55, ay - o, LINE_COLOURS.fine, 0.9) + line(ax + (bx - ax) * 0.45, ay + o, bx, ay + o, LINE_COLOURS.fine, 0.9));
+  }
+  const width = Math.hypot(d.x2 - d.x1, d.y2 - d.y1), tx = X(d.x1 + d.nx * width), ty = Y(d.y1 + d.ny * width), r = width * s;
+  const cross = (bx - ax) * (ty - ay) - (by - ay) * (tx - ax);
+  h += line(ax, ay, tx, ty, LINE_COLOURS.fine, d.kind === 'entry' ? 1.4 : 1.1);
+  h += '<path d="M' + bx.toFixed(1) + ',' + by.toFixed(1) + ' A' + r.toFixed(1) + ',' + r.toFixed(1) + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + tx.toFixed(1) + ',' + ty.toFixed(1) + '" fill="none" stroke="' + LINE_COLOURS.light + '" stroke-width="0.6"/>';
+  return h;
+}
+
+/* One floor as an SVG drawing. title = { num, name } adds dimension strings, a view title and a scale bar. */
+function floorDrawing(f, plan, vb, edit, sel, title) {
+  const v = drawingScale(vb, !!title), s = v.s, X = x => v.ox + (x - vb.minX) * s, Y = y => v.oy + (y - vb.minY) * s, id = ++drawingCount, o = plan.opts;
+  const f1 = n => n.toFixed(1), R = (q, extra) => '<rect x="' + f1(X(q.x)) + '" y="' + f1(Y(q.y)) + '" width="' + f1(q.w * s) + '" height="' + f1(q.h * s) + '" ' + extra + '/>';
+  const font = 'Helvetica Neue,Arial,sans-serif';
+  let h = '<svg ' + (edit ? 'id="edSvg" ' : '') + 'width="100%" viewBox="0 0 ' + DRAWING_WIDTH + ' ' + v.h + '" style="background:#fff;display:block' + (edit ? ';touch-action:none;user-select:none' : '') + '" font-family="' + font + '">';
+  h += '<defs><pattern id="hx' + id + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#cfcfcf" stroke-width="0.8"/></pattern>';
+  if (edit) h += '<pattern id="g' + id + '" width="' + (5 * s).toFixed(2) + '" height="' + (5 * s).toFixed(2) + '" patternUnits="userSpaceOnUse" x="' + f1(X(0)) + '" y="' + f1(Y(0)) + '"><path d="M ' + (5 * s).toFixed(2) + ' 0 L 0 0 0 ' + (5 * s).toFixed(2) + '" fill="none" stroke="#ececec" stroke-width="0.5"/></pattern>';
+  h += '</defs><rect width="' + DRAWING_WIDTH + '" height="' + v.h + '" fill="' + (edit ? 'url(#g' + id + ')' : '#fff') + '"/>';
+  /* 1. floor areas (white; the selected room is tinted while editing) */
   f.rooms.forEach((r, i) => {
-    const openRoom = plan.opts.open && ['Living', 'Dining', 'Kitchen'].indexOf(r.n) > -1, on = sel === i;
-    h += '<rect ' + (edit ? 'class="ed-room" data-i="' + i + '" ' : '') + 'x="' + X(r.x).toFixed(1) + '" y="' + Y(r.y).toFixed(1) + '" width="' + (r.w * s).toFixed(1) + '" height="' + (r.h * s).toFixed(1) + '" fill="' + (on ? '#dbeafe' : ROOM_COLORS[r.t] || '#fff') + '" stroke="' + (on ? '#2563eb' : r.bad ? '#dc2626' : '#64748b') + '" stroke-width="' + (on ? 2.5 : r.bad ? 1.8 : 1) + '"' + ((openRoom || r.openTo) ? ' stroke-dasharray="3 2"' : '') + (edit ? ' style="cursor:move"' : '') + '/>';
+    h += R(r, (edit ? 'class="ed-room" data-i="' + i + '" style="cursor:move" ' : '') + 'fill="' + (sel === i ? '#eaf1fb' : '#fff') + '" stroke="none"');
+    if (r.t === 'unf') h += R(r, 'fill="url(#hx' + id + ')" pointer-events="none"');
   });
+  h += '<g pointer-events="none">';
+  /* 2. furniture and fixtures in light grey */
+  if (o.showFurn) f.rooms.forEach((r, ri) => {
+    furnitureFor(f, r, ri, plan).forEach(p => {
+      if (p.kd === 'n') return;
+      const st = 'fill="' + (p.kd === 'c' ? '#f5f5f5' : '#fff') + '" stroke="' + LINE_COLOURS.furniture + '" stroke-width="' + (p.kd === 'a' ? 0.6 : 0.75) + '"';
+      if (p.r) h += R(p.r, 'rx="' + (p.rx * s).toFixed(1) + '" ' + st);
+      else if (p.c) h += '<circle cx="' + f1(X(p.c[0])) + '" cy="' + f1(Y(p.c[1])) + '" r="' + f1(p.c[2] * s) + '" ' + st + '/>';
+      else if (p.e) h += '<ellipse cx="' + f1(X(p.e[0])) + '" cy="' + f1(Y(p.e[1])) + '" rx="' + f1(p.e[2] * s) + '" ry="' + f1(p.e[3] * s) + '" ' + st + '/>';
+      else if (p.l) h += line(X(p.l[0]), Y(p.l[1]), X(p.l[2]), Y(p.l[3]), LINE_COLOURS.furniture, 0.6);
+    });
+  });
+  /* 3. closets: shelf outline with a dash-dot hanging rod, and the stairs */
   f.rooms.forEach((r, ri) => {
-    const c = closetRect(f, r, ri, plan);
-    if (c) h += '<rect x="' + X(c.x).toFixed(1) + '" y="' + Y(c.y).toFixed(1) + '" width="' + (c.w * s).toFixed(1) + '" height="' + (c.h * s).toFixed(1) + '" fill="#e2e8f0" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2 1.5" pointer-events="none"/>';
+    const c = f.cls[ri];
+    if (c) {
+      h += R(c, 'fill="#fff" stroke="' + LINE_COLOURS.light + '" stroke-width="0.7"');
+      const m = c.sd === 'n' || c.sd === 's' ? [c.x + 0.2, c.y + c.h / 2, c.x + c.w - 0.2, c.y + c.h / 2] : [c.x + c.w / 2, c.y + 0.2, c.x + c.w / 2, c.y + c.h - 0.2];
+      h += line(X(m[0]), Y(m[1]), X(m[2]), Y(m[3]), LINE_COLOURS.light, 0.7, ' stroke-dasharray="6 2 1 2"');
+    }
+    if (r.k === 'stairs') h += stairDrawing(r, X, Y, s, f.kind === 'base' ? 'UP' : f.kind === 'upper' ? 'DN' : (plan.floors.some(x => x.kind === 'upper') ? 'UP' : '') + (plan.floors.length > 2 ? ' / ' : '') + (plan.floors.some(x => x.kind === 'base') ? 'DN' : ''));
   });
+  /* 4. walls: open-plan rooms are only divided by a thin dashed room separation line; every other
+        shared edge is an interior wall; edges facing outside are the thick exterior walls */
+  const iw = Math.max(1.6, INT_WALL * s).toFixed(1), ew = Math.max(2.6, EXT_WALL * s).toFixed(1);
+  f.rooms.forEach((a, ai) => f.rooms.forEach((b, bi) => {
+    if (bi <= ai) return;
+    const sg = sharedWall(a, b); if (!sg) return;
+    const p = sg.ax === 'v' ? [sg.L, sg.s0, sg.L, sg.s1] : [sg.s0, sg.L, sg.s1, sg.L];
+    if (o.open && OPEN_PLAN_ROOMS[a.k] && OPEN_PLAN_ROOMS[b.k]) h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), LINE_COLOURS.light, 0.6, ' stroke-dasharray="5 3"');
+    else h += line(X(p[0]), Y(p[1]), X(p[2]), Y(p[3]), LINE_COLOURS.inner, iw, ' stroke-linecap="square"');
+  }));
+  f.ext.forEach(w => { h += line(X(w.x1), Y(w.y1), X(w.x2), Y(w.y2), LINE_COLOURS.wall, ew, ' stroke-linecap="square"'); });
+  /* 5. windows: a cut in the wall with two wall-face lines and a glass line, tagged width × height in inches */
+  if (o.showWin) f.windows.forEach(w => {
+    const vert = isClose(w.x1, w.x2), ax = X(w.x1), ay = Y(w.y1), bx = X(w.x2), by = Y(w.y2), half = +ew / 2;
+    h += line(ax, ay, bx, by, '#fff', (+ew + 0.6).toFixed(1));
+    [-half, 0, half].forEach(off => { h += vert ? line(ax + off, ay, bx + off, by, LINE_COLOURS.fine, off ? 0.7 : 0.5) : line(ax, ay + off, bx, by + off, LINE_COLOURS.fine, off ? 0.7 : 0.5); });
+    h += vert ? line(ax - half, ay, ax + half, ay, LINE_COLOURS.fine, 0.7) + line(bx - half, by, bx + half, by, LINE_COLOURS.fine, 0.7) : line(ax, ay - half, ax, ay + half, LINE_COLOURS.fine, 0.7) + line(bx, by - half, bx, by + half, LINE_COLOURS.fine, 0.7);
+    const out = { t: [0, -1], b: [0, 1], l: [-1, 0], r: [1, 0] }[w.side], mx = (ax + bx) / 2 + out[0] * (half + 7), my = (ay + by) / 2 + out[1] * (half + 7);
+    h += '<text x="' + f1(mx) + '" y="' + f1(my) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + (vert ? ' transform="rotate(-90 ' + f1(mx) + ' ' + f1(my) + ')"' : '') + '>' + w.wi + '×' + w.hi + '</text>';
+  });
+  /* 6. doors */
+  f.doors.forEach(d => { h += doorDrawing(d, X, Y, s); });
+  /* 7. rooms that break a standard get a thin red dashed outline */
+  f.rooms.forEach(r => { if (r.bad) h += R({ x: r.x + 0.5, y: r.y + 0.5, w: Math.max(0.5, r.w - 1), h: Math.max(0.5, r.h - 1) }, 'fill="none" stroke="#c0392b" stroke-width="0.9" stroke-dasharray="4 3"'); });
+  /* 8. room tags: name in capitals, size underneath */
   f.rooms.forEach(r => {
-    const pw = r.w * s, ph = r.h * s, cx = X(r.x + r.w / 2), cy = Y(r.y + r.h / 2);
-    if (r.t === 'hall') { if (pw > 40 || ph > 40) h += '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" font-size="7" text-anchor="middle" dominant-baseline="central" fill="#94a3b8" pointer-events="none">HALL</text>'; }
-    else if (pw > 46 && ph > 28) {
-      h += '<text x="' + cx.toFixed(1) + '" y="' + (cy - 4).toFixed(1) + '" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#0f172a" pointer-events="none">' + esc(r.n) + '</text>';
-      h += '<text x="' + cx.toFixed(1) + '" y="' + (cy + 8).toFixed(1) + '" font-size="8" font-family="monospace" text-anchor="middle" dominant-baseline="central" fill="#475569" pointer-events="none">' + fmtLen(r.w) + '×' + fmtLen(r.h) + '</text>';
-    } else if (pw > 20 && ph > 14) h += '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" font-size="8" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#0f172a" pointer-events="none">' + esc(r.n.slice(0, 4)) + '</text>';
+    const pw = r.w * s, ph = r.h * s, cx = X(r.x + r.w / 2), cy = Y(r.y + r.h / 2), halo = ' paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round"';
+    if (r.k === 'stairs') return;
+    if (r.t === 'hall') { if (pw > 40 || ph > 40) h += '<text x="' + f1(cx) + '" y="' + f1(cy) + '" font-size="7.5" letter-spacing="0.6" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + halo + '>HALL</text>'; return; }
+    const name = r.n.toUpperCase(), nameW = name.length * 7 + 8, size = formatLength(r.w) + ' × ' + formatLength(r.h);
+    if (pw > nameW && ph > 28) {
+      h += '<text x="' + f1(cx) + '" y="' + f1(cy - 5) + '" font-size="9.5" font-weight="700" letter-spacing="0.4" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.text + '"' + halo + '>' + escapeText(name) + '</text>';
+      if (pw > size.length * 4.8 + 6) h += '<text x="' + f1(cx) + '" y="' + f1(cy + 7) + '" font-size="8" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.note + '"' + halo + '>' + size + '</text>';
+    } else if (pw > 22 && ph > 14) {
+      const short = r.n.replace('Walk-in Closet', 'W.I.C.').replace('W/I Closet', 'W.I.C.').replace('Bathroom', 'Bath').replace('Laundry', 'Lndry').replace('Powder', 'Pwdr').replace('Pantry', 'Pntry').replace('Mudroom', 'Mud').toUpperCase();
+      const fsz = Math.min(8.5, pw / (short.length * 0.66 + 1));
+      if (fsz >= 5.5) h += '<text x="' + f1(cx) + '" y="' + f1(cy) + '" font-size="' + fsz.toFixed(1) + '" font-weight="700" letter-spacing="0.3" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.text + '"' + halo + '>' + escapeText(short) + '</text>';
+    }
   });
-  f.ext.forEach(w => { h += '<line x1="' + X(w.x1).toFixed(1) + '" y1="' + Y(w.y1).toFixed(1) + '" x2="' + X(w.x2).toFixed(1) + '" y2="' + Y(w.y2).toFixed(1) + '" stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" pointer-events="none"/>'; });
-  f.doors.forEach(d => { h += '<g pointer-events="none">' + doorSvg(d, X, Y, s) + '</g>'; });
-  if (!edit && plan.opts.showDims) h += '<text x="225" y="16" font-size="10" font-family="monospace" font-weight="600" text-anchor="middle" fill="#2563eb">WIDTH ' + fmtLen(plan.W) + '  ·  DEPTH ' + fmtLen(plan.D) + '</text>';
+  /* 9. overall dimension strings along the top and left, with architectural tick marks */
+  const x0 = Math.min(...f.rooms.map(r => r.x)), x1 = Math.max(...f.rooms.map(r => r.x + r.w)), y0 = Math.min(...f.rooms.map(r => r.y)), y1 = Math.max(...f.rooms.map(r => r.y + r.h));
+  if (title && o.showDims) {
+    const dy = Y(y0) - 24, dx = X(x0) - 24, tick = (px, py) => line(px - 3.5, py + 3.5, px + 3.5, py - 3.5, LINE_COLOURS.fine, 1.1);
+    h += line(X(x0), Y(y0) - 6, X(x0), dy - 5, LINE_COLOURS.light, 0.5) + line(X(x1), Y(y0) - 6, X(x1), dy - 5, LINE_COLOURS.light, 0.5) + line(X(x0) - 6, dy, X(x1) + 6, dy, LINE_COLOURS.fine, 0.6) + tick(X(x0), dy) + tick(X(x1), dy);
+    h += '<text x="' + f1((X(x0) + X(x1)) / 2) + '" y="' + f1(dy - 5) + '" font-size="8.5" text-anchor="middle" fill="' + LINE_COLOURS.text + '">' + formatDimension(x1 - x0) + '</text>';
+    h += line(X(x0) - 6, Y(y0), dx - 5, Y(y0), LINE_COLOURS.light, 0.5) + line(X(x0) - 6, Y(y1), dx - 5, Y(y1), LINE_COLOURS.light, 0.5) + line(dx, Y(y0) - 6, dx, Y(y1) + 6, LINE_COLOURS.fine, 0.6) + tick(dx, Y(y0)) + tick(dx, Y(y1));
+    const my = (Y(y0) + Y(y1)) / 2;
+    h += '<text x="' + f1(dx - 5) + '" y="' + f1(my) + '" font-size="8.5" text-anchor="middle" fill="' + LINE_COLOURS.text + '" transform="rotate(-90 ' + f1(dx - 5) + ' ' + f1(my) + ')">' + formatDimension(y1 - y0) + '</text>';
+  }
+  /* 10. view title, graphic scale bar and front arrow under the drawing */
+  if (title) {
+    const ty = v.oy + vb.d * s + 18, lx = Math.max(12, X(x0)), rx = Math.min(DRAWING_WIDTH - 12, X(x1));
+    h += '<circle cx="' + f1(lx + 12) + '" cy="' + f1(ty + 11) + '" r="11" fill="#fff" stroke="' + LINE_COLOURS.wall + '" stroke-width="1.2"/>';
+    h += '<text x="' + f1(lx + 12) + '" y="' + f1(ty + 11) + '" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="' + LINE_COLOURS.text + '">' + title.num + '</text>';
+    h += '<text x="' + f1(lx + 30) + '" y="' + f1(ty + 8) + '" font-size="12" font-weight="700" letter-spacing="1" fill="' + LINE_COLOURS.text + '">' + escapeText(title.name.toUpperCase()) + '</text>';
+    h += line(lx + 30, ty + 14, lx + 210, ty + 14, LINE_COLOURS.wall, 1.4);
+    h += '<text x="' + f1(lx + 30) + '" y="' + f1(ty + 26) + '" font-size="8" letter-spacing="0.5" fill="' + LINE_COLOURS.note + '">' + formatArea(f.area).toUpperCase() + ' FINISHED  ·  ' + formatDimension(x1 - x0) + ' × ' + formatDimension(y1 - y0) + '  ·  MC DESIGNS</text>';
+    const unit = useMetric ? 1 / METRES_PER_FOOT : 1, blocks = [0, 1, 2, 4];
+    let step = s * 5 * unit > 26 ? 5 : 10;
+    if (rx - 40 - 4 * step * unit * s < lx + 225 && step === 5) step = 2.5;
+    const bx0 = rx - 40 - blocks[3] * step * unit * s;
+    if (bx0 > lx + 222) {
+      for (let i = 0; i < 3; i++) h += '<rect x="' + f1(bx0 + blocks[i] * step * unit * s) + '" y="' + f1(ty + 4) + '" width="' + f1((blocks[i + 1] - blocks[i]) * step * unit * s) + '" height="4" fill="' + (i % 2 ? '#fff' : LINE_COLOURS.wall) + '" stroke="' + LINE_COLOURS.wall + '" stroke-width="0.7"/>';
+      blocks.forEach(b => { h += '<text x="' + f1(bx0 + b * step * unit * s) + '" y="' + f1(ty + 18) + '" font-size="7" text-anchor="middle" fill="' + LINE_COLOURS.note + '">' + b * step + (b === 4 ? (useMetric ? ' m' : ' ft') : '') + '</text>'; });
+    }
+    h += '<path d="M' + f1(rx - 14) + ',' + f1(ty - 2) + ' L' + f1(rx - 8) + ',' + f1(ty + 12) + ' L' + f1(rx - 14) + ',' + f1(ty + 9) + ' L' + f1(rx - 20) + ',' + f1(ty + 12) + ' Z" fill="' + LINE_COLOURS.wall + '"/>';
+    h += '<text x="' + f1(rx - 14) + '" y="' + f1(ty + 23) + '" font-size="6.5" font-weight="700" letter-spacing="0.5" text-anchor="middle" fill="' + LINE_COLOURS.text + '">FRONT</text>';
+  }
+  h += '</g>';
   if (edit && sel != null && f.rooms[sel]) {
     const r = f.rooms[sel], pts = [['nw', r.x, r.y, 'nwse'], ['ne', r.x + r.w, r.y, 'nesw'], ['se', r.x + r.w, r.y + r.h, 'nwse'], ['sw', r.x, r.y + r.h, 'nesw']];
-    pts.forEach(p => { h += '<rect class="ed-handle" data-h="' + p[0] + '" x="' + (X(p[1]) - 5).toFixed(1) + '" y="' + (Y(p[2]) - 5).toFixed(1) + '" width="10" height="10" fill="#2563eb" stroke="#fff" style="cursor:' + p[3] + '-resize"/>'; });
+    h += R(r, 'fill="none" stroke="#2f6fb5" stroke-width="1.6" pointer-events="none"');
+    pts.forEach(p => { h += '<rect class="ed-handle" data-h="' + p[0] + '" x="' + f1(X(p[1]) - 6) + '" y="' + f1(Y(p[2]) - 6) + '" width="12" height="12" fill="#2f6fb5" stroke="#fff" style="cursor:' + p[3] + '-resize"/>'; });
   }
   return h + '</svg>';
 }
 
-function sheetHtml(plan, idx, single) {
-  const base = { minX: -3, minY: -3, w: plan.W + 6, d: plan.D + 6 };
-  let h = '<div class="sheet"><div class="head"><div><h2>Option ' + plan.letter + ': ' + SHAPES[plan.shape] + '</h2><div class="sub">' + STYLES[plan.opts.style].n + ' · ' + fmtLen(plan.W) + ' × ' + fmtLen(plan.D) + ' footprint</div></div>';
+function goalHeadline(plan) {
+  const M = plan.metrics;
+  if (plan.goal === 'path') return ['Average walk', formatDistance(M.avgTrip), 'weighted everyday trips'];
+  if (plan.goal === 'space') return ['Halls', M.hallPct + '%', 'of finished floor area'];
+  if (plan.goal === 'open') return ['Open living area', formatArea(M.openArea), Math.round(M.openShare * 100) + '% of the main floor'];
+  if (plan.goal === 'private') return ['Primary to bedrooms', M.privSep == null ? '—' : formatDistance(M.privSep), M.noisy + ' noisy shared walls'];
+  return ['Cost per sq ft', '$' + Math.round(M.cost / Math.max(M.finished, 1)), 'finished area'];
+}
+function optionSheetHtml(plan, idx, single) {
+  const M = plan.metrics, g = GOALS.find(x => x.id === plan.goal), gs = goalHeadline(plan);
+  let h = '<div class="sheet"><div class="head"><div><div class="goal">Option ' + plan.letter + ' · ' + g.n + '</div><h2>' + plan.desc + '</h2><div class="sub">' + STYLES[plan.opts.style].n + ' · ' + plan.floors.map(f => f.label.toLowerCase()).join(', ') + ' · ' + formatLength(plan.W) + ' × ' + formatLength(plan.D) + ' main footprint</div></div>';
   h += '<button class="btn" data-refine="' + idx + '" type="button">Refine this option →</button></div>';
-  h += '<div class="metrics"><div class="metric">Living area<b>' + fmtArea(plan.living) + '</b></div>'
-    + '<div class="metric">Est. cost<b>' + fmtMoney(plan.cost) + '</b>' + (plan.over > 0 ? fmtMoney(plan.over) + ' over' : 'Within budget') + '</div>'
-    + '<div class="metric">Size rules<b>' + plan.passed + '/' + plan.checked + '</b>' + plan.hallPct + '% hall</div></div>';
+  h += '<div class="metrics"><div class="metric">Finished area<b>' + formatArea(M.finished) + '</b>' + (M.garage ? '+ ' + formatArea(M.garage) + ' garage' : 'no garage') + '</div>'
+    + '<div class="metric">Est. cost<b>' + formatMoney(M.cost) + '</b>' + (M.over > 0 ? formatMoney(M.over) + ' over budget' : 'within budget') + '</div>'
+    + '<div class="metric hl">' + gs[0] + '<b>' + gs[1] + '</b>' + gs[2] + '</div>'
+    + '<div class="metric">Room standards<b>' + plan.passed + '/' + plan.checked + '</b>' + (plan.miss.length ? plan.miss.length + ' without a door' : 'every room has a door') + '</div></div>';
+  const chips = [];
+  if (M.garKit != null) chips.push('Garage → kitchen ' + formatDistance(M.garKit));
+  if (M.bedBath != null) chips.push('Bedroom → bath ' + formatDistance(M.bedBath) + ' avg');
+  if (M.foyKit != null) chips.push('Front door → kitchen ' + formatDistance(M.foyKit));
+  chips.push('Halls ' + M.hallPct + '%');
+  if (M.privSep != null) chips.push('Primary ↔ bedrooms ' + formatDistance(M.privSep));
+  chips.push('Exterior wall ' + formatDistance(M.wall));
+  chips.push(M.corners + ' outline corners');
+  chips.push(M.wetGroups + ' plumbing group' + (M.wetGroups === 1 ? '' : 's'));
+  h += '<div class="kchips">' + chips.map(c => '<span>' + c + '</span>').join('') + '</div>';
+  /* each floor keeps the same left-right frame so the floors line up, but is cropped top to bottom */
   plan.floors.forEach(f => {
-    if (plan.floors.length > 1) h += '<div class="floor-label">' + f.label + '</div>';
-    h += floorSvg(f, plan, base, false, null);
+    const y0 = Math.min(...f.rooms.map(r => r.y)), y1 = Math.max(...f.rooms.map(r => r.y + r.h));
+    const num = f.kind === 'main' ? '1' : f.kind === 'upper' ? '2' : 'B';
+    h += '<div class="plan">' + floorDrawing(f, plan, { minX: plan.vb.minX, w: plan.vb.w, minY: y0 - 6, d: y1 - y0 + 8 }, false, null, { num: num, name: f.label + ' plan' }) + '</div>';
   });
-  if (single) h += '<div class="notes">' + plan.notes.map(x => '<div class="note">' + x + '</div>').join('') + '</div>';
+  if (single) {
+    h += '<div class="notes">' + plan.notes.map(x => '<div class="note">' + x + '</div>').join('') + '</div>';
+    h += '<details class="sched"><summary>Room schedule</summary><table><thead><tr><th>Room</th><th>Floor</th><th>Size</th><th>Area</th></tr></thead><tbody>';
+    plan.floors.forEach(f => f.rooms.filter(r => r.t !== 'hall').forEach(r => { h += '<tr' + (r.bad ? ' class="bad"' : '') + '><td>' + escapeText(r.n) + '</td><td>' + f.label.replace(' floor', '') + '</td><td>' + formatLength(r.w) + ' × ' + formatLength(r.h) + '</td><td>' + formatArea(r.w * r.h) + '</td></tr>'; }));
+    h += '</tbody></table></details>';
+  }
   return h + '</div>';
 }
 
 /* ---------------- refine tab (editor) ---------------- */
-function optHtml(list, cur) { return list.map(o => '<option value="' + o[0] + '"' + (String(o[0]) === String(cur) ? ' selected' : '') + '>' + o[1] + '</option>').join(''); }
+function optionsHtml(list, cur) { return list.map(o => '<option value="' + o[0] + '"' + (String(o[0]) === String(cur) ? ' selected' : '') + '>' + o[1] + '</option>').join(''); }
+const ADDABLE = ['bed', 'bath', 'bath3', 'powder', 'office', 'den', 'laundry', 'storage', 'linen', 'wic', 'pantry', 'mud', 'flex'];
 function refineHtml(plan) {
-  if (edFloor >= plan.floors.length) edFloor = 0;
-  const f = plan.floors[edFloor], o = plan.opts;
-  if (edSel != null && !f.rooms[edSel]) edSel = null;
-  edView = viewOf(plan.vb);
-  let h = '<div class="sheet"><div class="head"><div><h2>Refine Option ' + plan.letter + '</h2><div class="sub">' + SHAPES[plan.shape] + ' · ' + fmtArea(plan.living) + ' living · ' + fmtMoney(plan.cost) + '</div></div></div>';
+  if (editFloor >= plan.floors.length) editFloor = 0;
+  const f = plan.floors[editFloor], o = plan.opts;
+  if (selectedRoom != null && !f.rooms[selectedRoom]) selectedRoom = null;
+  editView = drawingScale(plan.vb);
+  let h = '<div class="sheet"><div class="head"><div><div class="goal">Option ' + plan.letter + ' · ' + GOALS.find(x => x.id === plan.goal).n + '</div><h2>Refine</h2><div class="sub">' + plan.desc + ' · ' + formatArea(plan.metrics.finished) + ' finished · ' + formatMoney(plan.metrics.cost) + '</div></div></div>';
   h += '<div class="bar"><button class="btn" id="edUndo" type="button"' + (plan.hi <= 0 ? ' disabled' : '') + '>↩ Undo</button><button class="btn" id="edRedo" type="button"' + (plan.hi >= plan.hist.length - 1 ? ' disabled' : '') + '>↪ Redo</button>'
-    + '<button class="btn" id="edRotate" type="button"' + (edSel == null ? ' disabled' : '') + '>Rotate (R)</button><button class="btn" id="edDelete" type="button"' + (edSel == null ? ' disabled' : '') + '>Delete</button>'
+    + '<button class="btn" id="edRotate" type="button"' + (selectedRoom == null ? ' disabled' : '') + '>Rotate (R)</button><button class="btn" id="edDelete" type="button"' + (selectedRoom == null ? ' disabled' : '') + '>Delete</button>'
     + '<button class="btn" id="edReset" type="button">Reset</button><button class="btn" id="edSvgSave" type="button">Download SVG</button>'
-    + '<select id="addRoom" style="width:auto"><option value="">+ Add room…</option><option>Bedroom</option><option>Bathroom</option><option>Office</option><option>Closet</option><option>Storage</option></select></div>';
+    + '<select id="addRoom" style="width:auto"><option value="">+ Add room…</option>' + ADDABLE.map(k => '<option value="' + k + '">' + ROOM_TYPES[k].n + '</option>').join('') + '</select></div>';
   h += '<div class="bar">'
-    + '<label>Style <select id="rfStyle" style="width:auto">' + optHtml(Object.keys(STYLES).map(k => [k, STYLES[k].n]), o.style) + '</select></label>'
-    + '<label>Bedroom closets <select id="rfCloset" style="width:auto">' + optHtml([['reach', 'Reach-in (2 × 6 ft)'], ['double', 'Double reach-in (2 × 9 ft)'], ['none', 'None']], o.closet) + '</select></label>'
-    + '<label>Closet depth <select id="rfDepth" style="width:auto">' + optHtml([[2, '2 ft'], [2.5, '2.5 ft']], o.closetDepth) + '</select></label>'
-    + '<label>Doors <select id="rfDoor" style="width:auto">' + optHtml([[2.5, '30 in'], [2.67, '32 in'], [3, '36 in']], o.doorW) + '</select></label>'
-    + '<label>Snap <select id="rfSnap" style="width:auto">' + optHtml([[0.25, '3 in'], [0.5, '6 in'], [1, '1 ft']], o.snap) + '</select></label>'
-    + '<label><input type="checkbox" id="rfOpen"' + (o.open ? ' checked' : '') + '> Open living spaces</label>'
-    + '<label><input type="checkbox" id="rfShowCl"' + (o.showCloset ? ' checked' : '') + '> Show closets</label></div>';
-  if (plan.floors.length > 1) {
-    h += '<div class="tabs">' + plan.floors.map((fl, i) => '<button class="btn' + (i === edFloor ? ' active' : '') + '" data-floor="' + i + '" type="button">' + fl.label + '</button>').join('') + '</div>';
-  }
-  h += '<div class="hint">Click a room to select it. Drag to move, drag a blue corner to resize, or type exact values below. Doors and closets update after every change.</div>';
-  h += floorSvg(f, plan, plan.vb, true, edSel);
-  h += '<div style="margin-top:10px">' + (plan.failed.length ? plan.failed.map(n => '<span class="chip">' + esc(n) + ' is outside the size rules</span>').join('') : '<span class="chip ok">All rooms meet the size rules</span>')
-    + (plan.miss.length ? '<span class="chip">No door: ' + esc(plan.miss.join(', ')) + '</span>' : '<span class="chip ok">Every room has a door</span>') + '</div>';
-  if (edSel != null) {
-    const r = f.rooms[edSel], r1 = v => Math.round(v * 10) / 10, isBed = /^Bed|^Primary/.test(r.n);
-    h += '<div class="insp"><div class="field"><label>Name</label><input type="text" id="iN" value="' + esc(r.n) + '"></div>'
+    + '<label>Style <select id="rfStyle" style="width:auto">' + optionsHtml(Object.keys(STYLES).map(k => [k, STYLES[k].n]), o.style) + '</select></label>'
+    + '<label>Bedroom closets <select id="rfCloset" style="width:auto">' + optionsHtml([['reach', 'Reach-in (2¼ × 6 ft)'], ['double', 'Double reach-in (2¼ × 9 ft)'], ['none', 'None']], o.closet) + '</select></label>'
+    + '<label>Doors <select id="rfDoor" style="width:auto">' + optionsHtml([[2.5, '30 in'], [2.67, '32 in'], [3, '36 in']], o.doorW) + '</select></label>'
+    + '<label>Snap <select id="rfSnap" style="width:auto">' + optionsHtml([[0.25, '3 in'], [0.5, '6 in'], [1, '1 ft']], o.snap) + '</select></label>'
+    + '<label><input type="checkbox" id="rfOpen"' + (o.open ? ' checked' : '') + '> Open living</label>'
+    + '<label><input type="checkbox" id="rfShowCl"' + (o.showCloset ? ' checked' : '') + '> Closets</label>'
+    + '<label><input type="checkbox" id="rfFurn"' + (o.showFurn ? ' checked' : '') + '> Furniture</label>'
+    + '<label><input type="checkbox" id="rfWin"' + (o.showWin ? ' checked' : '') + '> Windows</label></div>';
+  if (plan.floors.length > 1) h += '<div class="tabs">' + plan.floors.map((fl, i) => '<button class="btn' + (i === editFloor ? ' active' : '') + '" data-floor="' + i + '" type="button">' + fl.label + '</button>').join('') + '</div>';
+  h += '<div class="hint">Click a room to select it. Drag to move, drag a blue corner to resize, or type exact values below. Doors, closets, windows and furniture update after every change.</div>';
+  h += floorDrawing(f, plan, plan.vb, true, selectedRoom);
+  const misalign = plan.floors.length > 1 && (() => { const ss = plan.floors.map(fl => fl.rooms.find(r => r.k === 'stairs')).filter(Boolean); return ss.some(x => Math.abs(x.x - ss[0].x) > 0.1 || Math.abs(x.y - ss[0].y) > 0.1); })();
+  h += '<div style="margin-top:10px">' + (plan.failed.length ? plan.failed.map(n => '<span class="chip">' + escapeText(n) + '</span>').join('') : '<span class="chip ok">All rooms meet the standards</span>')
+    + (plan.miss.length ? '<span class="chip">No door: ' + escapeText(plan.miss.join(', ')) + '</span>' : '<span class="chip ok">Every room has a door</span>')
+    + (misalign ? '<span class="chip">Stairs no longer line up between floors</span>' : '') + '</div>';
+  if (selectedRoom != null) {
+    const r = f.rooms[selectedRoom], r1 = v => Math.round(v * 10) / 10, isBed = r.k === 'bed' || r.k === 'primary';
+    h += '<div class="insp"><div class="field"><label>Name</label><input type="text" id="iN" value="' + escapeText(r.n) + '"></div>'
       + '<div class="field"><label>Width (ft)</label><input type="number" id="iW" step="0.5" min="2" value="' + r1(r.w) + '"></div>'
       + '<div class="field"><label>Length (ft)</label><input type="number" id="iH" step="0.5" min="2" value="' + r1(r.h) + '"></div>'
       + '<div class="field"><label>X (ft)</label><input type="number" id="iX" step="0.5" value="' + r1(r.x) + '"></div>'
       + '<div class="field"><label>Y (ft)</label><input type="number" id="iY" step="0.5" value="' + r1(r.y) + '"></div>'
-      + (isBed ? '<div class="field"><label>Closet</label><select id="iC">' + optHtml([['', 'Plan default'], ['none', 'None'], ['reach', 'Reach-in'], ['double', 'Double']], r.closet || '') + '</select></div>' : '') + '</div>';
+      + (isBed ? '<div class="field"><label>Closet</label><select id="iC">' + optionsHtml([['', 'Plan default'], ['none', 'None'], ['reach', 'Reach-in'], ['double', 'Double']], r.cl == null ? '' : r.cl) + '</select></div>' : '') + '</div>';
   }
   return h + '</div>';
 }
-
-function edPt(e) {
+function pointerInFeet(e) {
   const sv = document.getElementById('edSvg');
-  if (!sv || !edView) return null;
-  const b = sv.getBoundingClientRect(), k = 450 / b.width;
-  return { x: ((e.clientX - b.left) * k - edView.ox) / edView.s + edView.vb.minX, y: ((e.clientY - b.top) * k - edView.oy) / edView.s + edView.vb.minY };
+  if (!sv || !editView) return null;
+  const b = sv.getBoundingClientRect(), k = DRAWING_WIDTH / b.width;
+  return { x: ((e.clientX - b.left) * k - editView.ox) / editView.s + editView.vb.minX, y: ((e.clientY - b.top) * k - editView.oy) / editView.s + editView.vb.minY };
 }
-function edCommit(plan) { analyze(plan); pushHist(plan); render(); }
+function saveEdit(plan) { analyze(plan); saveToHistory(plan); render(); }
 
 /* ===== page wiring (everything below touches the page) ===== */
 const $ = id => document.getElementById(id);
 
 function readSettings() {
+  const counts = {};
+  ROOM_PICKER.forEach(p => { counts[p[0]] = +$('c_' + p[0]).value; });
   return {
-    sizeMode: document.querySelector('input[name=sizeMode]:checked').value,
-    area: +$('area').value, width: +$('width').value, depth: +$('depth').value,
-    bedrooms: +$('bedrooms').value, bathrooms: +$('bathrooms').value, levels: +$('levels').value, garage: +$('garage').value,
-    office: $('office').checked, mudroom: $('mudroom').checked, pantry: $('pantry').checked, gym: $('gym').checked,
-    adaptable: $('adaptable').checked, popouts: $('popouts').checked, popDepth: +$('popDepth').value,
-    style: $('style').value, shape: $('shape').value, budget: +$('budget').value, finish: $('finish').value
+    counts: counts, storeys: +$('storeys').value, basement: $('basement').value,
+    closetPri: $('closetPri').value, closetSec: $('closetSec').value,
+    adaptable: $('adaptable').checked, style: $('style').value, budget: +$('budget').value, finish: $('finish').value
   };
 }
-function applySizeMode() {
-  const byArea = document.querySelector('input[name=sizeMode]:checked').value === 'area';
-  $('area').disabled = !byArea; $('width').disabled = byArea; $('depth').disabled = byArea;
-  $('areaField').classList.toggle('off', !byArea); $('widthField').classList.toggle('off', byArea); $('depthField').classList.toggle('off', byArea);
-}
-function updateLabels() {
-  $('areaOut').textContent = fmtArea(+$('area').value); $('widthOut').textContent = fmtLen(+$('width').value);
-  $('depthOut').textContent = fmtLen(+$('depth').value); $('budgetOut').textContent = fmtMoney(+$('budget').value);
+function updateLabels() { $('budgetOut').textContent = formatMoney(+$('budget').value); }
+function programHtml(P) {
+  const row = it => { const mn = minimumSize(it), rc = recommendedSize(it); return '<li><span>' + escapeText(it.n) + '</span><span>' + (it.k === 'stairs' ? '42 in flights' : mn[0] + '×' + mn[1] + ' – ' + rc[0] + '×' + rc[1] + ' ft') + '</span></li>'; };
+  const sec = (t, l) => l.length ? '<div class="floor-label">' + t + '</div><ul>' + l.map(row).join('') + '</ul>' : '';
+  return '<details class="fold" open><summary><h3>Room list (min – recommended)</h3></summary>' + sec('Main floor', P.main) + sec('Upper floor', P.upper) + sec('Basement', P.base) + '</details>';
 }
 
 function render() {
@@ -752,23 +1682,25 @@ function render() {
   $('optTabs').style.display = mainTab === 'options' ? 'flex' : 'none';
   if (!plans.length) { mount.innerHTML = ''; return; }
   if (mainTab === 'refine' && refineIdx != null) { mount.innerHTML = refineHtml(plans[refineIdx]); return; }
-  $('optTabs').innerHTML = plans.map((p, i) => '<button class="btn' + (optTab === i ? ' active' : '') + '" data-opt="' + i + '" type="button">Option ' + p.letter + '</button>').join('')
+  $('optTabs').innerHTML = plans.map((p, i) => '<button class="btn' + (optTab === i ? ' active' : '') + '" data-opt="' + i + '" type="button">' + p.letter + ' · ' + GOALS.find(g => g.id === p.goal).n + '</button>').join('')
     + '<button class="btn' + (optTab === 'all' ? ' active' : '') + '" data-opt="all" type="button">Compare all</button>';
-  mount.innerHTML = optTab === 'all' ? '<div class="grid">' + plans.map((p, i) => sheetHtml(p, i, false)).join('') + '</div>' : sheetHtml(plans[optTab], optTab, true);
+  mount.innerHTML = optTab === 'all' ? '<div class="grid">' + plans.map((p, i) => optionSheetHtml(p, i, false)).join('') + '</div>' : optionSheetHtml(plans[optTab], optTab, true);
 }
 
 function generate() {
   try {
     seed++;
-    applySizeMode(); updateLabels();
-    const s = readSettings(), shapes = optionShapes(s);
-    plans = shapes.map((shape, i) => buildOption(s, shape, i));
-    refineIdx = null; mainTab = 'options'; edSel = null; edFloor = 0;
+    updateLabels();
+    const s = readSettings();
+    plans = generateAllOptions(s);
+    $('program').innerHTML = programHtml(program);
+    refineIdx = null; mainTab = 'options'; selectedRoom = null; editFloor = 0;
+    if (optTab !== 'all') optTab = 0;
     $('stale').innerHTML = '';
     render();
   } catch (err) {
     console.error(err);
-    $('mount').innerHTML = '<div class="sheet error"><b>Could not build a plan:</b> ' + esc(err.message) + '</div>';
+    $('mount').innerHTML = '<div class="sheet error"><b>Could not build a plan:</b> ' + escapeText(err.message) + '</div>';
   }
 }
 
@@ -781,17 +1713,17 @@ function download(name, text, type) {
 function onEditorClick(e) {
   const plan = plans[refineIdx]; if (!plan) return;
   const b = e.target.closest('button'); if (!b) return;
-  const f = plan.floors[edFloor];
-  if (b.dataset.floor !== undefined) { edFloor = +b.dataset.floor; edSel = null; render(); return; }
-  if (b.id === 'edUndo' && plan.hi > 0) { restoreHist(plan, plan.hi - 1); edSel = null; render(); }
-  else if (b.id === 'edRedo' && plan.hi < plan.hist.length - 1) { restoreHist(plan, plan.hi + 1); edSel = null; render(); }
-  else if (b.id === 'edRotate' && edSel != null) { const r = f.rooms[edSel], t = r.w; r.w = r.h; r.h = t; edCommit(plan); }
-  else if (b.id === 'edDelete' && edSel != null) { f.rooms.splice(edSel, 1); edSel = null; edCommit(plan); }
-  else if (b.id === 'edReset') { restoreHist(plan, 0); plan.hist = plan.hist.slice(0, 1); plan.hi = 0; edSel = null; render(); }
+  const f = plan.floors[editFloor];
+  if (b.dataset.floor !== undefined) { editFloor = +b.dataset.floor; selectedRoom = null; render(); return; }
+  if (b.id === 'edUndo' && plan.hi > 0) { restoreFromHistory(plan, plan.hi - 1); selectedRoom = null; render(); }
+  else if (b.id === 'edRedo' && plan.hi < plan.hist.length - 1) { restoreFromHistory(plan, plan.hi + 1); selectedRoom = null; render(); }
+  else if (b.id === 'edRotate' && selectedRoom != null) { const r = f.rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
+  else if (b.id === 'edDelete' && selectedRoom != null) { f.rooms.splice(selectedRoom, 1); selectedRoom = null; saveEdit(plan); }
+  else if (b.id === 'edReset') { restoreFromHistory(plan, 0); plan.hist = plan.hist.slice(0, 1); plan.hi = 0; selectedRoom = null; render(); }
   else if (b.id === 'edSvgSave') {
     let t = new XMLSerializer().serializeToString($('edSvg'));
     if (t.indexOf('xmlns=') < 0) t = t.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-    download('plan_' + plan.letter + '.svg', t, 'image/svg+xml');
+    download('plan_' + plan.letter + '_' + plan.floors[editFloor].kind + '.svg', t, 'image/svg+xml');
   }
 }
 
@@ -800,43 +1732,44 @@ function onEditorChange(e) {
   const id = e.target.id, o = plan.opts, v = e.target.value;
   if (id === 'rfStyle') { o.style = v; o.open = STYLES[v].open; }
   else if (id === 'rfCloset') o.closet = v;
-  else if (id === 'rfDepth') o.closetDepth = +v;
   else if (id === 'rfDoor') o.doorW = +v;
   else if (id === 'rfSnap') o.snap = +v;
   else if (id === 'rfOpen') o.open = e.target.checked;
   else if (id === 'rfShowCl') o.showCloset = e.target.checked;
+  else if (id === 'rfFurn') o.showFurn = e.target.checked;
+  else if (id === 'rfWin') o.showWin = e.target.checked;
   else if (id === 'addRoom') {
     if (!v) return;
-    const spec = { Bedroom: ['Bed', 'sleep', 11, 12, 9], Bathroom: ['Bath', 'wet', 5, 9, 5], Office: ['Office', 'flex', 10, 12, 9], Closet: ['Closet', 'clo', 5, 6, 4], Storage: ['Storage', 'svc', 6, 6, 4] }[v];
-    plan.floors[edFloor].rooms.push({ n: spec[0], t: spec[1], x: 0, y: 0, w: spec[2], h: spec[3], minSide: spec[4], maxAspect: 2 });
-    edSel = plan.floors[edFloor].rooms.length - 1;
+    const rc = ROOM_TYPES[v].rec;
+    plan.floors[editFloor].rooms.push(makeRoom({ k: v, n: ROOM_TYPES[v].n, cl: v === 'bed' ? undefined : undefined }, 0, 0, rc[0], rc[1]));
+    selectedRoom = plan.floors[editFloor].rooms.length - 1;
   } else if (/^i[NWHXYC]$/.test(id)) {
-    const r = edSel != null && plan.floors[edFloor].rooms[edSel]; if (!r) return;
+    const r = selectedRoom != null && plan.floors[editFloor].rooms[selectedRoom]; if (!r) return;
     const vb = plan.vb, n = parseFloat(v);
     if (id === 'iN') r.n = v.trim() || r.n;
-    else if (id === 'iC') { if (v) r.closet = v; else delete r.closet; }
+    else if (id === 'iC') { if (v) r.cl = v; else delete r.cl; }
     else if (isFinite(n)) {
       if (id === 'iW') r.w = Math.max(2, n); else if (id === 'iH') r.h = Math.max(2, n);
       else if (id === 'iX') r.x = Math.max(vb.minX, n); else r.y = Math.max(vb.minY, n);
     }
   } else return;
-  edCommit(plan);
+  saveEdit(plan);
 }
 
 function onPointerDown(e) {
   if (mainTab !== 'refine' || refineIdx == null || !e.target.closest || !e.target.closest('#edSvg')) return;
-  const plan = plans[refineIdx], rooms = plan.floors[edFloor].rooms, pt = edPt(e); if (!pt) return;
+  const plan = plans[refineIdx], rooms = plan.floors[editFloor].rooms, pt = pointerInFeet(e); if (!pt) return;
   const handle = e.target.closest('.ed-handle'), roomEl = e.target.closest('.ed-room');
-  if (handle && edSel != null && rooms[edSel]) { const r = rooms[edSel]; drag = { mode: 'handle', h: handle.dataset.h, i: edSel, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
-  else if (roomEl) { const i = +roomEl.dataset.i, r = rooms[i]; edSel = i; drag = { mode: 'move', i: i, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
-  else edSel = null;
+  if (handle && selectedRoom != null && rooms[selectedRoom]) { const r = rooms[selectedRoom]; drag = { mode: 'handle', h: handle.dataset.h, i: selectedRoom, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
+  else if (roomEl) { const i = +roomEl.dataset.i, r = rooms[i]; selectedRoom = i; drag = { mode: 'move', i: i, sx: pt.x, sy: pt.y, o: { x: r.x, y: r.y, w: r.w, h: r.h }, moved: false }; }
+  else selectedRoom = null;
   try { $('mount').setPointerCapture(e.pointerId); } catch (_) { }
   e.preventDefault(); render();
 }
 function onPointerMove(e) {
   if (!drag) return;
   const plan = plans[refineIdx]; if (!plan) { drag = null; return; }
-  const r = plan.floors[edFloor].rooms[drag.i], pt = edPt(e); if (!r || !pt) return;
+  const r = plan.floors[editFloor].rooms[drag.i], pt = pointerInFeet(e); if (!r || !pt) return;
   const dx = pt.x - drag.sx, dy = pt.y - drag.sy, vb = plan.vb, q = plan.opts.snap, sn = v => Math.round(v / q) * q;
   if (!drag.moved && Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25) return;
   drag.moved = true;
@@ -853,33 +1786,34 @@ function onPointerMove(e) {
     r.x = Math.max(vb.minX, x); r.y = Math.max(vb.minY, y);
     r.w = Math.max(MIN, Math.min(w, maxX - r.x)); r.h = Math.max(MIN, Math.min(h, maxY - r.y));
   }
+  analyze(plan);
   render();
 }
 function onPointerUp(e) {
   if (!drag) return;
   const moved = drag.moved; drag = null;
   try { $('mount').releasePointerCapture(e.pointerId); } catch (_) { }
-  if (moved && plans[refineIdx]) edCommit(plans[refineIdx]);
+  if (moved && plans[refineIdx]) saveEdit(plans[refineIdx]);
 }
 function onKey(e) {
   if (mainTab !== 'refine' || refineIdx == null) return;
   const tag = (e.target && e.target.tagName) || ''; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
   const plan = plans[refineIdx], k = (e.key || '').toLowerCase();
-  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey ? plan.hi < plan.hist.length - 1 : plan.hi > 0) { restoreHist(plan, plan.hi + (e.shiftKey ? 1 : -1)); edSel = null; render(); } }
-  else if (k === 'r' && edSel != null && !e.ctrlKey && !e.metaKey) { const r = plan.floors[edFloor].rooms[edSel], t = r.w; r.w = r.h; r.h = t; edCommit(plan); }
-  else if ((k === 'delete' || k === 'backspace') && edSel != null) { e.preventDefault(); plan.floors[edFloor].rooms.splice(edSel, 1); edSel = null; edCommit(plan); }
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey ? plan.hi < plan.hist.length - 1 : plan.hi > 0) { restoreFromHistory(plan, plan.hi + (e.shiftKey ? 1 : -1)); selectedRoom = null; render(); } }
+  else if (k === 'r' && selectedRoom != null && !e.ctrlKey && !e.metaKey) { const r = plan.floors[editFloor].rooms[selectedRoom], t = r.w; r.w = r.h; r.h = t; saveEdit(plan); }
+  else if ((k === 'delete' || k === 'backspace') && selectedRoom != null) { e.preventDefault(); plan.floors[editFloor].rooms.splice(selectedRoom, 1); selectedRoom = null; saveEdit(plan); }
 }
 
 function init() {
-  $('style').innerHTML = optHtml(Object.keys(STYLES).map(k => [k, STYLES[k].n]), 'mod');
-  $('shape').innerHTML = optHtml([['auto', 'Auto (a different shape per option)']].concat(Object.keys(SHAPES).map(k => [k, SHAPES[k]])), 'auto');
-  $('sidebar').addEventListener('input', () => { applySizeMode(); updateLabels(); if (plans.length) $('stale').innerHTML = '<div class="stale">Settings changed. Press Generate Plans to update.</div>'; });
+  $('picker').innerHTML = ROOM_PICKER.map(p => '<label for="c_' + p[0] + '">' + p[1] + '</label><select id="c_' + p[0] + '">' + Array.from({ length: p[3] + 1 }, (_, i) => '<option' + (i === p[2] ? ' selected' : '') + '>' + i + '</option>').join('') + '</select>').join('');
+  $('style').innerHTML = optionsHtml(Object.keys(STYLES).map(k => [k, STYLES[k].n]), 'mod');
+  $('sidebar').addEventListener('input', () => { updateLabels(); if (plans.length) $('stale').innerHTML = '<div class="stale">Settings changed. Press Generate Plans to update.</div>'; });
   $('generate').addEventListener('click', generate);
-  $('mainTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; mainTab = b.dataset.main; edSel = null; render(); });
+  $('mainTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; mainTab = b.dataset.main; selectedRoom = null; render(); });
   $('optTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; optTab = b.dataset.opt === 'all' ? 'all' : +b.dataset.opt; render(); });
   $('mount').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.refine !== undefined) { refineIdx = +b.dataset.refine; mainTab = 'refine'; edSel = null; edFloor = 0; render(); window.scrollTo(0, 0); return; }
+    if (b.dataset.refine !== undefined) { refineIdx = +b.dataset.refine; mainTab = 'refine'; selectedRoom = null; editFloor = 0; render(); window.scrollTo(0, 0); return; }
     if (mainTab === 'refine') onEditorClick(e);
   });
   $('mount').addEventListener('change', e => { if (mainTab === 'refine') onEditorChange(e); });
@@ -895,7 +1829,7 @@ function init() {
   $('saveJson').addEventListener('click', () => {
     if (!plans.length) return;
     const p = plans[refineIdx != null ? refineIdx : (optTab === 'all' ? 0 : optTab)];
-    download('floorplan_' + p.letter + '.json', JSON.stringify({ settings: p.settings, options: p.opts, floors: p.floors.map(f => f.rooms.map(cleanRoom)) }, null, 2), 'application/json');
+    download('floorplan_' + p.letter + '.json', JSON.stringify({ settings: p.settings, goal: p.goal, options: p.opts, floors: p.floors.map(f => ({ label: f.label, rooms: f.rooms.map(roomForSaving), windows: f.windows.map(w => ({ room: f.rooms[w.ri].n, side: w.side, width_in: w.wi, height_in: w.hi })) })) }, null, 2), 'application/json');
   });
   generate();
 }
@@ -1023,7 +1957,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 (function () {
-  var MAIN_LABEL = "Main tool";          // <-- rename your existing tab here
+  var MAIN_LABEL = "ArchPlan Studio";    // <-- rename your existing tab here
   var SS_LABEL   = "Spatial separation";
   var LS_KEY = "ssTablesV1";
 
@@ -1352,7 +2286,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 (function () {
-  var MAIN_LABEL = "Main tool";   // only used if the spatial separation block isn't present
+  var MAIN_LABEL = "ArchPlan Studio";   // only used if the spatial separation block isn't present
   var RV_LABEL = "Roof ventilation";
   var $ = function (id) { return document.getElementById(id); };
   var me = document.currentScript, panel = $("rv-panel");
@@ -1517,17 +2451,17 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   /* dark theme for the added tabs */
   #ss-tabs, #ss-panel, #rv-panel { color-scheme: dark; color: #e5e7eb; }
 
-  #ss-tabs { background: #0b1220; border-bottom-color: #1e2a44; }
+  #ss-tabs { background: #161616; border-bottom-color: #2e2e2c; }
   #ss-tabs button { color: #cbd5e1; opacity: 1; }
-  #ss-tabs button:hover { background: #111a2e; }
+  #ss-tabs button:hover { background: #222220; }
   #ss-tabs button[aria-selected="true"] {
-    color: #fff; background: #16213a;
-    border-color: #1e2a44; border-bottom-color: #16213a;
-    box-shadow: inset 0 2px 0 #5aa2ff;
+    color: #fff; background: #262624;
+    border-color: #2e2e2c; border-bottom-color: #262624;
+    box-shadow: inset 0 2px 0 #f2f2f0;
   }
 
   #ss-panel, #rv-panel {
-    background: #0b1220; max-width: none;
+    background: #161616; max-width: none;
     padding-left: max(16px, calc((100% - 960px) / 2));
     padding-right: max(16px, calc((100% - 960px) / 2));
     min-height: calc(100vh - 44px);
